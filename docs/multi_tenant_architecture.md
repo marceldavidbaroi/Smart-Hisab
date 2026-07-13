@@ -187,12 +187,89 @@ erDiagram
 ---
 
 ### Flow B: Self-Service Tenant Creation (Optional SaaS Flow)
-*If your system allows users to sign up and pay directly without human admin intervention:*
-1.  **Select Tier**: Guest user registers on the website and completes payment setup.
-2.  **Trigger Automation RPC**: On successful verification, the backend triggers an automated RPC mimicking the Superadmin provisioning workflow:
-    *   Creates tenant.
-    *   Enables standard features matching the tier.
-    *   Assigns the registering user as the `Owner` of that tenant.
+*If your system allows users to sign up and provision their organization automatically without admin intervention:*
+
+1. **User Sign Up**: The guest user registers via the `/auth/signup` page, supplying their credentials and a desired **Workspace/Company Name**.
+2. **Auto-Provisioning database function**: Upon successful registration, the client invokes a Supabase Remote Procedure Call (RPC) to atomically set up their tenant:
+
+#### Database Function (SQL)
+Create a Postgres function `provision_new_tenant` in your migrations or the SQL Editor:
+```sql
+create or replace function public.provision_new_tenant(
+  p_tenant_name text,
+  p_slug text
+)
+returns uuid
+security definer
+set search_path = public
+language plpgsql
+as $$
+declare
+  v_tenant_id uuid;
+  v_owner_role_id uuid;
+begin
+  -- 1. Create the tenant
+  insert into public.tenants (name, slug)
+  values (p_tenant_name, p_slug)
+  returning id into v_tenant_id;
+
+  -- 2. Enable default features for new tenants
+  insert into public.tenant_settings (tenant_id, enabled_features)
+  values (
+    v_tenant_id,
+    '{"crm": true, "invoicing": true, "chat": true}'::jsonb
+  );
+
+  -- 3. Retrieve default system 'Owner' role ID
+  select id into v_owner_role_id 
+  from public.tenant_roles 
+  where name = 'Owner' and tenant_id is null;
+
+  -- 4. Map the authenticated user as the Tenant Owner
+  insert into public.tenant_members (tenant_id, user_id, role_id)
+  values (v_tenant_id, auth.uid(), v_owner_role_id);
+
+  -- 5. Initialize active free-tier billing
+  insert into public.tenant_billing (tenant_id, subscription_tier, status)
+  values (v_tenant_id, 'free', 'active');
+
+  return v_tenant_id;
+end;
+$$;
+```
+
+#### Frontend Client Integration
+Invoke the RPC from your frontend registration action (e.g. `SignupPage.vue`):
+```typescript
+import { supabase } from '@/boot/supabase';
+
+// 1. Sign up the user with email & password
+const { data: authData, error: authError } = await supabase.auth.signUp({
+  email: email.value,
+  password: password.value,
+  options: {
+    data: { full_name: fullName.value }
+  }
+});
+
+// 2. Call the provisioning function on success
+if (authData.user && !authError) {
+  const generatedSlug = companyName.value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  
+  const { data: tenantId, error: provisionError } = await supabase.rpc(
+    'provision_new_tenant', 
+    {
+      p_tenant_name: companyName.value,
+      p_slug: generatedSlug
+    }
+  );
+
+  if (!provisionError) {
+    // Redirect user to their brand new workspace
+    router.push(`/${generatedSlug}/dashboard`);
+  }
+}
+```
 
 ---
 
