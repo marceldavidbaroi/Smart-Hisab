@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+web/node_modules/
+
+# Python virtualenv
+.venv/
+python/.venv/
+
+# Quasar / Vite build output
+web/.quasar/
+web/dist/
+**/.cache/
+**/*.tsbuildinfo
+**/.eslintcache
+web/quasar.config.*.temporary.compiled*
+
+# Supabase local cache
+supabase/.temp/
+
+# Logs and backups
+**/*.log
+backups/
+**/*.ndjson
+**/*.json.gz
+
+# OS
+.DS_Store
