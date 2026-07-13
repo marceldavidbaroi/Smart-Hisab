@@ -3,7 +3,9 @@
     <!-- Header -->
     <div class="row items-center justify-between q-mb-lg q-mb-sm-xl">
       <div>
-        <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">Platform Admin Dashboard</h1>
+        <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">
+          Platform Admin Dashboard
+        </h1>
         <p class="text-grey-7 text-subtitle2 q-mt-xs q-mb-none">
           Global analytics and metrics for the SaaS platform.
         </p>
@@ -78,7 +80,9 @@
         <q-card flat bordered class="bg-white">
           <q-card-section class="row items-center border-bottom q-py-sm q-px-md">
             <q-icon name="bolt" size="24px" color="amber" class="q-mr-sm" />
-            <div class="text-subtitle1 text-weight-bold text-grey-9">Quick Administrative Tools</div>
+            <div class="text-subtitle1 text-weight-bold text-grey-9">
+              Quick Administrative Tools
+            </div>
           </q-card-section>
 
           <q-card-section class="q-py-md q-py-sm-lg">
@@ -89,7 +93,7 @@
                   color="amber"
                   text-color="black"
                   class="full-width text-weight-bold cursor-pointer action-btn"
-                  style="border-radius: 8px;"
+                  style="border-radius: 8px"
                   icon="add_business"
                   label="Provision New Tenant"
                   to="/admin/tenants"
@@ -100,7 +104,7 @@
                   outline
                   color="amber-10"
                   class="full-width text-weight-bold cursor-pointer action-btn"
-                  style="border-radius: 8px;"
+                  style="border-radius: 8px"
                   icon="tune"
                   label="Manage Subscriptions"
                   to="/admin/billing"

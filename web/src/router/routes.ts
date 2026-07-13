@@ -21,6 +21,11 @@ const routes: RouteRecordRaw[] = [
         name: 'no-tenant',
         component: () => import('@/pages/auth/NoTenantPage.vue'),
       },
+      {
+        path: 'pending-access',
+        name: 'pending-access',
+        component: () => import('@/pages/auth/PendingAccessPage.vue'),
+      },
     ],
   },
 

@@ -20,7 +20,7 @@
           label="Create Invoice"
           no-caps
           class="q-px-md text-weight-bold cursor-pointer action-btn"
-          style="border-radius: 8px;"
+          style="border-radius: 8px"
           @click="showCreateInvoiceDialog = true"
         />
       </div>
@@ -94,7 +94,9 @@
 
           <q-item v-for="inv in filteredInvoices" :key="inv.id" class="q-py-md hover-row">
             <q-item-section avatar>
-              <q-avatar color="grey-2" text-color="primary" class="text-weight-bold text-xs"> INV </q-avatar>
+              <q-avatar color="grey-2" text-color="primary" class="text-weight-bold text-xs">
+                INV
+              </q-avatar>
             </q-item-section>
 
             <q-item-section>
@@ -116,9 +118,7 @@
             </q-item-section>
 
             <q-item-section class="gt-xs">
-              <q-item-label caption class="text-grey-7"
-                >Issued: {{ inv.issuedDate }}</q-item-label
-              >
+              <q-item-label caption class="text-grey-7">Issued: {{ inv.issuedDate }}</q-item-label>
               <q-item-label caption class="text-grey-7">Due: {{ inv.dueDate }}</q-item-label>
             </q-item-section>
 
@@ -156,10 +156,7 @@
 
     <!-- Create Invoice Mock Dialog -->
     <q-dialog v-model="showCreateInvoiceDialog">
-      <q-card
-        class="bg-white text-grey-9 q-pa-md"
-        style="width: 100%; max-width: 440px;"
-      >
+      <q-card class="bg-white text-grey-9 q-pa-md" style="width: 100%; max-width: 440px">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold text-grey-9">Create Invoice</div>
           <q-space />
@@ -167,12 +164,7 @@
         </q-card-section>
 
         <q-card-section class="q-pt-md q-gutter-y-sm">
-          <q-input
-            outlined
-            dense
-            v-model="newInvoice.client"
-            label="Client Business Name"
-          />
+          <q-input outlined dense v-model="newInvoice.client" label="Client Business Name" />
           <q-input
             outlined
             dense

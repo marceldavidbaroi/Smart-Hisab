@@ -69,13 +69,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { createTenant } from '../../services/multiTenant';
 import { useTenantStore } from '../../stores/tenant';
 
 const router = useRouter();
 const tenantStore = useTenantStore();
+
+onMounted(async () => {
+  if (tenantStore.isSuperadmin) {
+    await router.push('/admin/dashboard');
+    return;
+  }
+  const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
+  if (!allowSelfService) {
+    await router.push('/auth/pending-access');
+  }
+});
 
 const name = ref('');
 const slug = ref('');

@@ -41,6 +41,7 @@ Ensure you have the following installed on your machine:
 * **Node.js**: Version 22.x or 20.x
 * **PNPM**: Global package manager (`npm install -g pnpm`)
 * **Supabase CLI**: Required for database management and local environment simulation
+* **Docker Desktop**: Required to run the local Supabase container environment
 
 ### 2. Workspace Setup
 Run the following command at the root workspace directory to link all workspace projects and install dependencies:
@@ -48,18 +49,28 @@ Run the following command at the root workspace directory to link all workspace 
 pnpm install
 ```
 
-### 3. Supabase CLI Setup
-Link the local project configuration to your Supabase cloud backend or run it locally:
+### 3. Local Development Startup (Recommended)
+You can run the entire database and backend stack locally using Docker:
 ```bash
-# Link the database with your Supabase project ref
-pnpm run backend:link
+# 1. Start the local database containers
+pnpm run backend:start
+
+# 2. Reset database and run local migrations & seeds
+pnpm run backend:reset
+
+# 3. Create the web configuration env file
+cp web/.env.example web/.env
 ```
+Once seeded, a platform superadmin account is automatically created for local testing:
+* **Email**: `admin@example.com`
+* **Password**: `Superadmin123!`
 
 ### 4. Running the Dev Server
 Launch the Quasar local development server:
 ```bash
 pnpm run dev
 ```
+Open `http://localhost:9000` in your browser.
 
 ---
 
@@ -69,12 +80,17 @@ All commands are run from the root workspace:
 
 | Script | Command | Description |
 | :--- | :--- | :--- |
-| `pnpm run dev` | `pnpm --filter web dev` | Starts the Quasar Vite dev server |
+| `pnpm run dev` | `pnpm --filter web dev` | Starts the Quasar Vite dev server (runs on `http://localhost:9000`) |
 | `pnpm run build` | `pnpm --filter web build` | Builds the Quasar web application |
 | `pnpm run lint` | `pnpm --filter web lint` | Runs eslint and prettier formatting |
+| `pnpm run backend:start` | `npx supabase start` | Starts the local Supabase Docker containers |
+| `pnpm run backend:stop` | `npx supabase stop` | Stops the local Supabase Docker containers |
+| `pnpm run backend:reset` | `npx supabase db reset` | Resets local DB schemas and loads the database seeds |
+| `pnpm run backend:status` | `npx supabase status` | Displays configuration details of running local containers |
+| `pnpm run backend:types:local` | `npx supabase gen types ...` | Generates TypeScript bindings from local database schema |
 | `pnpm run backend:init` | `npx supabase init` | Re-initializes supabase setup |
-| `pnpm run backend:push` | `npx supabase db push --linked` | Pushes local migrations to Supabase database |
-| `pnpm run backend:types` | `npx supabase gen types ...` | Re-generates TypeScript database bindings |
+| `pnpm run backend:push` | `npx supabase db push --linked` | Pushes local migrations to linked remote Supabase database |
+| `pnpm run backend:types` | `npx supabase gen types ...` | Generates TypeScript database bindings from linked remote database |
 
 ---
 
@@ -107,7 +123,7 @@ This repository is designed to be a reusable **base boilerplate template**. If y
    ```bash
    cp web/.env.example web/.env
    ```
-   Update the `VVITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` with your new Supabase project's keys from your Supabase dashboard.
+   Update the `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` with your new Supabase project's keys from your Supabase dashboard.
 
 5. **Pulling Upstream Updates**:
    If the base template gets updated with improvements, bugfixes, or features, you can merge them into your project at any time:

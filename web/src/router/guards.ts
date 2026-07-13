@@ -33,10 +33,17 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
 
     // 3. Authenticated user flow: prevent accessing auth routes directly
     if (isAuthRoute) {
-      if (to.name === 'no-tenant') {
-        // Allow the no-tenant onboarding page if the user has no workspaces
+      if (to.name === 'no-tenant' || to.name === 'pending-access') {
+        const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
+
         if (tenantStore.myTenants.length === 0 && !tenantStore.isSuperadmin) {
-          next();
+          if (to.name === 'no-tenant' && !allowSelfService) {
+            next({ name: 'pending-access' });
+          } else if (to.name === 'pending-access' && allowSelfService) {
+            next({ name: 'no-tenant' });
+          } else {
+            next();
+          }
         } else {
           // Otherwise send them to their dashboard
           redirectDefault(tenantStore, next);
@@ -48,14 +55,20 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
     }
 
     // 4. Authenticated but has no tenants and is not superadmin
-    // They must be forced to the no-tenant page
+    // They must be forced to the no-tenant or pending-access page
     if (
       tenantStore.myTenants.length === 0 &&
       !tenantStore.isSuperadmin &&
       to.name !== 'no-tenant' &&
+      to.name !== 'pending-access' &&
       !to.path.startsWith('/forbidden')
     ) {
-      next({ name: 'no-tenant' });
+      const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
+      if (allowSelfService) {
+        next({ name: 'no-tenant' });
+      } else {
+        next({ name: 'pending-access' });
+      }
       return;
     }
 
@@ -130,9 +143,11 @@ function redirectDefault(
     if (firstSlug) {
       next({ name: 'workspace-dashboard', params: { tenantSlug: firstSlug } });
     } else {
-      next({ name: 'no-tenant' });
+      const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
+      next(allowSelfService ? { name: 'no-tenant' } : { name: 'pending-access' });
     }
   } else {
-    next({ name: 'no-tenant' });
+    const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
+    next(allowSelfService ? { name: 'no-tenant' } : { name: 'pending-access' });
   }
 }

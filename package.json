@@ -11,7 +11,12 @@
     "backend:login": "npx supabase login",
     "backend:link": "npx supabase link --project-ref \"$SUPABASE_PROJECT_REF\"",
     "backend:push": "npx supabase db push --linked",
+    "backend:start": "npx supabase start",
+    "backend:stop": "npx supabase stop",
+    "backend:reset": "npx supabase db reset",
+    "backend:status": "npx supabase status",
     "backend:types": "sh -c 'mkdir -p web/src/types && npx supabase gen types typescript --linked --schema public > web/src/types/supabase.ts'",
+    "backend:types:local": "sh -c 'mkdir -p web/src/types && npx supabase gen types typescript --local --schema public > web/src/types/supabase.ts'",
     "backend:deploy": "chmod +x deploy_backend.sh && ./deploy_backend.sh"
   },
   "devDependencies": {

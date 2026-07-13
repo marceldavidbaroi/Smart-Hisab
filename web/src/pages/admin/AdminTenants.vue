@@ -3,7 +3,9 @@
     <!-- Header -->
     <div class="row items-center justify-between q-mb-lg q-mb-sm-xl">
       <div>
-        <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">Tenants Management</h1>
+        <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">
+          Tenants Management
+        </h1>
         <p class="text-grey-7 text-subtitle2 q-mt-xs q-mb-none">
           View all tenants on the platform and provision new ones.
         </p>
@@ -16,7 +18,7 @@
           icon="add"
           label="Provision Tenant"
           class="text-weight-bold cursor-pointer action-btn"
-          style="border-radius: 8px;"
+          style="border-radius: 8px"
           @click="showCreateDialog = true"
         />
       </div>
@@ -31,7 +33,10 @@
     </q-banner>
 
     <!-- Success Banner -->
-    <q-banner v-if="successMsg" class="bg-positive text-white rounded-borders q-mb-lg text-subtitle2">
+    <q-banner
+      v-if="successMsg"
+      class="bg-positive text-white rounded-borders q-mb-lg text-subtitle2"
+    >
       <template #avatar>
         <q-icon name="check_circle" color="white" />
       </template>
@@ -99,17 +104,27 @@
 
     <!-- Provision Tenant Dialog -->
     <q-dialog v-model="showCreateDialog" persistent>
-      <q-card class="bg-white text-grey-9 q-pa-md" style="width: 100%; max-width: 500px;">
+      <q-card class="bg-white text-grey-9 q-pa-md" style="width: 100%; max-width: 500px">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold text-amber-10">Provision Workspace Tenant</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="grey-6" class="cursor-pointer" />
+          <q-btn
+            icon="close"
+            flat
+            round
+            dense
+            v-close-popup
+            color="grey-6"
+            class="cursor-pointer"
+          />
         </q-card-section>
 
         <q-form @submit.prevent="handleCreateTenant" class="q-gutter-y-md q-mt-md">
           <q-card-section class="q-py-none q-gutter-y-md">
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">Organization Name</label>
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                >Organization Name</label
+              >
               <q-input
                 v-model="name"
                 type="text"
@@ -124,7 +139,9 @@
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">URL Slug</label>
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                >URL Slug</label
+              >
               <q-input
                 v-model="slug"
                 type="text"
@@ -143,7 +160,9 @@
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">Owner Email Address</label>
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                >Owner Email Address</label
+              >
               <q-input
                 v-model="ownerEmail"
                 type="email"
@@ -157,7 +176,9 @@
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">Parent Tenant (Optional)</label>
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                >Parent Tenant (Optional)</label
+              >
               <q-select
                 v-model="parentId"
                 :options="parentTenantOptions"
@@ -171,7 +192,9 @@
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">Subscription Tier</label>
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                >Subscription Tier</label
+              >
               <q-select
                 v-model="subscriptionTier"
                 :options="['free', 'pro', 'enterprise']"
@@ -182,7 +205,9 @@
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">Feature Modules</label>
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                >Feature Modules</label
+              >
               <div class="row q-col-gutter-sm q-mt-xs">
                 <div class="col-6">
                   <q-checkbox v-model="features.crm" label="CRM Module" color="amber-10" dense />

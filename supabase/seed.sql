@@ -5,7 +5,7 @@ create extension if not exists "pgcrypto";
 do $$
 declare
   v_user_id uuid := '00000000-0000-0000-0000-000000000100';
-  v_email text := 'davidubl007@gmail.com';
+  v_email text := 'admin@example.com';
   v_password text := 'Superadmin123!';
 begin
   if not exists (select 1 from auth.users where email = v_email) then
@@ -31,7 +31,7 @@ begin
       crypt(v_password, gen_salt('bf')),
       now(),
       '{"provider":"email","providers":["email"]}'::jsonb,
-      '{"full_name":"David (Superadmin)"}'::jsonb,
+      '{"full_name":"System Superadmin"}'::jsonb,
       now(),
       now()
     );

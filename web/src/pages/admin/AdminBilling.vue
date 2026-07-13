@@ -3,7 +3,9 @@
     <!-- Header -->
     <div class="row items-center justify-between q-mb-lg q-mb-sm-xl">
       <div>
-        <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">Billing & Feature Policies</h1>
+        <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">
+          Billing & Feature Policies
+        </h1>
         <p class="text-grey-7 text-subtitle2 q-mt-xs q-mb-none">
           Override subscription tiers and toggle enabled modules on a per-tenant basis.
         </p>
@@ -19,7 +21,10 @@
     </q-banner>
 
     <!-- Success Banner -->
-    <q-banner v-if="successMsg" class="bg-positive text-white rounded-borders q-mb-lg text-subtitle2">
+    <q-banner
+      v-if="successMsg"
+      class="bg-positive text-white rounded-borders q-mb-lg text-subtitle2"
+    >
       <template #avatar>
         <q-icon name="check_circle" color="white" />
       </template>
@@ -37,7 +42,9 @@
           <q-card-section class="q-pt-md">
             <q-form @submit.prevent="updateBillingPolicy" class="q-gutter-y-md">
               <div>
-                <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">Select Tenant Workspace</label>
+                <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                  >Select Tenant Workspace</label
+                >
                 <q-select
                   v-model="selectedTenantId"
                   :options="tenantOptions"
@@ -52,7 +59,9 @@
 
               <div v-if="selectedTenantId" class="q-gutter-y-md">
                 <div>
-                  <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">Subscription Plan Tier</label>
+                  <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                    >Subscription Plan Tier</label
+                  >
                   <q-select
                     v-model="billingTier"
                     :options="['free', 'pro', 'enterprise']"
@@ -63,7 +72,9 @@
                 </div>
 
                 <div>
-                  <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">Payment Account Status</label>
+                  <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                    >Payment Account Status</label
+                  >
                   <q-select
                     v-model="billingStatus"
                     :options="['active', 'past_due', 'canceled']"

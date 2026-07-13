@@ -56,8 +56,9 @@ export default defineConfig((/* ctx */) => {
 
       // publicPath: '/',
       defineEnv: {
-        SUPABASE_URL: process.env.VVITE_SUPABASE_URL,
+        SUPABASE_URL: process.env.VITE_SUPABASE_URL,
         SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        ALLOW_SELF_SERVICE_TENANTS: process.env.VITE_ALLOW_SELF_SERVICE_TENANTS || 'true',
       },
       // ignorePublicFolder: true,
       // minify: false,
