@@ -157,3 +157,66 @@ When extending your new cloned application with custom functionality (like tenan
   console.log(tenantStore.hasPermission('settings', 'write'));
   ```
 
+---
+
+## Mess/Canteen Management System Modules
+
+This section describes the modular features and requirements to be implemented within this project.
+
+### Module 1: Auth, Multi-Tenancy & Device Management
+This module manages system roles, tenant identification, and secures physical devices placed at the canteen counter.
+*   **Tenant Boarding & Device Pairing:** The Owner/Manager generates a temporary 6-digit activation code (expires in 30 minutes) from their personal dashboard. Entering this code on a new client device binds it to the tenant database and configures the device's local storage. This eliminates text typing for counter staff.
+*   **Access Roles & Logins:**
+    *   **Owner:** Email/Social login. Full dashboard access, settings configuration, adjustment entries, and reporting.
+    *   **Manager:** Email login. Accesses daily logs, payroll trackers, and bazar inputs, but cannot edit settings or view analytics.
+    *   **Staff:** 4-digit numeric PIN. Active only on devices locked to Counter Mode.
+*   **Counter Mode (Locked Terminal UI):** The active terminal device runs in "Counter Mode" locked to a 4-digit PIN grid. Toggling off Counter Mode to configure the device requires the Admin email password.
+    *   **Auto-Expiry:** Manager sessions auto-expire at 11:59 PM daily to prevent leftover sessions from leaking.
+    *   **Lockout:** Enforces a 15-minute lockout after 5 consecutive failed PIN attempts and registers a security log.
+
+### Module 2: Shift-Based POS (Point of Sale)
+This module replaces granular transactional logs with simple, shift-based aggregations to handle cash transactions rapidly.
+*   **Bulk Cash Entry:** Instead of logging every cash transaction, managers enter the total drawer cash counted at the end of each operational shift (Breakfast, Lunch, Afternoon Snacks, Dinner).
+*   **Walk-in Baki (Credit) Logging:** A dropdown interface to select a registered customer and log a credit transaction instantly. These entries are explicitly tagged as "walk-in credit" transactions to separate them from monthly subscription logs.
+*   **Immutable Ledger Constraints:** Once a shift cash total or walk-in baki sale is saved, the client application locks the fields. The database layer rejects any updates or deletes of these records, enforcing an append-only structure.
+
+### Module 3: Customer Attendance Tracker
+Tracks daily meals consumed by fixed contract/factory workers and accumulates them into a monthly tab.
+*   **Attendance Grid Interface:** Renders a clean grid list of all 40-45 fixed factory customers. The grid loads instantly from the device's local cache.
+*   **One-Tap Logging:** Displays three checkboxes (Breakfast, Lunch, Dinner) per customer. Tapping a checkbox automatically logs a meal and captures a snapshot of the customer’s predefined rate (`rate_applied = rate_at_time_of_meal`).
+*   **Attendance Time-Lock:** Box toggles automatically lock at 11:59 PM. The database rejects any attendance logs submitted or modified for previous calendar days.
+
+### Module 4: Accounts Receivable (Customer Collections)
+Handles collection tracking and verification for customers carrying outstanding debts.
+*   **Debt Directory:** A directory listing all credit-carrying customers, ordered from highest balance due to lowest.
+*   **Partial Payments:** Managers log the exact cash amount received from a debtor. The system decrements their balance in real-time.
+*   **Automated SMS Receipts:** Saving a payment triggers an API call to an SMS gateway to text the customer their received amount and new remaining balance.
+
+### Module 5: Accounts Payable (Bazar & Expense Ledger)
+Tracks canteen food expenditures and supplier relationships.
+*   **Daily Bazar Logging:** Form inputs for daily purchases categorized by raw items (e.g., Rice, Meat, Vegetables) linked to a specific supplier profile.
+*   **Payment Routing Toggle:** Requires selecting either `Cash Expense` (deducts cash directly from the current shift's drawer) or `Vendor Baki` (adds to the supplier's outstanding credit ledger).
+*   **Supplier Payouts:** A ledger entry screen to record cash handed to suppliers, automatically decrementing the supplier's accumulated balance.
+
+### Module 6: Employee Payroll & Cash Advances
+Handles staff wages and tracking of mid-month cash advance payments.
+*   **Cash Advance Tracker:** Captures cash advances taken by staff (cooks, servers, managers), requiring an employee ID, cash amount, and a short explanation note.
+*   **Dynamic Payroll Calculator:** Automatically aggregates monthly base salaries and subtracts the sum of all logged mid-month advances to output the exact cash due. Once finalized, records are locked as read-only.
+
+### Module 7: Shift Reconciliation Engine
+The primary fraud detection core running on the Owner's dashboard.
+*   **Expected vs. Reported Revenue Math:** When a shift is closed, the system calculates expected revenue and compares it to reported revenue:
+    *   $\text{Expected} = \sum(\text{Attendance Meals Logged} \times \text{Predefined Rate Snapshot})$
+    *   $\text{Reported} = \text{Shift Cash Entered} + \text{Baki Sales Logged}$
+    *   $\text{Variance} = \text{Reported} - \text{Expected}$
+    *   $\text{Variance \%} = \frac{\text{Variance}}{\text{Expected}}$
+*   **Configurable Variance Threshold:** The owner sets a variance percentage threshold (e.g., 5%) in the settings panel to filter out normal counting errors.
+*   **Dashboard Variance Feed:** A main dashboard feed showing closed shifts, the manager on duty, expected vs. reported revenue, and variance %. Discrepancies are sorted descending by absolute negative variance.
+
+### Module 8: Sync & Background Automation Engine
+Ensures continuous canteen operations in low-connectivity areas and automates end-of-day processes.
+*   **Zero-Block Offline Cache:** The client application writes all transactions (attendance, POS, bazar) to a local cache instantly. The UI runs without blocking on network requests.
+*   **Background Sync:** A background scheduler monitors internet connectivity. When online, it syncs local operations to the central database in batches, resolving conflicts using client-side generated transaction UUIDs.
+*   **End-of-Day (EOD) SMS Batching:** A backend scheduler triggers a cron job daily at 10:00 PM. It identifies all credit (baki) customers with transactions logged that day and sends a single consolidated SMS showing their daily consumption and remaining balance.
+
+

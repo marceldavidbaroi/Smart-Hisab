@@ -91,9 +91,10 @@ erDiagram
     ```json
     {
       "localization": {
-        "timezone": "UTC",
-        "currency": "USD",
-        "date_format": "YYYY-MM-DD"
+        "timezone": "Asia/Dhaka",
+        "currency": "BDT",
+        "language": "bn",
+        "date_format": "DD/MM/YYYY"
       },
       "security": {
         "mfa_required": false,
@@ -132,7 +133,8 @@ erDiagram
       "notifications": {
         "email": true,
         "push": false
-      }
+      },
+      "language": "bn"
     }
     ```
 
