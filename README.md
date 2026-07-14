@@ -6,6 +6,24 @@ Inspired by the workspace structure of `brandwala-wholesale-quasar-v2`.
 
 ---
 
+## Table of Contents
+* [1. Project Structure](#project-structure)
+* [2. Setup and Startup Instructions](#setup-and-startup-instructions)
+* [3. Key Monorepo Commands](#key-monorepo-commands)
+* [4. Starting a New Project (Cloning / Forking)](#starting-a-new-project-cloning--forking)
+* [5. How to Add New Features (Best Practices)](#how-to-add-new-features-best-practices)
+* [6. Mess/Canteen Management System Modules](#messcanteen-management-system-modules)
+  * [Module 1: Auth, Multi-Tenancy & Device Management](#module-1-auth-multi-tenancy--device-management)
+  * [Module 2: Shift-Based POS (Point of Sale)](#module-2-shift-based-pos-point-of-sale)
+  * [Module 3: Customer Attendance Tracker](#module-3-customer-attendance-tracker)
+  * [Module 4: Accounts Receivable (Customer Collections)](#module-4-accounts-receivable-customer-collections)
+  * [Module 5: Accounts Payable (Bazar & Expense Ledger)](#module-5-accounts-payable-bazar--expense-ledger)
+  * [Module 6: Employee Payroll & Cash Advances](#module-6-employee-payroll-cash-advances)
+  * [Module 7: Shift Reconciliation Engine](#module-7-shift-reconciliation-engine)
+  * [Module 8: Sync & Background Automation Engine](#module-8-sync--background-automation-engine)
+
+---
+
 ## Project Structure
 
 ```

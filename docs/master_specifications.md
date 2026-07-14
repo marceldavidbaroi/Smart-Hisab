@@ -4,7 +4,19 @@ This document outlines the decoupled, multi-tenant modular architecture of the C
 
 ---
 
-## 1. System-Wide Decoupling & Integration Strategy
+## Table of Contents
+* [1. System-Wide Decoupling & Integration Strategy](#decoupling-strategy)
+* [2. Phase-Based Implementation Roadmap (MVP & Spinoff Order)](#roadmap)
+* [3. Core Module: Operational Shifts & Sessions (`shift-sessions`)](#shift-sessions)
+* [4. Module: Staff Attendance & Payroll (`staff-payroll`)](#staff-payroll)
+* [5. Module: Meal & Customer Management (`meal-management`)](#meal-management)
+* [6. Module: Procurement & Supplier Management (`procurement`)](#procurement)
+* [7. Module: Transaction Ledger (`financial-ledger`)](#financial-ledger)
+* [8. System-Wide Localization & Currency Strategy](#localization-currency)
+
+---
+
+## 1. System-Wide Decoupling & Integration Strategy <a id="decoupling-strategy"></a>
 
 To allow each module (and its submodules) to be split into separate microservices or standalone apps in the future, the system adheres to the following decoupling principles:
 *   **Database Isolation:** Modules do not execute direct SQL `JOIN` statements across boundaries. References between modules (e.g., linking a transaction to an employee) are stored as simple foreign IDs (`uuid`), treated as external references.
@@ -29,7 +41,7 @@ To allow each module (and its submodules) to be split into separate microservice
 
 ---
 
-## 2. Phase-Based Implementation Roadmap (MVP & Spinoff Order)
+## 2. Phase-Based Implementation Roadmap (MVP & Spinoff Order) <a id="roadmap"></a>
 
 To construct this system systematically while remaining adaptable for spinoff services (like standalone staff management or micro-POS applications), development is structured into clear phases. Items marked **[MVP]** constitute the essential core required to run a local canteen drawer operation.
 
@@ -45,33 +57,33 @@ graph TD
 *   **Objective:** Establish workspace scopes and temporal operational limits.
 *   **Detailed specs:** 
     *   Tenant/Role setup: [Multi-Tenant Architecture Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/multi_tenant_architecture.md)
-    *   Shift drawers: [Operational Shifts & Sessions Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/operational_shifts_sessions.md) (refer to [Section 3: Core Module: Operational Shifts & Sessions](#3-core-module-operational-shifts--sessions-shift-sessions))
+    *   Shift drawers: [Operational Shifts & Sessions Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/operational_shifts_sessions.md) (refer to [Section 3: Operational Shifts & Sessions](#shift-sessions))
 
 ### Phase 2: Ledger & Cash Register [MVP]
 *   **Objective:** Build append-only audit ledger and dynamic dashboards.
 *   **Detailed specs:** 
-    *   Immutable book of logs: [Transaction Ledger Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/transaction_ledger.md) (refer to [Section 7: Module: Transaction Ledger](#7-module-transaction-ledger-financial-ledger))
+    *   Immutable book of logs: [Transaction Ledger Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/transaction_ledger.md) (refer to [Section 7: Transaction Ledger](#financial-ledger))
 
 ### Phase 3: Core Canteen & Customer Operations [MVP]
 *   **Objective:** Support billing contract workers, credit (baki) logs, collections, daily raw material (bazar) shopping, and vendor invoices.
 *   **Detailed specs:**
-    *   Billing and Credit: [Meal & Customer Management Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/meal_customer_management.md) (refer to [Section 5: Module: Meal & Customer Management](#5-module-meal--customer-management-meal-management))
-    *   Expenses and Vendors: [Procurement & Supplier Management Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/procurement_supplier_management.md) (refer to [Section 6: Module: Procurement & Supplier Management](#6-module-procurement--supplier-management-procurement))
+    *   Billing and Credit: [Meal & Customer Management Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/meal_customer_management.md) (refer to [Section 5: Meal & Customer Management](#meal-management))
+    *   Expenses and Vendors: [Procurement & Supplier Management Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/procurement_supplier_management.md) (refer to [Section 6: Procurement & Supplier Management](#procurement))
 
 ### Phase 4: Staff Management & Payroll [Spinoff Module]
 *   **Objective:** Manage staff directory, clock attendance, record cash advances, and run payroll settlement payouts.
 *   **Spinoff Potential:** This module has low temporal coupling and generic user references, enabling a straightforward spinoff to a dedicated payroll/workforce management app.
 *   **Detailed specs:**
-    *   Workforce: [Staff Attendance & Payroll Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/staff_attendance_payroll.md) (refer to [Section 4: Module: Staff Attendance & Payroll](#4-module-staff-attendance--payroll-staff-payroll))
+    *   Workforce: [Staff Attendance & Payroll Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/staff_attendance_payroll.md) (refer to [Section 4: Staff Attendance & Payroll](#staff-payroll))
 
 ### Phase 5: Localization & BDT formatting
 *   **Objective:** Enable English/Bangla language switching and dynamic currency rendering.
 *   **Detailed specs:**
-    *   Settings & i18n layouts: Refer to [Section 8: System-Wide Localization & Currency Strategy](#8-system-wide-localization--currency-strategy).
+    *   Settings & i18n layouts: Refer to [Section 8: Localization & Currency Strategy](#localization-currency).
 
 ---
 
-## 3. Core Module: Operational Shifts & Sessions (`shift-sessions`)
+## 3. Core Module: Operational Shifts & Sessions (`shift-sessions`) <a id="shift-sessions"></a>
 
 > [!NOTE]
 > For the complete data models, security controls, database triggers, and API flows of this module, refer to the [Operational Shifts & Sessions Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/operational_shifts_sessions.md).
@@ -94,7 +106,7 @@ This module manages the temporal and physical cash drawer context for all operat
 
 ---
 
-## 4. Module: Staff Attendance & Payroll (`staff-payroll`)
+## 4. Module: Staff Attendance & Payroll (`staff-payroll`) <a id="staff-payroll"></a>
 
 > [!NOTE]
 > For the complete data models, security controls, database triggers, and API flows of this module, refer to the [Staff Attendance & Payroll Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/staff_attendance_payroll.md).
@@ -120,7 +132,7 @@ Handles employee registry, attendance logs, mid-month cash advances, and periodi
 
 ---
 
-## 5. Module: Meal & Customer Management (`meal-management`)
+## 5. Module: Meal & Customer Management (`meal-management`) <a id="meal-management"></a>
 
 > [!NOTE]
 > For the complete data models, security controls, database triggers, and API flows of this module, refer to the [Meal & Customer Management Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/meal_customer_management.md).
@@ -145,7 +157,7 @@ Manages flat-rate contract workers (charged a fixed daily rate if present for an
 
 ---
 
-## 6. Module: Procurement & Supplier Management (`procurement`)
+## 6. Module: Procurement & Supplier Management (`procurement`) <a id="procurement"></a>
 
 > [!NOTE]
 > For the complete data models, security controls, database triggers, and API flows of this module, refer to the [Procurement & Supplier Management Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/procurement_supplier_management.md).
@@ -166,7 +178,7 @@ Manages vendor ledgers, daily market expense lists, and payment tracking.
 
 ---
 
-## 7. Module: Transaction Ledger (`financial-ledger`)
+## 7. Module: Transaction Ledger (`financial-ledger`) <a id="financial-ledger"></a>
 
 > [!NOTE]
 > For the complete data models, security controls, database triggers, and API flows of this module, refer to the [Transaction Ledger Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/transaction_ledger.md).
@@ -185,7 +197,7 @@ A clean, high-performance financial register acting as the tenant's single bookk
 
 ---
 
-## 8. System-Wide Localization & Currency Strategy
+## 8. System-Wide Localization & Currency Strategy <a id="localization-currency"></a>
 
 To ensure ground-level operability in canteen environments (where kitchen staff and managers prefer localized interfaces) and to provide robust bookkeeping compliance, the system implements a dynamic localization and multi-currency layer:
 1. **Bilingual Translations (i18n):**
