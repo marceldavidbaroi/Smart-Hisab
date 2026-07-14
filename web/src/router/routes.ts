@@ -26,6 +26,38 @@ const routes: RouteRecordRaw[] = [
         name: 'pending-access',
         component: () => import('@/pages/auth/PendingAccessPage.vue'),
       },
+      {
+        path: 'pair-device',
+        name: 'pair-device',
+        component: () => import('@/pages/auth/PairDevicePage.vue'),
+      },
+      {
+        path: 'counter-login',
+        name: 'counter-login',
+        component: () => import('@/pages/auth/CounterLoginPage.vue'),
+      },
+    ],
+  },
+  {
+    path: '/:tenantSlug/login',
+    component: () => import('@/layouts/AuthLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'tenant-login',
+        component: () => import('@/pages/auth/LoginPage.vue'),
+      },
+    ],
+  },
+  {
+    path: '/admin/login',
+    component: () => import('@/layouts/AuthLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'admin-login',
+        component: () => import('@/pages/auth/LoginPage.vue'),
+      },
     ],
   },
 
@@ -91,6 +123,11 @@ const routes: RouteRecordRaw[] = [
         name: 'workspace-chat',
         component: () => import('@/pages/workspace/ChatPage.vue'),
         meta: { requiredFeature: 'chat', requiredPermission: 'chat' },
+      },
+      {
+        path: 'counter/dashboard',
+        name: 'counter-dashboard',
+        component: () => import('@/pages/workspace/CounterDashboard.vue'),
       },
     ],
   },

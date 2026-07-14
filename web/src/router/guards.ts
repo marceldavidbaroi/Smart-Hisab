@@ -7,13 +7,23 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
   router.beforeEach(async (to, from, next) => {
     const tenantStore = useTenantStore(pinia);
 
-    // 1. Ensure the store is initialized with auth state
+    // 1. Device-Level Kiosk Lock Check
+    const deviceToken = localStorage.getItem('device_token');
+    const isCounterLoginRoute = to.name === 'counter-login';
+    // If a device token exists, force to counter-login (unless they have a valid staff session which we can check later)
+    if (deviceToken && !isCounterLoginRoute) {
+      next({ name: 'counter-login' });
+      return;
+    }
+
+    // 2. Ensure the store is initialized with auth state
     if (!tenantStore.initialized) {
       await tenantStore.initializeStore();
     }
 
     const isAuthenticated = !!tenantStore.user;
-    const isAuthRoute = to.path.startsWith('/auth');
+    const isAuthRoute =
+      to.path.startsWith('/auth') || to.name === 'tenant-login' || to.name === 'admin-login';
     const isAdminRoute = to.path.startsWith('/admin');
     const tenantSlug = to.params.tenantSlug as string | undefined;
 
@@ -136,18 +146,16 @@ function redirectDefault(
   tenantStore: ReturnType<typeof useTenantStore>,
   next: NavigationGuardNext,
 ) {
-  if (tenantStore.isSuperadmin) {
-    next({ name: 'admin-dashboard' });
-  } else if (tenantStore.myTenants.length > 0) {
+  // Always favor workspace redirect first (even for superadmins)
+  if (tenantStore.myTenants.length > 0) {
     const firstSlug = tenantStore.myTenants[0]?.tenants?.slug;
     if (firstSlug) {
       next({ name: 'workspace-dashboard', params: { tenantSlug: firstSlug } });
-    } else {
-      const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
-      next(allowSelfService ? { name: 'no-tenant' } : { name: 'pending-access' });
+      return;
     }
-  } else {
-    const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
-    next(allowSelfService ? { name: 'no-tenant' } : { name: 'pending-access' });
   }
+
+  // Fallback behavior if they have no workspaces
+  const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
+  next(allowSelfService ? { name: 'no-tenant' } : { name: 'pending-access' });
 }

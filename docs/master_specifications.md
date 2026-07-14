@@ -47,36 +47,42 @@ To construct this system systematically while remaining adaptable for spinoff se
 
 ```mermaid
 graph TD
-    P1["Phase 1: Foundation & Temporal Session Context [MVP]"] --> P2["Phase 2: Immutable Ledger & Cash Drawer [MVP]"]
-    P2 --> P3["Phase 3: Core Canteen & Customer Operations [MVP]"]
-    P3 --> P4["Phase 4: Staff & Payroll Spinoff Module"]
-    P3 --> P5["Phase 5: Localization & BDT formatting"]
+    P1["Phase 1: Login, Device Pairing & Scope Routing [MVP]"] --> P2["Phase 2: Foundation & Operational Session Context [MVP]"]
+    P2 --> P3["Phase 3: Immutable Ledger & Cash Drawer [MVP]"]
+    P3 --> P4["Phase 4: Core Canteen & Customer Operations [MVP]"]
+    P4 --> P5["Phase 5: Staff Management & Payroll [Spinoff Module]"]
+    P5 --> P6["Phase 6: Localization & BDT formatting"]
 ```
 
-### Phase 1: Foundation & Operational Session Context [MVP]
+### Phase 1: Login, Device Pairing & Scope Routing [MVP]
+*   **Objective:** Segregate admin, manager, and staff entry scopes. Establish kiosk terminal pairing and bypass onboarding blocks for invited team members.
+*   **Detailed specs:**
+    *   Tenant/Role setup & guards: [Multi-Tenant Architecture Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/multi_tenant_architecture.md)
+    *   Kiosk pairing & staff PINs: [Device Pairing & PIN Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/device_pairing_and_pin_auth.md)
+
+### Phase 2: Foundation & Operational Session Context [MVP]
 *   **Objective:** Establish workspace scopes and temporal operational limits.
 *   **Detailed specs:** 
-    *   Tenant/Role setup: [Multi-Tenant Architecture Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/multi_tenant_architecture.md)
     *   Shift drawers: [Operational Shifts & Sessions Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/operational_shifts_sessions.md) (refer to [Section 3: Operational Shifts & Sessions](#shift-sessions))
 
-### Phase 2: Ledger & Cash Register [MVP]
+### Phase 3: Ledger & Cash Register [MVP]
 *   **Objective:** Build append-only audit ledger and dynamic dashboards.
 *   **Detailed specs:** 
     *   Immutable book of logs: [Transaction Ledger Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/transaction_ledger.md) (refer to [Section 7: Transaction Ledger](#financial-ledger))
 
-### Phase 3: Core Canteen & Customer Operations [MVP]
+### Phase 4: Core Canteen & Customer Operations [MVP]
 *   **Objective:** Support billing contract workers, credit (baki) logs, collections, daily raw material (bazar) shopping, and vendor invoices.
 *   **Detailed specs:**
     *   Billing and Credit: [Meal & Customer Management Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/meal_customer_management.md) (refer to [Section 5: Meal & Customer Management](#meal-management))
     *   Expenses and Vendors: [Procurement & Supplier Management Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/procurement_supplier_management.md) (refer to [Section 6: Procurement & Supplier Management](#procurement))
 
-### Phase 4: Staff Management & Payroll [Spinoff Module]
-*   **Objective:** Manage staff directory, clock attendance, record cash advances, and run payroll settlement payouts.
+### Phase 5: Staff Management & Payroll [Spinoff Module]
+*   **Objective:** Manage staff directory, configure pay rates, record cash advances, and run payroll settlement payouts.
 *   **Spinoff Potential:** This module has low temporal coupling and generic user references, enabling a straightforward spinoff to a dedicated payroll/workforce management app.
 *   **Detailed specs:**
     *   Workforce: [Staff Attendance & Payroll Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/staff_attendance_payroll.md) (refer to [Section 4: Staff Attendance & Payroll](#staff-payroll))
 
-### Phase 5: Localization & BDT formatting
+### Phase 6: Localization & BDT formatting
 *   **Objective:** Enable English/Bangla language switching and dynamic currency rendering.
 *   **Detailed specs:**
     *   Settings & i18n layouts: Refer to [Section 8: Localization & Currency Strategy](#localization-currency).
@@ -115,7 +121,8 @@ Handles employee registry, attendance logs, mid-month cash advances, and periodi
 
 ### Submodules
 1.  **Staff Directory & Roster:**
-    *   Registry of cooks, servers, and managers with contact details.
+    *   Registry of cooks, servers, and managers with unique contact numbers (phone).
+    *   Counter Mode Access control: Option to generate/disable a 4-digit temporary setup PIN. Hashed private PIN setup on first login (stored securely using blowfish hashing, blind to the Owner).
     *   Pay rates configuration (hourly rates, fixed daily rates, weekly wages, or monthly salary structures).
 2.  **Staff Attendance Tracker:**
     *   Daily shift-based attendance logging (Present / Absent / Half-day).

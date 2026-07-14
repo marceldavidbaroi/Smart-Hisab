@@ -24,6 +24,12 @@ To support enterprise administration, billing control, and provisioning, the sys
                   ┌─────────────────────────────────────────┐
                   │             Tenant Member               │
                   │       (Access Scoped Feature Data)      │
+                  └───────────────────┬─────────────────────┘
+                                      │
+                                      ▼
+                  ┌─────────────────────────────────────────┐
+                  │             Counter Staff               │
+                  │   (PIN-only Auth on Paired Terminals)   │
                   └─────────────────────────────────────────┘
 ```
 
@@ -42,6 +48,7 @@ To support enterprise administration, billing control, and provisioning, the sys
 *   **Permissions**:
     *   **Tenant Owner**: Full control *only* within their organization scope. Can invite users, configure internal visual settings, switch subscription plans (within limits allowed by the superadmin), and manage team roles.
     *   **Tenant Admin/Member**: Access features, edit project/module data, and view settings as permitted by their custom assigned `tenant_roles` permissions.
+    *   **Counter Staff**: PIN-only operators who do not have platform (email) accounts. They operate on paired terminal devices and log POS items, attendance meals, or cash advances.
 
 ---
 
@@ -56,6 +63,8 @@ erDiagram
     tenants ||--o{ tenant_members : "contains"
     tenants ||--o{ tenant_invitations : "issues"
     tenants ||--o{ tenant_roles : "defines"
+    tenants ||--o{ staff_members : "hires"
+    tenants ||--o{ device_pairings : "authorizes"
     
     auth_users ||--o| user_profiles : "extends"
     auth_users ||--o{ tenant_members : "belongs to"
@@ -163,6 +172,24 @@ erDiagram
 *   `subscription_tier` (Text): Tier catalog (e.g., `free`, `pro`, `enterprise`).
 *   `status` (Text): Payment state (`active`, `past_due`, `canceled`).
 *   `current_period_end` (Timestamp)
+
+#### 8. `staff_members`
+*   `id` (UUID, Primary Key): Unique staff employee identifier.
+*   `tenant_id` (UUID, Foreign Key -> `tenants.id`)
+*   `full_name` (Text): Employee name.
+*   `role` (Text): Employee duty (e.g. Cook, Server, Manager).
+*   `phone` (Text): Mandatory, unique contact number within the tenant.
+*   `is_active` (Boolean): Status flag.
+*   `allow_terminal_login` (Boolean): Activates PIN logins on paired kiosks.
+*   `hashed_pin` (Text, Nullable): Blowfish-hashed 4-digit PIN.
+*   `temp_pin` (Text, Nullable): Masked temporary PIN displayed on Owner dashboards.
+
+#### 9. `device_pairings`
+*   `id` (UUID, Primary Key): Pairing session record index.
+*   `tenant_id` (UUID, Foreign Key -> `tenants.id`)
+*   `pairing_code` (Text, Unique): Short 6-digit random pairing passcode.
+*   `device_name` (Text): Identifier (e.g., "Counter Tablet B").
+*   `expires_at` (Timestamp): Expiry validation (+30 minutes limit).
 
 ---
 
@@ -295,6 +322,36 @@ if (authData.user && !authError) {
     *   Vue Router updates navigation sidebar according to the dynamic `enabled_features` config.
     *   Supabase client queries use RLS policies matching the new `tenant_id`.
 
+### Flow C: Kiosk Device Pairing
+```
+[Owner Dashboard (Web)] ──► [Generate 6-Digit Code] ──► [Displays code (e.g. 584921)]
+                                                                     │
+                                                                     ▼
+[Counter Terminal (App)] ◄── [Enter Pairing Code] ◄───────── [Manual handover]
+         │
+         ▼
+[Verify Pairing RPC] ──► [Generate Device Session Token] ──► [App locks to PIN Pad]
+```
+1.  **Request Code**: The Owner/Manager clicks "Pair Device" inside the workspace dashboard. The system calls `generate_pairing_code` which creates a 6-digit random code linked to the tenant (valid for 30 minutes).
+2.  **Kiosk Input**: On a fresh app setup, the cashier clicks "Pair Device" and inputs this code.
+3.  **Activation**: The app executes `verify_pairing_code`. On success, the backend cleans up the pairing code (single-use) and returns the tenant's details.
+4.  **Lockdown**: The app stores the paired device credentials locally, locks its routing path to `/auth/counter-login`, and displays the branded PIN Pad screen.
+
+### Flow D: Staff PIN Onboarding & Authentication
+```
+[Owner Dashboard] ──► [Create Staff Member] ──► [System generates Temp PIN (e.g. 4821)]
+                                                                     │
+                                                                     ▼
+[PIN Pad Kiosk] ◄── [Enter Temp PIN & Prompt for Private PIN] ◄── [Manual Handover]
+         │
+         ▼
+[Hash & Store Private PIN] ──► [Save in DB & Clear Temp PIN] ──► [Shift Session starts]
+```
+1.  **Create Member**: The Owner adds a new employee profile in the admin portal, supplying their name and unique phone number. If "Allow Counter Login" is toggled, a random temporary 4-digit PIN (e.g., `4821`) is generated and displayed.
+2.  **First Login**: The staff member enters `4821` on the paired kiosk terminal PIN pad. The database recognizes that `temp_pin` is set.
+3.  **PIN Registration**: The terminal prompts the user to enter their new private 4-digit PIN. The system calls `set_staff_pin` to encrypt this private PIN (blowfish hash) into `hashed_pin` and clear `temp_pin`.
+4.  **Subsequent Logs**: The employee enters their private PIN on the pad. The terminal validates the PIN hash, signs the shift attendance/sale with the staff member's UUID, and grants session access.
+
 ---
 
 ## 4. UI Routing & Layout Architecture
@@ -320,7 +377,7 @@ src/
 1.  **Auth Route Group (`/auth/*`)**
     *   **Layout**: `AuthLayout.vue`
     *   **Access**: Anonymous Users
-    *   **Paths**: `/auth/login`, `/auth/signup`, `/auth/verify`
+    *   **Paths**: `/auth/login`, `/auth/signup`, `/auth/verify`, `/auth/pair-device`, `/auth/counter-login`
 2.  **Superadmin Route Group (`/admin/*`)**
     *   **Layout**: `AdminLayout.vue`
     *   **Access**: Logged in users where `user_profiles.is_superadmin === true`
@@ -328,7 +385,7 @@ src/
 3.  **Tenant Workspace Route Group (`/:tenantSlug/*`)**
     *   **Layout**: `WorkspaceLayout.vue`
     *   **Access**: Logged in users verified as a member of the requested `:tenantSlug`
-    *   **Paths**: `/:tenantSlug/dashboard`, `/:tenantSlug/projects`, `/:tenantSlug/settings`
+    *   **Paths**: `/:tenantSlug/dashboard`, `/:tenantSlug/projects`, `/:tenantSlug/settings`, `/:tenantSlug/counter/dashboard`
 
 ### Security Guard Workflow
 *   **Superadmin Guard**: When accessing `/admin/*`, middleware retrieves the current user profile. If `is_superadmin` is `false`, it redirects the user to their default workspace or a 403 error page.
@@ -350,6 +407,11 @@ src/
 *   **`signInWithOAuth(provider)`**: Triggers OAuth redirect flow.
 *   **`sendPhoneOtp(phone)`**: Sends validation SMS.
 *   **`verifyPhoneOtp(phone, token)`**: Verifies SMS passcode to authenticate user.
+*   **`generatePairingCode(tenantId, deviceName)`**: Generates a 6-digit kiosk pairing token.
+*   **`verifyPairingCode(code, deviceName)`**: Pairs a local device to a tenant scope.
+*   **`verifyStaffPin(tenantId, pin)`**: Authenticates staff and returns session info.
+*   **`setStaffPin(staffId, tempPin, newPin)`**: Updates the temporary PIN to a private hashed PIN.
+*   **`resetStaffPin(staffId)`**: Generates a new temporary PIN for the staff profile.
 
 ### 3. Tenant-Level Management Services
 *   **`getUserTenants(userId)`**: Retrieves a list of all tenants the authenticated user belongs to.

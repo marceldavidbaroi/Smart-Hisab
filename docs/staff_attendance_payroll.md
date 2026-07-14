@@ -75,8 +75,11 @@ Tracks the metadata of canteen staff members.
 | `tenant_id` | `uuid` | Foreign Key -> `tenants.id`, `not null` | Scopes this profile to a tenant. |
 | `full_name` | `text` | `not null` | First and last name of employee. |
 | `role` | `text` | `not null` | Employee title (e.g. Cook, Server, Manager). |
-| `phone` | `text` | Nullable | Contact number. |
+| `phone` | `text` | `not null` | Mandatory contact number. Unique within tenant. |
 | `is_active` | `boolean` | `default true`, `not null` | Soft-disable flag. |
+| `allow_terminal_login`| `boolean` | `default false`, `not null` | Controls PIN-based counter terminal access. |
+| `hashed_pin` | `text` | Nullable | Cryptographic hash of the private 4-digit PIN. |
+| `temp_pin` | `text` | Nullable | Clear-text temporary setup PIN (displayed to Owner). |
 | `created_at` | `timestamptz` | `default now()`, `not null` | Audit timestamp. |
 | `updated_at` | `timestamptz` | `default now()`, `not null` | Audit timestamp. |
 
@@ -152,7 +155,8 @@ Registry of payments clearing outstanding payroll record totals.
 | `amount` | `numeric(12, 2)` | `not null`, `check (amount > 0)` | Disbursed salary amount. |
 | `payment_method` | `text` | `not null`, `check (payment_method in ('cash', 'mobile_wallet', 'bank_transfer'))` | Payment method. |
 | `disbursed_at` | `timestamptz` | `default now()`, `not null` | Date and time payout occurred. |
-| `disbursed_by` | `uuid` | Foreign Key -> `auth.users`, `not null` | Authorized user profiles identifier. |
+| `disbursed_by_user_id`| `uuid` | Foreign Key -> `auth.users`, Nullable | Web/Dashboard administrator who cleared the payout. |
+| `disbursed_by_staff_id`| `uuid` | Foreign Key -> `staff_members.id`, Nullable | Counter terminal staff member who cleared the payout. |
 | `notes` | `text` | Nullable | Payment references or transaction IDs. |
 | `created_at` | `timestamptz` | `default now()`, `not null` | Audit tracking. |
 

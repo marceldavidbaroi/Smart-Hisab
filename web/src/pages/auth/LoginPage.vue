@@ -1,7 +1,15 @@
 <template>
   <div class="login-container">
-    <div class="text-h5 text-bold text-slate-800 q-mb-md">Welcome Back</div>
-    <p class="text-slate-500 q-mb-lg text-sm">Enter your credentials to access your workspaces.</p>
+    <div class="text-h5 text-bold text-slate-800 q-mb-md">
+      <template v-if="route.name === 'admin-login'">Platform Administration</template>
+      <template v-else-if="tenantName">Welcome to {{ tenantName }}</template>
+      <template v-else>Welcome Back</template>
+    </div>
+    <p class="text-slate-500 q-mb-lg text-sm">
+      <template v-if="route.name === 'admin-login'">Enter credentials to access the Superadmin Panel.</template>
+      <template v-else-if="tenantName">Enter your credentials to access the workspace.</template>
+      <template v-else>Enter your credentials to access your workspaces.</template>
+    </p>
 
     <!-- Error Banner -->
     <q-banner v-if="errorMsg" class="bg-red-9 text-white rounded-borders q-mb-lg text-sm">
@@ -80,6 +88,20 @@
       </div>
     </q-btn>
 
+    <!-- Pair Counter Device Button -->
+    <q-btn
+      outline
+      no-caps
+      class="full-width q-py-sm rounded-btn q-mt-md text-weight-bold"
+      color="secondary"
+      :to="'/auth/pair-device'"
+    >
+      <div class="row items-center no-wrap">
+        <q-icon name="devices" size="18px" class="q-mr-sm" />
+        <span>Pair Counter Device</span>
+      </div>
+    </q-btn>
+
     <div class="q-mt-xl text-center text-sm text-slate-500">
       Don't have an account?
       <router-link to="/auth/signup" class="text-primary text-weight-bold hover-underline">
@@ -90,10 +112,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { signInWithEmail, signInWithGoogle } from '../../services/multiTenant';
 import { useTenantStore } from '../../stores/tenant';
+import { supabase } from '../../boot/supabase';
 
 const router = useRouter();
 const route = useRoute();
@@ -103,6 +126,41 @@ const email = ref('');
 const password = ref('');
 const loading = ref(false);
 const errorMsg = ref('');
+
+const tenantName = ref<string | null>(null);
+const resolvingTenant = ref(false);
+
+const fetchTenantInfo = async () => {
+  const slug = route.params.tenantSlug as string | undefined;
+  if (!slug) {
+    tenantName.value = null;
+    return;
+  }
+
+  resolvingTenant.value = true;
+  try {
+    const { data, error } = await supabase
+      .from('tenants')
+      .select('name')
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      console.error('Error fetching tenant details:', error.message);
+      tenantName.value = null;
+    } else if (data) {
+      tenantName.value = data.name;
+    }
+  } catch (err) {
+    console.error('Failed to fetch tenant info:', err);
+    tenantName.value = null;
+  } finally {
+    resolvingTenant.value = false;
+  }
+};
+
+onMounted(fetchTenantInfo);
+watch(() => route.params.tenantSlug, fetchTenantInfo);
 
 const handleLogin = async () => {
   loading.value = true;
@@ -118,18 +176,50 @@ const handleLogin = async () => {
     await tenantStore.initializeStore();
 
     // Check where to redirect
+    // 1. Explicit redirect path in query parameter (e.g. redirect=/admin/dashboard)
     const redirectPath = route.query.redirect as string | undefined;
     if (redirectPath) {
       await router.push(redirectPath);
       return;
     }
 
-    if (tenantStore.isSuperadmin) {
-      await router.push('/admin/dashboard');
-    } else if (tenantStore.myTenants.length > 0 && tenantStore.myTenants[0]?.tenants) {
+    // 2. Logging in from Admin login URL or with scope=admin
+    const isExplicitAdminScope = route.name === 'admin-login' || route.query.scope === 'admin';
+    if (isExplicitAdminScope) {
+      if (tenantStore.isSuperadmin) {
+        await router.push('/admin/dashboard');
+        return;
+      } else {
+        // Strict admin segregation: non-admins are rejected from /admin/login
+        errorMsg.value = 'Access Denied: Superadmin privileges required.';
+        // Optionally sign them out: await supabase.auth.signOut();
+        return;
+      }
+    }
+
+    // 3. Logging in from a tenant-specific page
+    const tenantSlug = route.params.tenantSlug as string | undefined;
+    if (tenantSlug) {
+      // Check if user has access to this tenant
+      if (tenantStore.hasTenantAccess(tenantSlug)) {
+        await router.push(`/${tenantSlug}/dashboard`);
+        return;
+      } else {
+        // Logged in but doesn't have access to this specific tenant
+        errorMsg.value = `You do not have access to the workspace: ${tenantName.value || tenantSlug}`;
+        return;
+      }
+    }
+
+    // 4. Default fallback redirection logic
+    if (tenantStore.myTenants.length > 0 && tenantStore.myTenants[0]?.tenants) {
       // Go to first tenant workspace dashboard
       await router.push(`/${tenantStore.myTenants[0]?.tenants?.slug}/dashboard`);
+    } else if (tenantStore.isSuperadmin) {
+      // If superadmin has no workspaces, go to admin portal
+      await router.push('/admin/dashboard');
     } else {
+      // Regular user with no workspaces
       await router.push('/auth/no-tenant');
     }
   } catch (err) {
@@ -144,8 +234,19 @@ const handleGoogleLogin = async () => {
   loading.value = true;
   errorMsg.value = '';
   try {
+    let redirectTo = window.location.origin;
+    
+    // Determine the target URL after Google OAuth callback
     const redirectPath = route.query.redirect as string | undefined;
-    const redirectTo = redirectPath ? window.location.origin + redirectPath : undefined;
+    if (redirectPath) {
+      redirectTo += redirectPath;
+    } else if (route.params.tenantSlug) {
+      const tenantSlug = Array.isArray(route.params.tenantSlug) ? route.params.tenantSlug[0] : route.params.tenantSlug;
+      redirectTo += `/${tenantSlug}/dashboard`;
+    } else if (route.name === 'admin-login' || route.query.scope === 'admin') {
+      redirectTo += `/admin/dashboard`;
+    }
+
     const { error } = await signInWithGoogle(redirectTo);
     if (error) {
       errorMsg.value = error.message;

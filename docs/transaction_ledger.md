@@ -83,7 +83,8 @@ The single table acting as the tenant's append-only financial ledger.
 | `category` | `text` | `not null` | Category classification (e.g., `POS`, `Debt Collection`, `Raw Materials`, `Payroll`, `Supplier Payout`, `Staff Advance`, `Bazar Discrepancy`, `Bazar Surplus`, `Overhead`, `Manual Inflow`, `Manual Outflow`). |
 | `amount` | `numeric(12, 2)` | `not null`, `check (amount >= 0)` | Transaction value. |
 | `payment_method` | `text` | `not null`, `check (payment_method in ('cash', 'bank_transfer', 'mobile_wallet'))` | Settled payment channel. |
-| `operator_id` | `uuid` | Foreign Key -> `auth.users`, `not null` | The user ID who initiated or triggered this ledger log. |
+| `operator_user_id`| `uuid` | Foreign Key -> `auth.users`, Nullable | Web/Dashboard administrator who initiated the ledger log. |
+| `operator_staff_id`| `uuid` | Foreign Key -> `staff_members.id`, Nullable | Counter terminal staff member who initiated the ledger log. |
 | `notes` | `text` | Nullable | Audit note or descriptive reference. |
 | `created_at` | `timestamptz` | `default now()`, `not null` | Epoch timestamp of creation. |
 | `updated_at` | `timestamptz` | `default now()`, `not null` | Audit tracking (immutable). |
@@ -94,7 +95,8 @@ The single table acting as the tenant's append-only financial ledger.
     ```sql
     create index idx_transaction_ledger_tenant_id on public.transaction_ledger(tenant_id);
     create index idx_transaction_ledger_session_id on public.transaction_ledger(session_id);
-    create index idx_transaction_ledger_operator_id on public.transaction_ledger(operator_id);
+    create index idx_transaction_ledger_operator_user_id on public.transaction_ledger(operator_user_id);
+    create index idx_transaction_ledger_operator_staff_id on public.transaction_ledger(operator_staff_id);
     ```
 2.  **Performance & Query Optimization Indexes**:
     ```sql

@@ -62,6 +62,17 @@
       />
     </q-form>
 
+    <div v-if="tenantStore.isSuperadmin" class="q-mt-md text-center">
+      <q-btn
+        color="amber-9"
+        outline
+        class="full-width q-py-sm rounded-btn text-weight-bold"
+        icon="admin_panel_settings"
+        label="Go to Superadmin Portal"
+        to="/admin/dashboard"
+      />
+    </div>
+
     <div class="q-mt-xl text-center">
       <q-btn flat color="grey-7" icon="logout" label="Sign Out" @click="handleSignOut" size="sm" />
     </div>
@@ -78,10 +89,6 @@ const router = useRouter();
 const tenantStore = useTenantStore();
 
 onMounted(async () => {
-  if (tenantStore.isSuperadmin) {
-    await router.push('/admin/dashboard');
-    return;
-  }
   const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
   if (!allowSelfService) {
     await router.push('/auth/pending-access');

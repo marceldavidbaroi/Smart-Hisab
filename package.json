@@ -17,7 +17,9 @@
     "backend:status": "npx supabase status",
     "backend:types": "sh -c 'mkdir -p web/src/types && npx supabase gen types typescript --linked --schema public > web/src/types/supabase.ts'",
     "backend:types:local": "sh -c 'mkdir -p web/src/types && npx supabase gen types typescript --local --schema public > web/src/types/supabase.ts'",
-    "backend:deploy": "chmod +x deploy_backend.sh && ./deploy_backend.sh"
+    "backend:push": "npx supabase db push --linked",
+    "backend:deploy": "bash ./deploy_backend.sh",
+    "deploy:backend": "bash ./deploy_backend.sh"
   },
   "devDependencies": {
     "supabase": "^2.105.0",
