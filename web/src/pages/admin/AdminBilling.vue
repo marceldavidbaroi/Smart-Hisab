@@ -110,27 +110,41 @@
             <div v-if="selectedTenantId" class="q-gutter-y-md">
               <p class="text-caption text-grey-6 q-mb-xs">
                 Updating these checks immediately updates `tenant_settings.enabled_features` column
-                for this tenant, controlling access scopes.
+                for this tenant.
               </p>
 
               <div class="q-gutter-y-xs">
                 <q-checkbox
-                  v-model="featureCrm"
-                  label="CRM Capability"
+                  v-model="featureShiftSessions"
+                  label="Operational Shifts & Sessions"
                   color="amber-10"
                   dense
                   class="block q-py-xs"
                 />
                 <q-checkbox
-                  v-model="featureInvoicing"
-                  label="Invoicing Capability"
+                  v-model="featureFinancialLedger"
+                  label="Transaction Ledger"
                   color="amber-10"
                   dense
                   class="block q-py-xs"
                 />
                 <q-checkbox
-                  v-model="featureChat"
-                  label="Chat Capability"
+                  v-model="featureMealManagement"
+                  label="Meal & Customer Management"
+                  color="amber-10"
+                  dense
+                  class="block q-py-xs"
+                />
+                <q-checkbox
+                  v-model="featureProcurement"
+                  label="Procurement & Supplier Management"
+                  color="amber-10"
+                  dense
+                  class="block q-py-xs"
+                />
+                <q-checkbox
+                  v-model="featureStaffPayroll"
+                  label="Staff Attendance & Payroll"
                   color="amber-10"
                   dense
                   class="block q-py-xs"
@@ -175,9 +189,11 @@ const billingTier = ref('free');
 const billingStatus = ref('active');
 const submittingBilling = ref(false);
 
-const featureCrm = ref(false);
-const featureInvoicing = ref(false);
-const featureChat = ref(false);
+const featureShiftSessions = ref(true);
+const featureFinancialLedger = ref(true);
+const featureMealManagement = ref(true);
+const featureProcurement = ref(true);
+const featureStaffPayroll = ref(true);
 const submittingFeatures = ref(false);
 
 const errorMsg = ref('');
@@ -228,13 +244,17 @@ const onTenantSelected = async (tenantId: string) => {
 
     if (!settingsErr && settings) {
       const f = settings.enabled_features as Record<string, boolean>;
-      featureCrm.value = !!f?.crm;
-      featureInvoicing.value = !!f?.invoicing;
-      featureChat.value = !!f?.chat;
+      featureShiftSessions.value = f?.['shift-sessions'] !== false;
+      featureFinancialLedger.value = f?.['financial-ledger'] !== false;
+      featureMealManagement.value = f?.['meal-management'] !== false;
+      featureProcurement.value = f?.['procurement'] !== false;
+      featureStaffPayroll.value = f?.['staff-payroll'] !== false;
     } else {
-      featureCrm.value = false;
-      featureInvoicing.value = false;
-      featureChat.value = false;
+      featureShiftSessions.value = true;
+      featureFinancialLedger.value = true;
+      featureMealManagement.value = true;
+      featureProcurement.value = true;
+      featureStaffPayroll.value = true;
     }
   } catch (err) {
     const error = err as Error;
@@ -265,9 +285,11 @@ const updateFeaturesPolicy = async () => {
   successMsg.value = '';
   try {
     const activeFeatures = {
-      crm: featureCrm.value,
-      invoicing: featureInvoicing.value,
-      chat: featureChat.value,
+      'shift-sessions': featureShiftSessions.value,
+      'financial-ledger': featureFinancialLedger.value,
+      'meal-management': featureMealManagement.value,
+      procurement: featureProcurement.value,
+      'staff-payroll': featureStaffPayroll.value,
     };
     await adminToggleTenantFeatures(selectedTenantId.value, activeFeatures);
     successMsg.value = 'Module feature policy flags updated successfully!';

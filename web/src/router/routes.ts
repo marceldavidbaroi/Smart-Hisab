@@ -50,7 +50,7 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/admin/login',
+    path: '/admin/auth/login',
     component: () => import('@/layouts/AuthLayout.vue'),
     children: [
       {
@@ -107,24 +107,6 @@ const routes: RouteRecordRaw[] = [
         meta: { requiredPermission: 'settings' },
       },
       {
-        path: 'crm',
-        name: 'workspace-crm',
-        component: () => import('@/pages/workspace/CrmPage.vue'),
-        meta: { requiredFeature: 'crm', requiredPermission: 'crm' },
-      },
-      {
-        path: 'invoicing',
-        name: 'workspace-invoicing',
-        component: () => import('@/pages/workspace/InvoicingPage.vue'),
-        meta: { requiredFeature: 'invoicing', requiredPermission: 'invoicing' },
-      },
-      {
-        path: 'chat',
-        name: 'workspace-chat',
-        component: () => import('@/pages/workspace/ChatPage.vue'),
-        meta: { requiredFeature: 'chat', requiredPermission: 'chat' },
-      },
-      {
         path: 'counter/dashboard',
         name: 'counter-dashboard',
         component: () => import('@/pages/workspace/CounterDashboard.vue'),
@@ -132,7 +114,36 @@ const routes: RouteRecordRaw[] = [
     ],
   },
 
-  // 4. Fallback / Global Error Routes
+  // 4. Kiosk Terminal Routes
+  {
+    path: '/kiosk',
+    component: () => import('@/layouts/KioskLayout.vue'),
+    children: [
+      {
+        path: '',
+        redirect: '/kiosk/login',
+      },
+      {
+        path: 'pair',
+        name: 'kiosk-pair',
+        component: () => import('@/pages/kiosk/PairDevice.vue'),
+      },
+      {
+        path: 'login',
+        name: 'kiosk-login',
+        component: () => import('@/pages/kiosk/PINLogin.vue'),
+        meta: { requiresPairing: true },
+      },
+      {
+        path: 'workspace',
+        name: 'kiosk-workspace',
+        component: () => import('@/pages/kiosk/StaffWorkspace.vue'),
+        meta: { requiresPairing: true, requiresStaffAuth: true },
+      },
+    ],
+  },
+
+  // 5. Fallback / Global Error Routes
   {
     path: '/forbidden',
     name: 'error-403',

@@ -72,9 +72,12 @@
               </q-item>
 
               <!-- Optional Superadmin redirect -->
-              <q-separator class="q-my-sm" v-if="tenantStore.isSuperadmin" />
+              <q-separator
+                class="q-my-sm"
+                v-if="tenantStore.isSuperadmin && tenantStore.isAdminSession"
+              />
               <q-item
-                v-if="tenantStore.isSuperadmin"
+                v-if="tenantStore.isSuperadmin && tenantStore.isAdminSession"
                 clickable
                 v-close-popup
                 to="/admin/dashboard"
@@ -85,6 +88,21 @@
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-weight-bold">Superadmin Portal</q-item-label>
+                </q-item-section>
+              </q-item>
+              <!-- Create New Workspace Button -->
+              <q-separator class="q-my-sm" />
+              <q-item
+                clickable
+                v-close-popup
+                @click="showCreateWorkspaceDialog = true"
+                class="q-py-sm text-primary"
+              >
+                <q-item-section avatar>
+                  <q-icon name="add" size="24px" color="primary" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-bold">Create New Workspace</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -112,7 +130,7 @@
                   {{ tenantStore.userProfile?.full_name || 'User Profile' }}
                 </div>
                 <div class="text-caption text-slate-500">{{ tenantStore.user?.email }}</div>
-                <div v-if="tenantStore.isSuperadmin" class="q-mt-xs">
+                <div v-if="tenantStore.isSuperadmin && tenantStore.isAdminSession" class="q-mt-xs">
                   <q-badge color="amber" class="text-black text-weight-bold">Superadmin</q-badge>
                 </div>
               </div>
@@ -195,6 +213,98 @@
         </transition>
       </router-view>
     </q-page-container>
+
+    <!-- Create Workspace Dialog -->
+    <q-dialog v-model="showCreateWorkspaceDialog" persistent>
+      <q-card
+        style="width: 450px; max-width: 90vw; border-radius: 16px"
+        class="q-pa-md bg-white text-slate-900"
+      >
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6 text-bold text-slate-800">Create New Workspace</div>
+          <q-space />
+          <q-btn
+            icon="close"
+            flat
+            round
+            dense
+            v-close-popup
+            class="cursor-pointer text-slate-500"
+            :disable="createLoading"
+          />
+        </q-card-section>
+
+        <q-card-section class="q-pt-md">
+          <q-banner
+            v-if="createErrorMsg"
+            class="bg-red-9 text-white rounded-borders q-mb-md text-sm"
+          >
+            <template #avatar>
+              <q-icon name="warning" color="white" />
+            </template>
+            {{ createErrorMsg }}
+          </q-banner>
+
+          <q-form @submit.prevent="handleCreateWorkspace" class="q-gutter-y-md">
+            <div>
+              <label class="text-slate-600 font-semibold q-mb-xs block text-xs"
+                >Workspace Name</label
+              >
+              <q-input
+                v-model="newWorkspaceName"
+                type="text"
+                filled
+                placeholder="Acme Corp"
+                color="primary"
+                class="custom-input"
+                :rules="[(val) => !!val || 'Workspace name is required']"
+                hide-bottom-space
+                @update:model-value="autoGenerateSlug"
+              />
+            </div>
+
+            <div>
+              <label class="text-slate-600 font-semibold q-mb-xs block text-xs"
+                >Workspace Slug (URL)</label
+              >
+              <q-input
+                v-model="newWorkspaceSlug"
+                type="text"
+                filled
+                placeholder="acme-corp"
+                color="primary"
+                class="custom-input"
+                :rules="[
+                  (val) => !!val || 'Workspace slug is required',
+                  (val) =>
+                    /^[a-z0-9-]+$/.test(val) ||
+                    'Slug must only contain lowercase letters, numbers, and dashes',
+                ]"
+                hide-bottom-space
+                prefix="app.domain.com/"
+              />
+            </div>
+
+            <div class="row justify-end q-mt-lg q-gutter-sm">
+              <q-btn
+                flat
+                label="Cancel"
+                v-close-popup
+                :disable="createLoading"
+                class="cursor-pointer text-slate-500"
+              />
+              <q-btn
+                type="submit"
+                color="primary"
+                label="Create Workspace"
+                :loading="createLoading"
+                class="q-px-md cursor-pointer btn-gradient text-weight-bold"
+              />
+            </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-layout>
 </template>
 
@@ -202,10 +312,44 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTenantStore } from '../stores/tenant';
+import { createTenant } from '../services/multiTenant';
 
 const router = useRouter();
 const tenantStore = useTenantStore();
 const leftDrawerOpen = ref(true);
+
+const showCreateWorkspaceDialog = ref(false);
+const newWorkspaceName = ref('');
+const newWorkspaceSlug = ref('');
+const createLoading = ref(false);
+const createErrorMsg = ref('');
+
+const autoGenerateSlug = (val: string | number | null) => {
+  const strVal = String(val || '');
+  newWorkspaceSlug.value = strVal
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+};
+
+const handleCreateWorkspace = async () => {
+  createLoading.value = true;
+  createErrorMsg.value = '';
+  try {
+    await createTenant(newWorkspaceName.value, newWorkspaceSlug.value);
+    await tenantStore.loadUserProfileAndTenants();
+    await tenantStore.setActiveTenantBySlug(newWorkspaceSlug.value);
+    showCreateWorkspaceDialog.value = false;
+    newWorkspaceName.value = '';
+    newWorkspaceSlug.value = '';
+    await router.push(`/${newWorkspaceSlug.value}/dashboard`);
+  } catch (err) {
+    const error = err as Error;
+    createErrorMsg.value = error.message || 'Failed to create workspace. Slug might be taken.';
+  } finally {
+    createLoading.value = false;
+  }
+};
 
 interface NavItem {
   label: string;
@@ -221,27 +365,6 @@ const navItems = computed<NavItem[]>(() => {
       label: 'Dashboard',
       icon: 'dashboard',
       toName: 'workspace-dashboard',
-    },
-    {
-      label: 'CRM',
-      icon: 'stars',
-      toName: 'workspace-crm',
-      requiredFeature: 'crm',
-      requiredPermission: 'crm',
-    },
-    {
-      label: 'Invoicing',
-      icon: 'receipt',
-      toName: 'workspace-invoicing',
-      requiredFeature: 'invoicing',
-      requiredPermission: 'invoicing',
-    },
-    {
-      label: 'Chat',
-      icon: 'chat',
-      toName: 'workspace-chat',
-      requiredFeature: 'chat',
-      requiredPermission: 'chat',
     },
     {
       label: 'Members',
@@ -426,5 +549,27 @@ const handleSignOut = async () => {
 .fade-slide-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  border: none;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.custom-input :deep(.q-field__control) {
+  border-radius: 12px;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1;
+  color: #0f172a !important;
+
+  &:hover {
+    border-color: #94a3b8;
+  }
 }
 </style>

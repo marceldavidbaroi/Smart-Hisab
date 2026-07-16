@@ -1,22 +1,83 @@
-import type { Router, NavigationGuardNext } from 'vue-router';
+import type { Router, RouteLocationRaw, RouteLocationNormalized } from 'vue-router';
 import type { Pinia } from 'pinia';
 import { useTenantStore } from '../stores/tenant';
+import { useKioskStore } from '../stores/kiosk';
 import { Notify } from 'quasar';
 
-export function setupRouteGuards(router: Router, pinia: Pinia) {
-  router.beforeEach(async (to, from, next) => {
-    const tenantStore = useTenantStore(pinia);
+function noTenantTarget(isSuperadmin = false): RouteLocationRaw {
+  const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
+  return { name: allowSelfService || isSuperadmin ? 'no-tenant' : 'pending-access' };
+}
 
-    // 1. Device-Level Kiosk Lock Check
-    const deviceToken = localStorage.getItem('device_token');
-    const isCounterLoginRoute = to.name === 'counter-login';
-    // If a device token exists, force to counter-login (unless they have a valid staff session which we can check later)
-    if (deviceToken && !isCounterLoginRoute) {
-      next({ name: 'counter-login' });
-      return;
+function firstWorkspaceSlug(tenantStore: ReturnType<typeof useTenantStore>): string | null {
+  for (const membership of tenantStore.myTenants) {
+    const tenants = membership.tenants as unknown;
+    // Supabase may return object OR array for nested FK selects
+    if (Array.isArray(tenants)) {
+      const slug = (tenants[0] as { slug?: string } | undefined)?.slug;
+      if (slug) return slug;
+    } else if (tenants && typeof tenants === 'object') {
+      const slug = (tenants as { slug?: string }).slug;
+      if (slug) return slug;
+    }
+  }
+  return null;
+}
+
+/** Normal / tenant login scope: workspace first; admin only as last-resort fallback. */
+function redirectTenantScope(tenantStore: ReturnType<typeof useTenantStore>): RouteLocationRaw {
+  const slug = firstWorkspaceSlug(tenantStore);
+  if (slug) {
+    return { name: 'workspace-dashboard', params: { tenantSlug: slug } };
+  }
+  return noTenantTarget(tenantStore.isSuperadmin);
+}
+
+/** Platform admin login scope: always admin portal (never workspace). */
+function redirectAdminScope(
+  tenantStore: ReturnType<typeof useTenantStore>,
+): RouteLocationRaw | true {
+  if (tenantStore.isSuperadmin) {
+    tenantStore.setAdminSession(true);
+    return { name: 'admin-dashboard' };
+  }
+  // Stay on /admin/auth/login so the page can show Access Denied.
+  return true;
+}
+
+function isAdminLoginRoute(to: RouteLocationNormalized) {
+  return to.name === 'admin-login' || to.query.scope === 'admin';
+}
+
+export function setupRouteGuards(router: Router, pinia: Pinia) {
+  router.beforeEach(async (to) => {
+    const tenantStore = useTenantStore(pinia);
+    const kioskStore = useKioskStore(pinia);
+
+    const isPaired = kioskStore.isDevicePaired;
+
+    // 1. Kiosk-Specific Route Guards
+    if (to.path.startsWith('/kiosk')) {
+      if (to.meta.requiresPairing && !isPaired) {
+        return { name: 'kiosk-pair' };
+      }
+      if (to.name === 'kiosk-pair' && isPaired) {
+        return { name: 'kiosk-login' };
+      }
+      if (to.meta.requiresStaffAuth && !kioskStore.isStaffAuthenticated) {
+        return { name: 'kiosk-login' };
+      }
+      return true;
     }
 
-    // 2. Ensure the store is initialized with auth state
+    // 2. Device-Level Kiosk Lock (paired devices stay in kiosk UI)
+    if (isPaired) {
+      return {
+        name: kioskStore.isStaffAuthenticated ? 'kiosk-workspace' : 'kiosk-login',
+      };
+    }
+
+    // 3. Ensure the store is initialized with auth state
     if (!tenantStore.initialized) {
       await tenantStore.initializeStore();
     }
@@ -26,78 +87,63 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
       to.path.startsWith('/auth') || to.name === 'tenant-login' || to.name === 'admin-login';
     const isAdminRoute = to.path.startsWith('/admin');
     const tenantSlug = to.params.tenantSlug as string | undefined;
+    const isNoTenantGate = to.name === 'no-tenant' || to.name === 'pending-access';
 
-    // 2. Unauthenticated user flow
+    // 4. Unauthenticated user flow
     if (!isAuthenticated) {
-      if (isAuthRoute) {
-        next();
-      } else {
-        // Redirect to login, preserving target path in redirect query
-        next({
-          name: 'login',
-          query: { redirect: to.fullPath },
-        });
+      if (isAuthRoute) return true;
+      if (isAdminRoute) {
+        return { name: 'admin-login', query: { redirect: to.fullPath } };
       }
-      return;
+      return { name: 'login', query: { redirect: to.fullPath } };
     }
 
-    // 3. Authenticated user flow: prevent accessing auth routes directly
+    // 5. Authenticated user on auth routes — honor login scope
     if (isAuthRoute) {
-      if (to.name === 'no-tenant' || to.name === 'pending-access') {
-        const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
-
-        if (tenantStore.myTenants.length === 0 && !tenantStore.isSuperadmin) {
-          if (to.name === 'no-tenant' && !allowSelfService) {
-            next({ name: 'pending-access' });
-          } else if (to.name === 'pending-access' && allowSelfService) {
-            next({ name: 'no-tenant' });
-          } else {
-            next();
-          }
-        } else {
-          // Otherwise send them to their dashboard
-          redirectDefault(tenantStore, next);
+      if (isNoTenantGate) {
+        if (firstWorkspaceSlug(tenantStore)) {
+          return redirectTenantScope(tenantStore);
         }
-      } else {
-        redirectDefault(tenantStore, next);
+        const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
+        if (to.name === 'no-tenant' && !allowSelfService && !tenantStore.isSuperadmin) {
+          return { name: 'pending-access' };
+        }
+        if (to.name === 'pending-access' && (allowSelfService || tenantStore.isSuperadmin)) {
+          return { name: 'no-tenant' };
+        }
+        return true;
       }
-      return;
+
+      // /admin/auth/login (or ?scope=admin) → platform scope only
+      if (isAdminLoginRoute(to)) {
+        return redirectAdminScope(tenantStore);
+      }
+
+      // /auth/login, /:slug/login → tenant/workspace scope
+      return redirectTenantScope(tenantStore);
     }
 
-    // 4. Authenticated but has no tenants and is not superadmin
-    // They must be forced to the no-tenant or pending-access page
+    // 6. Authenticated, no usable workspace, not superadmin → force gate page
     if (
-      tenantStore.myTenants.length === 0 &&
+      !firstWorkspaceSlug(tenantStore) &&
       !tenantStore.isSuperadmin &&
-      to.name !== 'no-tenant' &&
-      to.name !== 'pending-access' &&
+      !isNoTenantGate &&
       !to.path.startsWith('/forbidden')
     ) {
-      const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
-      if (allowSelfService) {
-        next({ name: 'no-tenant' });
-      } else {
-        next({ name: 'pending-access' });
-      }
-      return;
+      return noTenantTarget();
     }
 
-    // 5. Admin access check
+    // 7. Admin access check
     if (isAdminRoute) {
-      if (tenantStore.isSuperadmin) {
-        next();
-      } else {
-        next({ name: 'error-403' });
-      }
-      return;
+      if (tenantStore.isSuperadmin && tenantStore.isAdminSession) return true;
+      return { name: 'error-403' };
     }
 
-    // 6. Tenant workspace access check
+    // 8. Tenant workspace access check
     if (tenantSlug) {
       try {
         await tenantStore.setActiveTenantBySlug(tenantSlug);
 
-        // Check feature requirements
         const requiredFeature = to.meta.requiredFeature as string | undefined;
         if (requiredFeature && !tenantStore.isFeatureEnabled(requiredFeature)) {
           Notify.create({
@@ -106,11 +152,9 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
             position: 'top',
             timeout: 3000,
           });
-          next({ name: 'workspace-dashboard', params: { tenantSlug } });
-          return;
+          return { name: 'workspace-dashboard', params: { tenantSlug } };
         }
 
-        // Check permission requirements
         const requiredPermission = to.meta.requiredPermission as string | undefined;
         if (requiredPermission && !tenantStore.hasPermission(requiredPermission, 'read')) {
           Notify.create({
@@ -119,43 +163,22 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
             position: 'top',
             timeout: 3000,
           });
-          next({ name: 'workspace-dashboard', params: { tenantSlug } });
-          return;
+          return { name: 'workspace-dashboard', params: { tenantSlug } };
         }
 
-        next();
+        return true;
       } catch (err) {
         const error = err as Error;
         console.error(`Access verification failed for tenant slug: ${tenantSlug}`, error.message);
-        next({ name: 'error-403' });
+        return { name: 'error-403' };
       }
-      return;
     }
 
-    // 7. Handle root '/' path or general pages
+    // 9. Root `/` — default to tenant scope (not admin)
     if (to.path === '/') {
-      redirectDefault(tenantStore, next);
-      return;
+      return redirectTenantScope(tenantStore);
     }
 
-    next();
+    return true;
   });
-}
-
-function redirectDefault(
-  tenantStore: ReturnType<typeof useTenantStore>,
-  next: NavigationGuardNext,
-) {
-  // Always favor workspace redirect first (even for superadmins)
-  if (tenantStore.myTenants.length > 0) {
-    const firstSlug = tenantStore.myTenants[0]?.tenants?.slug;
-    if (firstSlug) {
-      next({ name: 'workspace-dashboard', params: { tenantSlug: firstSlug } });
-      return;
-    }
-  }
-
-  // Fallback behavior if they have no workspaces
-  const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
-  next(allowSelfService ? { name: 'no-tenant' } : { name: 'pending-access' });
 }

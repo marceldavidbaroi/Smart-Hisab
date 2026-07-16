@@ -267,10 +267,10 @@ begin
   p_code := trim(p_code);
 
   -- Retrieve pairing record
-  select id, tenant_id, expires_at
+  select dp.id, dp.tenant_id, dp.expires_at
   into v_pairing
-  from public.device_pairings
-  where pairing_code = p_code;
+  from public.device_pairings dp
+  where dp.pairing_code = p_code;
 
   if not found then
     return query select null::uuid, null::text, null::text, false, 'Invalid pairing code.'::text;

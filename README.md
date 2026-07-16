@@ -1,6 +1,6 @@
-# Boilerplate Supabase Quasar
+# Smart Hisab
 
-A clean, multi-tenant boilerplate workspace combining the **Quasar Framework** (Vite, Vue 3, TypeScript, Pinia) on the frontend and **Supabase** (PostgreSQL, RLS, CLI migrations) on the backend.
+A clean, multi-tenant application combining the **Quasar Framework** (Vite, Vue 3, TypeScript, Pinia) on the frontend and **Supabase** (PostgreSQL, RLS, CLI migrations) on the backend.
 
 Inspired by the workspace structure of `brandwala-wholesale-quasar-v2`.
 

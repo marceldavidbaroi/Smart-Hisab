@@ -303,7 +303,7 @@ begin
 
   -- 2. Create tenant settings with default active modules
   insert into public.tenant_settings (tenant_id, enabled_features)
-  values (v_tenant_id, '{"crm": true, "invoicing": false, "chat": true}'::jsonb);
+  values (v_tenant_id, '{"shift-sessions": true, "financial-ledger": true, "meal-management": true, "procurement": true, "staff-payroll": true}'::jsonb);
 
   -- 3. Create tenant billing record (default free tier)
   insert into public.tenant_billing (tenant_id, subscription_tier, status)

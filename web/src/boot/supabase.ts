@@ -1,5 +1,6 @@
 import { defineBoot } from '#q-app';
 import { createClient } from '@supabase/supabase-js';
+import { useTenantStore } from '../stores/tenant';
 
 // Retrieve keys from import.meta.env (configured via defineEnv in quasar.config.ts)
 const supabaseUrl = import.meta.env.SUPABASE_URL || '';
@@ -49,14 +50,43 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export default defineBoot(({ app }) => {
-  // Listen for auth changes to handle redirects or sync states
-  supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_OUT') {
-      console.log('[supabase boot] user signed out');
-    }
+export default defineBoot(({ app, router }) => {
+  // Defer store work: awaiting Supabase inside onAuthStateChange can deadlock.
+  supabase.auth.onAuthStateChange((event, session) => {
+    void Promise.resolve().then(async () => {
+      const tenantStore = useTenantStore();
+
+      if (event === 'SIGNED_OUT') {
+        tenantStore.clearStore();
+        return;
+      }
+
+      // OAuth PKCE: session may arrive after first guard run.
+      if (
+        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') &&
+        session?.user
+      ) {
+        const wasLoggedOut = !tenantStore.user;
+        await tenantStore.syncFromUser(session.user);
+
+        if (!wasLoggedOut || (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION')) {
+          return;
+        }
+
+        const route = router.currentRoute.value;
+        // Only nudge navigation when still parked on a pre-auth route.
+        if (
+          route.path === '/' ||
+          route.name === 'login' ||
+          route.name === 'signup' ||
+          route.name === 'tenant-login' ||
+          route.name === 'admin-login'
+        ) {
+          await router.replace(route.fullPath === '/' ? '/' : { path: route.path });
+        }
+      }
+    });
   });
 
-  // Expose $supabase to Vue templates and options API
   app.config.globalProperties.$supabase = supabase;
 });

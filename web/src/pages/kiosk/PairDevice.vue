@@ -1,0 +1,160 @@
+<template>
+  <q-page class="flex flex-center bg-grey-10 text-white q-pa-md">
+    <div class="pair-card-container full-width">
+      <q-card class="flat bordered bg-grey-9 q-pa-lg text-white">
+        <q-card-section class="column items-center q-pb-none text-center">
+          <q-avatar size="64px" color="grey-8" text-color="primary" class="q-mb-md">
+            <q-icon name="devices" size="36px" />
+          </q-avatar>
+          <h1 class="text-h5 text-weight-bold q-my-none">Pair Kiosk Terminal</h1>
+          <p class="text-caption text-grey-5 q-mt-xs q-mb-md">
+            Authorize this device to process fast PIN-based staff operations.
+          </p>
+        </q-card-section>
+
+        <q-form @submit.prevent="handlePairDevice" class="q-gutter-y-md">
+          <q-card-section class="q-py-none">
+            <!-- Error Alert -->
+            <q-banner
+              v-if="errorMessage"
+              class="bg-red-9 text-white rounded-borders q-mb-md text-caption"
+              inline-actions
+              dense
+            >
+              <template #avatar>
+                <q-icon name="error" color="white" size="18px" />
+              </template>
+              {{ errorMessage }}
+            </q-banner>
+
+            <div class="q-mb-md">
+              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+                >Device Name</label
+              >
+              <q-input
+                v-model="deviceName"
+                type="text"
+                filled
+                placeholder="e.g. Counter Tablet A"
+                color="primary"
+                dark
+                class="custom-dark-input"
+                :rules="[(val) => !!val || 'Device name is required']"
+                hide-bottom-space
+                :disable="loading"
+              />
+            </div>
+
+            <div>
+              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+                >Pairing Code (6 Digits)</label
+              >
+              <q-input
+                v-model="pairingCode"
+                type="text"
+                filled
+                placeholder="000 000"
+                mask="### ###"
+                unmasked-value
+                color="primary"
+                dark
+                class="custom-dark-input text-center text-h5 font-mono tracking-widest"
+                :rules="[
+                  (val) => !!val || 'Pairing code is required',
+                  (val) => val.length === 6 || 'Must be exactly 6 digits',
+                ]"
+                hide-bottom-space
+                :disable="loading"
+              />
+            </div>
+          </q-card-section>
+
+          <q-card-actions class="q-px-md q-pt-md">
+            <q-btn
+              type="submit"
+              color="primary"
+              label="Confirm Pairing"
+              class="full-width q-py-sm text-weight-bold btn-gradient cursor-pointer"
+              :loading="loading"
+              unelevated
+            />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </div>
+  </q-page>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useKioskStore } from '../../stores/kiosk';
+import { useQuasar } from 'quasar';
+
+const router = useRouter();
+const kioskStore = useKioskStore();
+const $q = useQuasar();
+
+const deviceName = ref('Counter Tablet');
+const pairingCode = ref('');
+const errorMessage = ref('');
+
+const loading = computed(() => kioskStore.loading);
+
+const handlePairDevice = async () => {
+  errorMessage.value = '';
+  try {
+    const success = await kioskStore.pairDevice(pairingCode.value, deviceName.value);
+    if (success) {
+      $q.notify({
+        type: 'positive',
+        message: 'Device paired successfully!',
+        position: 'top',
+        timeout: 2000,
+      });
+      void router.push({ name: 'kiosk-login' });
+    }
+  } catch (err) {
+    const error = err as Error;
+    errorMessage.value = error.message || 'Verification failed. Please check the pairing code.';
+  }
+};
+</script>
+
+<style scoped lang="scss">
+.pair-card-container {
+  max-width: 420px;
+}
+
+.custom-dark-input :deep(.q-field__control) {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white !important;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  &.q-field__control--focused {
+    border-color: var(--q-primary) !important;
+  }
+}
+
+.btn-gradient {
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  border: none;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+</style>

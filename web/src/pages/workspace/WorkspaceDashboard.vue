@@ -141,8 +141,23 @@ import { useTenantStore } from '../../stores/tenant';
 
 const tenantStore = useTenantStore();
 
+const VALID_FEATURES = [
+  'shift-sessions',
+  'financial-ledger',
+  'meal-management',
+  'procurement',
+  'staff-payroll',
+];
+
 const enabledFeatures = computed<any>(() => {
-  return (tenantStore.activeSettings as any)?.enabled_features || {};
+  const rawFeatures = (tenantStore.activeSettings as any)?.enabled_features || {};
+  const filtered: any = {};
+  for (const key of VALID_FEATURES) {
+    if (key in rawFeatures) {
+      filtered[key] = rawFeatures[key];
+    }
+  }
+  return filtered;
 });
 
 const hasFeatures = computed(() => {

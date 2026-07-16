@@ -105,7 +105,9 @@
                       v-if="props.row.user_profile?.avatar_url"
                       :src="props.row.user_profile.avatar_url"
                     />
-                    <span v-else>{{ getInitials(props.row.user_profile?.full_name || 'Member') }}</span>
+                    <span v-else>{{
+                      getInitials(props.row.user_profile?.full_name || 'Member')
+                    }}</span>
                   </q-avatar>
                   <div>
                     <div class="text-weight-bold">
@@ -155,77 +157,6 @@
                   @click="confirmRemove(props.row)"
                 >
                   <q-tooltip>Remove Member</q-tooltip>
-                </q-btn>
-                <span v-else class="text-caption text-grey-5">N/A</span>
-              </q-td>
-            </template>
-          </q-table>
-        </q-card>
-
-        <!-- Pending Invitations Card -->
-        <q-card class="glass-card">
-          <q-card-section class="q-py-md border-bottom row items-center justify-between">
-            <div class="text-h6 text-bold text-slate-800">Pending Invitations</div>
-            <q-btn
-              flat
-              round
-              dense
-              icon="refresh"
-              color="grey-7"
-              @click="loadInvitations"
-              :loading="loadingInvitations"
-            />
-          </q-card-section>
-
-          <q-table
-            :rows="invitations"
-            :columns="invitationsColumns"
-            row-key="id"
-            flat
-            binary-state-sort
-            class="bg-transparent border-none text-slate-800"
-            :loading="loadingInvitations"
-            no-data-label="No pending invitations for this workspace"
-            dense
-          >
-            <!-- Custom Role Slot -->
-            <template #body-cell-role="props">
-              <q-td :props="props">
-                <q-badge outline color="primary" class="q-py-xs q-px-sm font-semibold">
-                  {{ props.row.tenant_roles?.name || 'Member' }}
-                </q-badge>
-              </q-td>
-            </template>
-
-            <!-- Custom Status Slot -->
-            <template #body-cell-status="props">
-              <q-td :props="props">
-                <q-badge color="warning" class="text-weight-bold text-black uppercase">
-                  {{ props.row.status }}
-                </q-badge>
-              </q-td>
-            </template>
-
-            <!-- Custom Expires At Slot -->
-            <template #body-cell-expires_at="props">
-              <q-td :props="props">
-                {{ formatDate(props.row.expires_at) }}
-              </q-td>
-            </template>
-
-            <!-- Custom Actions Slot -->
-            <template #body-cell-actions="props">
-              <q-td :props="props" class="text-right">
-                <q-btn
-                  v-if="canManage"
-                  flat
-                  round
-                  dense
-                  icon="cancel"
-                  color="negative"
-                  @click="confirmCancelInvitation(props.row)"
-                >
-                  <q-tooltip>Cancel Invitation</q-tooltip>
                 </q-btn>
                 <span v-else class="text-caption text-grey-5">N/A</span>
               </q-td>
@@ -319,32 +250,6 @@
       </q-tab-panel>
     </q-tab-panels>
 
-    <!-- 1. Confirm Cancel Invitation Dialog -->
-    <q-dialog v-model="showConfirmCancelInvite" persistent>
-      <q-card class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md">
-        <q-card-section class="row items-center">
-          <q-avatar icon="warning" color="red-9" text-color="white" class="q-mr-md" />
-          <span class="text-h6 text-bold text-slate-800">Cancel Invitation?</span>
-        </q-card-section>
-
-        <q-card-section class="q-py-md text-slate-600">
-          Are you sure you want to cancel the invitation for
-          <span class="text-weight-bold text-slate-800">{{ selectedInvitation?.email }}</span>? This token will be immediately invalidated.
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" v-close-popup color="grey-7" />
-          <q-btn
-            flat
-            label="Confirm Cancel"
-            color="negative"
-            @click="handleCancelInvitation"
-            :loading="cancellingInvite"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
     <!-- 2. Invite Member Dialog -->
     <q-dialog v-model="showInviteDialog" persistent>
       <q-card class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md dialog-card">
@@ -357,7 +262,9 @@
         <q-form @submit.prevent="handleInvite" class="q-gutter-y-md q-mt-md">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">Email Address</label>
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                >Email Address</label
+              >
               <q-input
                 v-model="inviteEmail"
                 type="email"
@@ -371,7 +278,9 @@
             </div>
 
             <div>
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">Role Assignment</label>
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                >Role Assignment</label
+              >
               <q-select
                 v-model="inviteRole"
                 :options="rolesOptions"
@@ -408,8 +317,11 @@
 
         <q-card-section class="q-py-md text-slate-600">
           Are you sure you want to remove
-          <span class="text-weight-bold text-slate-800">{{ selectedMember?.user_profile?.full_name || 'this member' }}</span>
-          from this workspace? This action will immediately revoke their access to all tenant-scoped resources.
+          <span class="text-weight-bold text-slate-800">{{
+            selectedMember?.user_profile?.full_name || 'this member'
+          }}</span>
+          from this workspace? This action will immediately revoke their access to all tenant-scoped
+          resources.
         </q-card-section>
 
         <q-card-actions align="right">
@@ -439,7 +351,9 @@
         <q-form @submit.prevent="handleStaffSubmit" class="q-gutter-y-md q-mt-md">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">Full Name</label>
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                >Full Name</label
+              >
               <q-input
                 v-model="staffName"
                 type="text"
@@ -453,7 +367,9 @@
             </div>
 
             <div class="q-mb-md">
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">Phone Number</label>
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                >Phone Number</label
+              >
               <q-input
                 v-model="staffPhone"
                 type="tel"
@@ -467,7 +383,9 @@
             </div>
 
             <div class="q-mb-md">
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">Role / Job Title</label>
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                >Role / Job Title</label
+              >
               <q-input
                 v-model="staffRole"
                 type="text"
@@ -483,7 +401,9 @@
             <div class="row items-center justify-between q-mt-md">
               <div class="col-8">
                 <div class="text-weight-medium text-slate-800 text-sm">Allow Terminal Login</div>
-                <div class="text-caption text-grey-6">Allow this profile to authenticate on paired kiosk devices via 4-digit PIN.</div>
+                <div class="text-caption text-grey-6">
+                  Allow this profile to authenticate on paired kiosk devices via 4-digit PIN.
+                </div>
               </div>
               <q-toggle v-model="staffAllowTerminalLogin" color="primary" />
             </div>
@@ -491,7 +411,9 @@
             <div v-if="isEditingStaff" class="row items-center justify-between q-mt-md">
               <div class="col-8">
                 <div class="text-weight-medium text-slate-800 text-sm">Active Profile</div>
-                <div class="text-caption text-grey-6">Enable or temporarily disable this staff member.</div>
+                <div class="text-caption text-grey-6">
+                  Enable or temporarily disable this staff member.
+                </div>
               </div>
               <q-toggle v-model="staffIsActive" color="positive" />
             </div>
@@ -513,7 +435,10 @@
 
     <!-- 5. Temporary PIN Display Dialog -->
     <q-dialog v-model="showTempPinDialog" persistent>
-      <q-card class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md" style="width: 100%; max-width: 400px">
+      <q-card
+        class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md"
+        style="width: 100%; max-width: 400px"
+      >
         <q-card-section class="text-center q-pt-md">
           <q-icon name="vpn_key" size="48px" color="warning" class="q-mb-md" />
           <div class="text-h6 text-bold text-slate-800">Temporary PIN Code</div>
@@ -523,16 +448,25 @@
         </q-card-section>
 
         <q-card-section class="text-center q-py-md">
-          <div class="text-h3 text-bold text-primary font-mono tracking-widest bg-grey-2 q-pa-md rounded-borders inline-block">
+          <div
+            class="text-h3 text-bold text-primary font-mono tracking-widest bg-grey-2 q-pa-md rounded-borders inline-block"
+          >
             {{ tempPinCode }}
           </div>
           <div class="text-caption text-red-9 text-weight-bold q-mt-md">
-            Warning: This code will not be shown again. The staff member will be forced to change it on their first login.
+            Warning: This code will not be shown again. The staff member will be forced to change it
+            on their first login.
           </div>
         </q-card-section>
 
         <q-card-actions align="center">
-          <q-btn unelevated color="primary" label="Got It" v-close-popup class="q-px-lg rounded-btn text-weight-bold" />
+          <q-btn
+            unelevated
+            color="primary"
+            label="Got It"
+            v-close-popup
+            class="q-px-lg rounded-btn text-weight-bold"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -543,16 +477,27 @@
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-bold text-slate-800">Pair Terminal Device</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="grey-7" @click="closePairingDialog" />
+          <q-btn
+            icon="close"
+            flat
+            round
+            dense
+            v-close-popup
+            color="grey-7"
+            @click="closePairingDialog"
+          />
         </q-card-section>
 
         <q-card-section class="q-pt-md">
           <p class="text-slate-600 text-sm">
-            Enter a descriptive name for the device (e.g. Counter Tablet A) and generate a 6-digit verification code.
+            Enter a descriptive name for the device (e.g. Counter Tablet A) and generate a 6-digit
+            verification code.
           </p>
 
           <div v-if="!pairingCode" class="q-mb-md">
-            <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">Device Name</label>
+            <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+              >Device Name</label
+            >
             <q-input
               v-model="pairingDeviceName"
               type="text"
@@ -572,12 +517,16 @@
           </div>
 
           <div v-else class="text-center q-py-lg">
-            <div class="text-h6 text-slate-500 q-mb-xs">Verification Code for {{ pairingDeviceName }}</div>
-            <div class="text-h3 text-bold text-primary font-mono tracking-widest bg-grey-2 q-pa-md rounded-borders inline-block q-my-md">
+            <div class="text-h6 text-slate-500 q-mb-xs">
+              Verification Code for {{ pairingDeviceName }}
+            </div>
+            <div
+              class="text-h3 text-bold text-primary font-mono tracking-widest bg-grey-2 q-pa-md rounded-borders inline-block q-my-md"
+            >
               {{ formatPairingCode(pairingCode) }}
             </div>
             <div class="text-caption text-grey-6 text-weight-medium">
-              Enter this code on the target device's Pairing Screen.<br>
+              Enter this code on the target device's Pairing Screen.<br />
               This code is valid for 30 minutes.
             </div>
           </div>
@@ -599,8 +548,6 @@ import {
   getTenantRoles,
   inviteUser,
   removeMember,
-  getTenantInvitations,
-  cancelInvitation,
 } from '../../services/multiTenant';
 import {
   getStaffMembers,
@@ -651,15 +598,6 @@ const showConfirmRemove = ref(false);
 const selectedMember = ref<MemberWithProfile | null>(null);
 const removingMember = ref(false);
 
-// Pending invitations state
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const invitations = ref<any[]>([]);
-const loadingInvitations = ref(false);
-const cancellingInvite = ref(false);
-const showConfirmCancelInvite = ref(false);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectedInvitation = ref<any>(null);
-
 // Kiosk Kiosk & Staff state
 const staff = ref<StaffMember[]>([]);
 const loadingStaff = ref(false);
@@ -695,27 +633,30 @@ const columns = [
   { name: 'actions', align: 'right' as const, label: 'Actions', field: 'actions' },
 ];
 
-const invitationsColumns = [
-  { name: 'email', align: 'left' as const, label: 'Email Address', field: 'email', sortable: true },
-  { name: 'role', align: 'left' as const, label: 'Role', field: 'tenant_roles', sortable: true },
-  { name: 'status', align: 'left' as const, label: 'Status', field: 'status', sortable: true },
+const staffColumns = [
   {
-    name: 'expires_at',
+    name: 'full_name',
     align: 'left' as const,
-    label: 'Expires At',
-    field: 'expires_at',
+    label: 'Full Name',
+    field: 'full_name',
     sortable: true,
   },
-  { name: 'actions', align: 'right' as const, label: 'Actions', field: 'actions' },
-];
-
-const staffColumns = [
-  { name: 'full_name', align: 'left' as const, label: 'Full Name', field: 'full_name', sortable: true },
-  { name: 'role', align: 'left' as const, label: 'Role / Job Title', field: 'role', sortable: true },
+  {
+    name: 'role',
+    align: 'left' as const,
+    label: 'Role / Job Title',
+    field: 'role',
+    sortable: true,
+  },
   { name: 'phone', align: 'left' as const, label: 'Phone Number', field: 'phone', sortable: true },
-  { name: 'allow_terminal_login', align: 'center' as const, label: 'Terminal Access', field: 'allow_terminal_login' },
+  {
+    name: 'allow_terminal_login',
+    align: 'center' as const,
+    label: 'Terminal Access',
+    field: 'allow_terminal_login',
+  },
   { name: 'is_active', align: 'center' as const, label: 'Active', field: 'is_active' },
-  { name: 'actions', align: 'right' as const, label: 'Actions', field: 'actions' }
+  { name: 'actions', align: 'right' as const, label: 'Actions', field: 'actions' },
 ];
 
 const canManage = computed(() => {
@@ -782,7 +723,6 @@ const handleInvite = async () => {
     successMsg.value = `Successfully invited ${inviteEmail.value} to this workspace!`;
     showInviteDialog.value = false;
     inviteEmail.value = '';
-    await loadInvitations();
   } catch (err) {
     const error = err as Error;
     errorMsg.value = error.message || 'Failed to send invitation.';
@@ -814,57 +754,6 @@ const handleRemove = async () => {
   } finally {
     removingMember.value = false;
   }
-};
-
-const loadInvitations = async () => {
-  if (!tenantStore.activeTenant) return;
-  loadingInvitations.value = true;
-  try {
-    const list = await getTenantInvitations(tenantStore.activeTenant.id);
-    invitations.value = list || [];
-  } catch (err) {
-    const error = err as Error;
-    console.error('Failed to load pending invitations:', error.message);
-  } finally {
-    loadingInvitations.value = false;
-  }
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const confirmCancelInvitation = (invite: any) => {
-  selectedInvitation.value = invite;
-  showConfirmCancelInvite.value = true;
-};
-
-const handleCancelInvitation = async () => {
-  if (!tenantStore.activeTenant || !selectedInvitation.value) return;
-  cancellingInvite.value = true;
-  errorMsg.value = '';
-  successMsg.value = '';
-  try {
-    await cancelInvitation(tenantStore.activeTenant.id, selectedInvitation.value.id);
-    successMsg.value = `Successfully cancelled invitation for ${selectedInvitation.value.email}.`;
-    showConfirmCancelInvite.value = false;
-    selectedInvitation.value = null;
-    await loadInvitations();
-  } catch (err) {
-    const error = err as Error;
-    errorMsg.value = error.message || 'Failed to cancel invitation.';
-    showConfirmCancelInvite.value = false;
-  } finally {
-    cancellingInvite.value = false;
-  }
-};
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 };
 
 // Kiosk & Staff Management methods
@@ -916,7 +805,7 @@ const handleStaffSubmit = async () => {
         role: staffRole.value,
         phone: staffPhone.value,
         allow_terminal_login: staffAllowTerminalLogin.value,
-        is_active: staffIsActive.value
+        is_active: staffIsActive.value,
       });
       successMsg.value = `Successfully updated staff member ${staffName.value}.`;
       showStaffDialog.value = false;
@@ -926,11 +815,11 @@ const handleStaffSubmit = async () => {
         full_name: staffName.value,
         role: staffRole.value,
         phone: staffPhone.value,
-        allow_terminal_login: staffAllowTerminalLogin.value
+        allow_terminal_login: staffAllowTerminalLogin.value,
       });
       successMsg.value = `Successfully added staff member ${staffName.value}.`;
       showStaffDialog.value = false;
-      
+
       if (staffAllowTerminalLogin.value) {
         const pin = await resetStaffPin(newStaff.id);
         tempPinCode.value = pin;
@@ -964,7 +853,7 @@ const handleResetStaffPin = async (staffMember: StaffMember) => {
 const toggleTerminalLogin = async (staffMember: StaffMember) => {
   try {
     await updateStaffMember(staffMember.id, {
-      allow_terminal_login: staffMember.allow_terminal_login
+      allow_terminal_login: staffMember.allow_terminal_login,
     });
     successMsg.value = `Updated terminal access for ${staffMember.full_name}.`;
     if (staffMember.allow_terminal_login && !staffMember.temp_pin && !staffMember.hashed_pin) {
@@ -983,7 +872,7 @@ const toggleTerminalLogin = async (staffMember: StaffMember) => {
 const toggleStaffActive = async (staffMember: StaffMember) => {
   try {
     await updateStaffMember(staffMember.id, {
-      is_active: staffMember.is_active
+      is_active: staffMember.is_active,
     });
     successMsg.value = `Updated active status for ${staffMember.full_name}.`;
     await loadStaff();
@@ -1026,7 +915,6 @@ const closePairingDialog = () => {
 onMounted(() => {
   void loadMembers();
   void loadRoles();
-  void loadInvitations();
   void loadStaff();
 });
 </script>

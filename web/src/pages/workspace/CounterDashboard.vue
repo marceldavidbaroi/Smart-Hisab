@@ -1,13 +1,24 @@
 <template>
-  <q-page class="flex flex-center bg-grey-9 q-pa-md fullscreen" style="min-height: 100vh;">
-    <q-card class="dashboard-card no-shadow bordered rounded-borders bg-white" style="width: 100%; max-width: 500px">
+  <q-page class="flex flex-center bg-grey-9 q-pa-md fullscreen" style="min-height: 100vh">
+    <q-card
+      class="dashboard-card no-shadow bordered rounded-borders bg-white"
+      style="width: 100%; max-width: 500px"
+    >
       <!-- Header / Staff Avatar -->
       <q-card-section class="text-center q-pt-xl q-pb-md">
-        <q-avatar size="80px" color="primary" text-color="white" class="q-mb-md shadow-2 font-bold text-h4">
+        <q-avatar
+          size="80px"
+          color="primary"
+          text-color="white"
+          class="q-mb-md shadow-2 font-bold text-h4"
+        >
           {{ staffName ? staffName.charAt(0).toUpperCase() : 'S' }}
         </q-avatar>
         <div class="text-h5 text-weight-bold text-slate-800">{{ staffName || 'Staff Member' }}</div>
-        <q-badge color="secondary" class="q-mt-sm q-py-xs q-px-md text-weight-medium text-subtitle2">
+        <q-badge
+          color="secondary"
+          class="q-mt-sm q-py-xs q-px-md text-weight-medium text-subtitle2"
+        >
           {{ staffRole || 'Counter Staff' }}
         </q-badge>
       </q-card-section>
@@ -28,13 +39,16 @@
         </div>
 
         <!-- Phase 4 Placeholder Banner -->
-        <q-banner class="bg-indigo-1 text-indigo-9 rounded-borders q-mt-lg q-pa-md no-shadow bordered">
+        <q-banner
+          class="bg-indigo-1 text-indigo-9 rounded-borders q-mt-lg q-pa-md no-shadow bordered"
+        >
           <template #avatar>
             <q-icon name="rocket" color="primary" size="sm" />
           </template>
           <div class="text-weight-bold text-subtitle2">Kiosk Mode Active</div>
           <div class="text-xs q-mt-xs">
-            POS transactions, attendance logs, and cash drawer management will be fully operational in Phase 4.
+            POS transactions, attendance logs, and cash drawer management will be fully operational
+            in Phase 4.
           </div>
         </q-banner>
       </q-card-section>
@@ -47,7 +61,7 @@
           class="full-width q-py-md rounded-btn text-weight-bold text-subtitle1 cursor-pointer"
           icon="logout"
           label="Clock Out"
-          style="min-height: 48px;"
+          style="min-height: 48px"
           @click="handleClockOut"
         />
       </q-card-section>
@@ -82,12 +96,16 @@ onMounted(() => {
 
   staffName.value = localStorage.getItem('staff_session_name') || 'Staff';
   staffRole.value = localStorage.getItem('staff_session_role') || 'Staff';
-  
+
   // Format current local date/time as fallback if not set
   const formatTime = () => {
     const d = new Date();
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + 
-           ' (' + d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ')';
+    return (
+      d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
+      ' (' +
+      d.toLocaleDateString([], { month: 'short', day: 'numeric' }) +
+      ')'
+    );
   };
   clockInTime.value = formatTime();
 });

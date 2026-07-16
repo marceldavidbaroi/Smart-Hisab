@@ -1,6 +1,6 @@
 # Multi-Tenant Architecture Specifications
 
-This document outlines the architecture, database models, user flows, and API surface for the multi-tenant SaaS boilerplate built on **Supabase** and **Quasar**.
+This document outlines the architecture, database models, user flows, and API surface for the multi-tenant Smart Hisab application built on **Supabase** and **Quasar**.
 
 ---
 

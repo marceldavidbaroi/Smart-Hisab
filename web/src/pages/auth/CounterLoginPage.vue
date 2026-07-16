@@ -1,14 +1,15 @@
 <template>
-  <q-page class="flex flex-center bg-grey-9 q-pa-md fullscreen" style="min-height: 100vh;">
-    <q-card class="pin-card no-shadow bordered rounded-borders bg-white" style="width: 100%; max-width: 450px">
+  <q-page class="flex flex-center bg-grey-9 q-pa-md fullscreen" style="min-height: 100vh">
+    <q-card
+      class="pin-card no-shadow bordered rounded-borders bg-white"
+      style="width: 100%; max-width: 450px"
+    >
       <q-card-section class="text-center q-pt-xl q-pb-md">
         <q-avatar size="72px" color="primary" text-color="white" class="q-mb-md shadow-2 font-bold">
           {{ tenantName ? tenantName.charAt(0).toUpperCase() : 'C' }}
         </q-avatar>
         <div class="text-h5 text-weight-bold text-slate-800">{{ tenantName || 'Canteen' }}</div>
-        <p class="text-slate-500 text-sm q-mt-sm">
-          Enter your 4-digit PIN to clock in.
-        </p>
+        <p class="text-slate-500 text-sm q-mt-sm">Enter your 4-digit PIN to clock in.</p>
       </q-card-section>
 
       <q-card-section class="q-px-xl">
@@ -32,12 +33,12 @@
             class="custom-input q-mb-md text-center text-h6"
             :rules="[
               (val) => !!val || 'PIN is required',
-              (val) => val.length === 4 || 'Must be exactly 4 digits'
+              (val) => val.length === 4 || 'Must be exactly 4 digits',
             ]"
             hide-bottom-space
             autofocus
           />
-          
+
           <q-input
             v-model="confirmPin"
             type="password"
@@ -49,12 +50,15 @@
             class="custom-input q-mb-md text-center text-h6"
             :rules="[
               (val) => !!val || 'Confirmation is required',
-              (val) => val === newPin || 'PINs do not match'
+              (val) => val === newPin || 'PINs do not match',
             ]"
             hide-bottom-space
           />
 
-          <q-banner v-if="errorMsg" class="bg-red-1 text-red-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow">
+          <q-banner
+            v-if="errorMsg"
+            class="bg-red-1 text-red-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow"
+          >
             <template #avatar>
               <q-icon name="error" color="red-9" />
             </template>
@@ -83,21 +87,27 @@
             class="custom-input q-mb-md text-center text-h4 font-bold"
             :rules="[
               (val) => !!val || 'PIN is required',
-              (val) => val.length === 4 || 'Must be exactly 4 digits'
+              (val) => val.length === 4 || 'Must be exactly 4 digits',
             ]"
             hide-bottom-space
             autofocus
             input-class="tracking-widest"
           />
 
-          <q-banner v-if="errorMsg" class="bg-red-1 text-red-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow">
+          <q-banner
+            v-if="errorMsg"
+            class="bg-red-1 text-red-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow"
+          >
             <template #avatar>
               <q-icon name="error" color="red-9" />
             </template>
             {{ errorMsg }}
           </q-banner>
 
-          <q-banner v-if="successMsg" class="bg-green-1 text-green-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow">
+          <q-banner
+            v-if="successMsg"
+            class="bg-green-1 text-green-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow"
+          >
             <template #avatar>
               <q-icon name="check_circle" color="green-9" />
             </template>
@@ -182,14 +192,14 @@ const handleLogin = async () => {
         tempPin.value = pin.value;
         pin.value = ''; // clear original pin input
       } else {
-        // Success! Logged in. 
+        // Success! Logged in.
         // Store staff session info in localStorage or store
         localStorage.setItem('staff_session_id', data.staff_id);
         localStorage.setItem('staff_session_name', data.full_name);
         localStorage.setItem('staff_session_role', data.role);
-        
+
         successMsg.value = `Welcome, ${data.full_name} (${data.role})`;
-        
+
         setTimeout(() => {
           void router.push(`/${tenantSlug.value}/counter/dashboard`);
         }, 1000);
@@ -251,7 +261,7 @@ const unpairDevice = () => {
   localStorage.removeItem('staff_session_id');
   localStorage.removeItem('staff_session_name');
   localStorage.removeItem('staff_session_role');
-  
+
   void router.push('/auth/login');
 };
 </script>

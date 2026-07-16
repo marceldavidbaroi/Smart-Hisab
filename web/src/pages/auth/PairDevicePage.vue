@@ -1,6 +1,9 @@
 <template>
   <q-page class="flex flex-center bg-grey-2 q-pa-md">
-    <q-card class="pairing-card no-shadow bordered rounded-borders" style="width: 100%; max-width: 400px">
+    <q-card
+      class="pairing-card no-shadow bordered rounded-borders"
+      style="width: 100%; max-width: 400px"
+    >
       <q-card-section class="text-center q-pt-xl">
         <q-icon name="devices" size="48px" color="primary" class="q-mb-md" />
         <div class="text-h5 text-weight-bold text-slate-800">Pair Counter Device</div>
@@ -22,7 +25,7 @@
             class="custom-input q-mb-md text-center text-h6"
             :rules="[
               (val) => !!val || 'Pairing code is required',
-              (val) => val.length === 6 || 'Must be exactly 6 digits'
+              (val) => val.length === 6 || 'Must be exactly 6 digits',
             ]"
             hide-bottom-space
             autofocus
@@ -38,7 +41,10 @@
             hide-bottom-space
           />
 
-          <q-banner v-if="errorMsg" class="bg-red-1 text-red-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow">
+          <q-banner
+            v-if="errorMsg"
+            class="bg-red-1 text-red-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow"
+          >
             <template #avatar>
               <q-icon name="error" color="red-9" />
             </template>
@@ -56,7 +62,13 @@
       </q-card-section>
 
       <q-card-section class="text-center q-pt-none q-pb-lg">
-        <q-btn flat color="slate-500" no-caps class="hover-underline text-weight-medium" to="/auth/login">
+        <q-btn
+          flat
+          color="slate-500"
+          no-caps
+          class="hover-underline text-weight-medium"
+          to="/auth/login"
+        >
           Return to Login
         </q-btn>
       </q-card-section>
@@ -67,9 +79,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { supabase } from '../../boot/supabase';
+import { useKioskStore } from '../../stores/kiosk';
 
 const router = useRouter();
+const kioskStore = useKioskStore();
 
 const pairingCode = ref('');
 const deviceName = ref('Counter Tablet');
@@ -83,29 +96,9 @@ const handlePairing = async () => {
   errorMsg.value = '';
 
   try {
-    const { data, error } = await supabase.rpc('verify_pairing_code', {
-      p_code: pairingCode.value,
-      p_device_name: deviceName.value,
-    });
-
-    if (error) {
-      errorMsg.value = error.message;
-      return;
-    }
-
-    if (data && data.length > 0) {
-      const result = data[0];
-      if (result.success) {
-        // Pairing successful
-        localStorage.setItem('device_token', 'true');
-        localStorage.setItem('device_tenant_id', result.tenant_id);
-        localStorage.setItem('device_tenant_name', result.tenant_name);
-        localStorage.setItem('device_tenant_slug', result.tenant_slug);
-        
-        await router.push({ name: 'counter-login' });
-      } else {
-        errorMsg.value = result.message || 'Invalid pairing code.';
-      }
+    const success = await kioskStore.pairDevice(pairingCode.value, deviceName.value);
+    if (success) {
+      await router.push({ name: 'counter-login' });
     } else {
       errorMsg.value = 'Failed to verify pairing code.';
     }

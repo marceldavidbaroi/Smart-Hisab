@@ -38,6 +38,9 @@ export const useTenantStore = defineStore('tenant', () => {
   const activeRole = ref<string | null>(null);
   const loading = ref(false);
   const initialized = ref(false);
+  const isAdminSession = ref<boolean>(
+    typeof window !== 'undefined' && localStorage.getItem('auth.is_admin_session') === 'true',
+  );
 
   // Getters
   const isSuperadmin = computed(() => {
@@ -96,33 +99,46 @@ export const useTenantStore = defineStore('tenant', () => {
       }
 
       // Load tenants user is member of
-      const memberships = await getUserTenants();
-      myTenants.value = (memberships || []) as unknown as TenantMembership[];
+      const memberships = await getUserTenants(user.value.id);
+      myTenants.value = ((memberships || []) as unknown as TenantMembership[]).map((m) => {
+        const raw = m.tenants as unknown;
+        if (Array.isArray(raw)) {
+          return { ...m, tenants: (raw[0] as Tenant | null) ?? null };
+        }
+        return m;
+      });
     } catch (err) {
       const error = err as Error;
       console.error('Error loading profile and tenants:', error.message);
     }
   }
 
+  async function syncFromUser(sessionUser: User | null) {
+    if (sessionUser) {
+      user.value = sessionUser;
+      await loadUserProfileAndTenants();
+    } else {
+      clearStore();
+    }
+    initialized.value = true;
+  }
+
   async function initializeStore() {
-    if (initialized.value) return;
+    // Always re-sync session. An early return here broke email/OAuth login:
+    // the route guard marks initialized=true while logged out, then LoginPage's
+    // post-login initializeStore() was a no-op → empty store → blank/wrong redirect.
     loading.value = true;
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session?.user) {
-        user.value = session.user;
-        await loadUserProfileAndTenants();
-      } else {
-        clearStore();
-      }
+      await syncFromUser(session?.user ?? null);
     } catch (err) {
       const error = err as Error;
       console.error('Failed to initialize tenant store:', error.message);
+      initialized.value = true;
     } finally {
       loading.value = false;
-      initialized.value = true;
     }
   }
 
@@ -184,11 +200,26 @@ export const useTenantStore = defineStore('tenant', () => {
     localStorage.removeItem('workspace.selected.tenant.id');
   }
 
+  function setAdminSession(val: boolean) {
+    isAdminSession.value = val;
+    if (typeof window !== 'undefined') {
+      if (val) {
+        localStorage.setItem('auth.is_admin_session', 'true');
+      } else {
+        localStorage.removeItem('auth.is_admin_session');
+      }
+    }
+  }
+
   function clearStore() {
     user.value = null;
     userProfile.value = null;
     myTenants.value = [];
     clearActiveTenant();
+    isAdminSession.value = false;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth.is_admin_session');
+    }
   }
 
   async function logout() {
@@ -207,10 +238,13 @@ export const useTenantStore = defineStore('tenant', () => {
     loading,
     initialized,
     isSuperadmin,
+    isAdminSession,
+    setAdminSession,
     hasTenantAccess,
     isFeatureEnabled,
     hasPermission,
     initializeStore,
+    syncFromUser,
     loadUserProfileAndTenants,
     setActiveTenantBySlug,
     clearActiveTenant,

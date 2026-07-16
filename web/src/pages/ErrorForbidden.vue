@@ -41,7 +41,7 @@ const tenantStore = useTenantStore();
 const goBack = async () => {
   if (tenantStore.myTenants.length > 0 && tenantStore.myTenants[0]?.tenants) {
     await router.push(`/${tenantStore.myTenants[0]?.tenants?.slug}/dashboard`);
-  } else if (tenantStore.isSuperadmin) {
+  } else if (tenantStore.isSuperadmin && tenantStore.isAdminSession) {
     await router.push('/admin/dashboard');
   } else {
     await router.push('/');

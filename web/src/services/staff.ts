@@ -31,11 +31,7 @@ export async function createStaffMember(staff: {
   phone: string;
   allow_terminal_login: boolean;
 }): Promise<StaffMember> {
-  const { data, error } = await supabase
-    .from('staff_members')
-    .insert(staff)
-    .select()
-    .single();
+  const { data, error } = await supabase.from('staff_members').insert(staff).select().single();
 
   if (error) {
     console.error('Error creating staff member:', error.message);
@@ -49,7 +45,7 @@ export async function createStaffMember(staff: {
  */
 export async function updateStaffMember(
   staffId: string,
-  updates: Partial<Omit<StaffMember, 'id' | 'tenant_id' | 'created_at' | 'updated_at'>>
+  updates: Partial<Omit<StaffMember, 'id' | 'tenant_id' | 'created_at' | 'updated_at'>>,
 ): Promise<StaffMember> {
   const { data, error } = await supabase
     .from('staff_members')

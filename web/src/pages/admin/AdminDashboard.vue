@@ -7,7 +7,7 @@
           Platform Admin Dashboard
         </h1>
         <p class="text-grey-7 text-subtitle2 q-mt-xs q-mb-none">
-          Global analytics and metrics for the SaaS platform.
+          Global analytics and metrics for the Smart Hisab platform.
         </p>
       </div>
       <div>

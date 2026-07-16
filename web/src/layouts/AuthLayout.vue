@@ -9,10 +9,10 @@
         <div class="auth-card-wrapper">
           <div class="text-center q-mb-lg">
             <div class="app-logo q-mb-xs">
-              <q-icon name="cloud" size="48px" class="logo-icon" />
+              <q-icon name="receipt_long" size="48px" class="logo-icon" />
             </div>
-            <h1 class="text-h4 text-bold text-slate-800 title-gradient">SaaS Boilerplate</h1>
-            <p class="text-subtitle2 text-slate-500">Enterprise Multi-Tenant Portal</p>
+            <h1 class="text-h4 text-bold text-slate-800 title-gradient">Smart Hisab</h1>
+            <p class="text-subtitle2 text-slate-500">Smart Accounting & Management Portal</p>
           </div>
 
           <div class="glass-panel">

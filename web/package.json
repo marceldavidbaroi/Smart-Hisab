@@ -2,7 +2,7 @@
   "name": "web",
   "version": "0.0.1",
   "description": "A Quasar Project",
-  "productName": "Boilerplate App",
+  "productName": "Smart Hisab",
   "author": "marceldavidbaroi <marceldavidbaroi@gmail.com>",
   "type": "module",
   "private": true,

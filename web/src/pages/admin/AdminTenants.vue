@@ -204,24 +204,50 @@
               />
             </div>
 
-            <div>
+            <div class="q-mt-md">
               <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
                 >Feature Modules</label
               >
               <div class="row q-col-gutter-sm q-mt-xs">
-                <div class="col-6">
-                  <q-checkbox v-model="features.crm" label="CRM Module" color="amber-10" dense />
-                </div>
-                <div class="col-6">
+                <div class="col-12">
                   <q-checkbox
-                    v-model="features.invoicing"
-                    label="Invoicing Module"
+                    v-model="features['shift-sessions']"
+                    label="Operational Shifts & Sessions"
                     color="amber-10"
                     dense
                   />
                 </div>
-                <div class="col-6">
-                  <q-checkbox v-model="features.chat" label="Chat Module" color="amber-10" dense />
+                <div class="col-12">
+                  <q-checkbox
+                    v-model="features['financial-ledger']"
+                    label="Transaction Ledger"
+                    color="amber-10"
+                    dense
+                  />
+                </div>
+                <div class="col-12">
+                  <q-checkbox
+                    v-model="features['meal-management']"
+                    label="Meal & Customer Management"
+                    color="amber-10"
+                    dense
+                  />
+                </div>
+                <div class="col-12">
+                  <q-checkbox
+                    v-model="features['procurement']"
+                    label="Procurement & Supplier Management"
+                    color="amber-10"
+                    dense
+                  />
+                </div>
+                <div class="col-12">
+                  <q-checkbox
+                    v-model="features['staff-payroll']"
+                    label="Staff Attendance & Payroll"
+                    color="amber-10"
+                    dense
+                  />
                 </div>
               </div>
             </div>
@@ -265,10 +291,12 @@ const slug = ref('');
 const ownerEmail = ref('');
 const parentId = ref<string | null>(null);
 const subscriptionTier = ref('free');
-const features = ref({
-  crm: true,
-  invoicing: false,
-  chat: false,
+const features = ref<Record<string, boolean>>({
+  'shift-sessions': true,
+  'financial-ledger': true,
+  'meal-management': true,
+  procurement: true,
+  'staff-payroll': true,
 });
 const submitting = ref(false);
 
@@ -354,7 +382,13 @@ const handleCreateTenant = async () => {
     ownerEmail.value = '';
     parentId.value = null;
     subscriptionTier.value = 'free';
-    features.value = { crm: true, invoicing: false, chat: false };
+    features.value = {
+      'shift-sessions': true,
+      'financial-ledger': true,
+      'meal-management': true,
+      procurement: true,
+      'staff-payroll': true,
+    };
 
     await loadTenants();
   } catch (err) {

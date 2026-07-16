@@ -95,8 +95,8 @@ export async function adminUpdateBilling(tenantId: string, tier: string, status:
 }
 
 // 3. Tenant & Member API (Tenant Level)
-export async function getUserTenants() {
-  const { data, error } = await supabase.from('tenant_members').select(`
+export async function getUserTenants(userId?: string) {
+  let query = supabase.from('tenant_members').select(`
       id,
       status,
       joined_at,
@@ -115,6 +115,12 @@ export async function getUserTenants() {
         permissions
       )
     `);
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return data;
 }
@@ -289,4 +295,9 @@ export async function createTenant(name: string, slug: string) {
   });
   if (error) throw error;
   return data;
+}
+
+export async function deleteTenant(tenantId: string) {
+  const { error } = await supabase.from('tenants').delete().eq('id', tenantId);
+  if (error) throw error;
 }

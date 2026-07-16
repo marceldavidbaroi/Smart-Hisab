@@ -62,7 +62,7 @@
       />
     </q-form>
 
-    <div v-if="tenantStore.isSuperadmin" class="q-mt-md text-center">
+    <div v-if="tenantStore.isSuperadmin && tenantStore.isAdminSession" class="q-mt-md text-center">
       <q-btn
         color="amber-9"
         outline
@@ -90,7 +90,7 @@ const tenantStore = useTenantStore();
 
 onMounted(async () => {
   const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
-  if (!allowSelfService) {
+  if (!allowSelfService && !(tenantStore.isSuperadmin && tenantStore.isAdminSession)) {
     await router.push('/auth/pending-access');
   }
 });

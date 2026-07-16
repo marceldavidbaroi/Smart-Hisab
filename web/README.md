@@ -1,4 +1,4 @@
-# Boilerplate App (web)
+# Smart Hisab App (web)
 
 ## Install the dependencies
 

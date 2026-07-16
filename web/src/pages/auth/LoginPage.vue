@@ -6,7 +6,9 @@
       <template v-else>Welcome Back</template>
     </div>
     <p class="text-slate-500 q-mb-lg text-sm">
-      <template v-if="route.name === 'admin-login'">Enter credentials to access the Superadmin Panel.</template>
+      <template v-if="route.name === 'admin-login'"
+        >Enter credentials to access the Superadmin Panel.</template
+      >
       <template v-else-if="tenantName">Enter your credentials to access the workspace.</template>
       <template v-else>Enter your credentials to access your workspaces.</template>
     </p>
@@ -139,11 +141,7 @@ const fetchTenantInfo = async () => {
 
   resolvingTenant.value = true;
   try {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('name')
-      .eq('slug', slug)
-      .single();
+    const { data, error } = await supabase.from('tenants').select('name').eq('slug', slug).single();
 
     if (error) {
       console.error('Error fetching tenant details:', error.message);
@@ -163,6 +161,10 @@ onMounted(fetchTenantInfo);
 watch(() => route.params.tenantSlug, fetchTenantInfo);
 
 const handleLogin = async () => {
+  const targetRouteName = route.name;
+  const targetQuery = { ...route.query };
+  const targetParams = { ...route.params };
+
   loading.value = true;
   errorMsg.value = '';
   try {
@@ -177,28 +179,31 @@ const handleLogin = async () => {
 
     // Check where to redirect
     // 1. Explicit redirect path in query parameter (e.g. redirect=/admin/dashboard)
-    const redirectPath = route.query.redirect as string | undefined;
+    const redirectPath = targetQuery.redirect as string | undefined;
     if (redirectPath) {
       await router.push(redirectPath);
       return;
     }
 
     // 2. Logging in from Admin login URL or with scope=admin
-    const isExplicitAdminScope = route.name === 'admin-login' || route.query.scope === 'admin';
+    const isExplicitAdminScope = targetRouteName === 'admin-login' || targetQuery.scope === 'admin';
     if (isExplicitAdminScope) {
       if (tenantStore.isSuperadmin) {
+        tenantStore.setAdminSession(true);
         await router.push('/admin/dashboard');
         return;
       } else {
-        // Strict admin segregation: non-admins are rejected from /admin/login
+        // Strict admin segregation: non-admins are rejected from /admin/auth/login
         errorMsg.value = 'Access Denied: Superadmin privileges required.';
-        // Optionally sign them out: await supabase.auth.signOut();
+        await tenantStore.logout();
         return;
       }
+    } else {
+      tenantStore.setAdminSession(false);
     }
 
     // 3. Logging in from a tenant-specific page
-    const tenantSlug = route.params.tenantSlug as string | undefined;
+    const tenantSlug = targetParams.tenantSlug as string | undefined;
     if (tenantSlug) {
       // Check if user has access to this tenant
       if (tenantStore.hasTenantAccess(tenantSlug)) {
@@ -215,11 +220,11 @@ const handleLogin = async () => {
     if (tenantStore.myTenants.length > 0 && tenantStore.myTenants[0]?.tenants) {
       // Go to first tenant workspace dashboard
       await router.push(`/${tenantStore.myTenants[0]?.tenants?.slug}/dashboard`);
-    } else if (tenantStore.isSuperadmin) {
-      // If superadmin has no workspaces, go to admin portal
+    } else if (tenantStore.isSuperadmin && isExplicitAdminScope) {
+      // If superadmin has no workspaces and logged in explicitly via admin scope, go to admin portal
       await router.push('/admin/dashboard');
     } else {
-      // Regular user with no workspaces
+      // Regular user with no workspaces, or superadmin logging in via auth scope
       await router.push('/auth/no-tenant');
     }
   } catch (err) {
@@ -235,16 +240,21 @@ const handleGoogleLogin = async () => {
   errorMsg.value = '';
   try {
     let redirectTo = window.location.origin;
-    
+
     // Determine the target URL after Google OAuth callback
     const redirectPath = route.query.redirect as string | undefined;
     if (redirectPath) {
       redirectTo += redirectPath;
     } else if (route.params.tenantSlug) {
-      const tenantSlug = Array.isArray(route.params.tenantSlug) ? route.params.tenantSlug[0] : route.params.tenantSlug;
+      const tenantSlug = Array.isArray(route.params.tenantSlug)
+        ? route.params.tenantSlug[0]
+        : route.params.tenantSlug;
       redirectTo += `/${tenantSlug}/dashboard`;
     } else if (route.name === 'admin-login' || route.query.scope === 'admin') {
+      tenantStore.setAdminSession(true);
       redirectTo += `/admin/dashboard`;
+    } else {
+      tenantStore.setAdminSession(false);
     }
 
     const { error } = await signInWithGoogle(redirectTo);
