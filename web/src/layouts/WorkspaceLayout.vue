@@ -1,157 +1,26 @@
 <template>
   <q-layout view="hHh Lpr lFf" class="workspace-layout">
     <!-- Header -->
-    <q-header elevated class="bg-slate-950 border-bottom text-slate-800">
-      <q-toolbar class="q-py-sm">
+    <q-header bordered class="bg-white border-bottom text-dark">
+      <q-toolbar dense class="q-py-xs">
         <q-btn
           flat
           dense
           round
           icon="menu"
           aria-label="Menu"
-          class="q-mr-sm text-slate-600"
+          class="q-mr-sm text-grey-7 cursor-pointer"
           @click="toggleLeftDrawer"
         />
 
-        <!-- Tenant Switcher Selector -->
-        <div class="tenant-switcher-container">
-          <q-btn-dropdown
-            flat
-            no-caps
-            class="tenant-dropdown-btn"
-            content-class="tenant-dropdown-menu"
-          >
-            <template #label>
-              <div class="row items-center no-wrap">
-                <q-avatar size="28px" class="q-mr-sm tenant-avatar text-white">
-                  {{ activeTenantNameInitials }}
-                </q-avatar>
-                <div class="text-left">
-                  <div class="text-weight-bold text-slate-900 leading-tight">
-                    {{ tenantStore.activeTenant?.name || 'Loading...' }}
-                  </div>
-                  <div class="text-caption text-slate-500 leading-none">
-                    {{ tenantStore.activeRole || 'Member' }}
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Dropdown List of Tenants -->
-            <q-list class="q-py-xs bg-slate-950 text-slate-900 border-all">
-              <q-item-label header class="text-slate-500 text-xs font-semibold q-pb-xs">
-                Switch Workspace
-              </q-item-label>
-
-              <q-item
-                v-for="membership in tenantStore.myTenants"
-                :key="membership.id"
-                clickable
-                v-close-popup
-                :active="membership.tenants?.id === tenantStore.activeTenant?.id"
-                active-class="active-tenant-item"
-                class="q-py-sm tenant-select-item"
-                @click="switchWorkspace(membership.tenants?.slug)"
-              >
-                <q-item-section avatar>
-                  <q-avatar size="32px" class="tenant-avatar-small">
-                    {{ getInitials(membership.tenants?.name || '') }}
-                  </q-avatar>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-weight-bold">
-                    {{ membership.tenants?.name }}
-                  </q-item-label>
-                  <q-item-label caption class="text-slate-500">
-                    {{ membership.tenant_roles?.name || 'Member' }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side v-if="membership.tenants?.id === tenantStore.activeTenant?.id">
-                  <q-icon name="check" color="primary" size="18px" />
-                </q-item-section>
-              </q-item>
-
-              <!-- Optional Superadmin redirect -->
-              <q-separator
-                class="q-my-sm"
-                v-if="tenantStore.isSuperadmin && tenantStore.isAdminSession"
-              />
-              <q-item
-                v-if="tenantStore.isSuperadmin && tenantStore.isAdminSession"
-                clickable
-                v-close-popup
-                to="/admin/dashboard"
-                class="q-py-sm text-amber-900"
-              >
-                <q-item-section avatar>
-                  <q-icon name="admin_panel_settings" size="24px" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-weight-bold">Superadmin Portal</q-item-label>
-                </q-item-section>
-              </q-item>
-              <!-- Create New Workspace Button -->
-              <q-separator class="q-my-sm" />
-              <q-item
-                clickable
-                v-close-popup
-                @click="showCreateWorkspaceDialog = true"
-                class="q-py-sm text-primary"
-              >
-                <q-item-section avatar>
-                  <q-icon name="add" size="24px" color="primary" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-weight-bold">Create New Workspace</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-btn-dropdown>
-        </div>
-
-        <q-space />
-
-        <!-- User Profile Dropdown -->
         <div class="row items-center no-wrap">
-          <q-btn-dropdown flat round dense class="user-dropdown-btn">
-            <template #label>
-              <q-avatar size="32px" class="user-avatar text-white">
-                <img
-                  v-if="tenantStore.userProfile?.avatar_url"
-                  :src="tenantStore.userProfile.avatar_url"
-                />
-                <span v-else>{{ userInitials }}</span>
-              </q-avatar>
-            </template>
-
-            <q-list style="min-width: 220px" class="bg-slate-950 text-slate-900 border-all q-py-sm">
-              <div class="q-px-md q-py-sm">
-                <div class="text-weight-bold">
-                  {{ tenantStore.userProfile?.full_name || 'User Profile' }}
-                </div>
-                <div class="text-caption text-slate-500">{{ tenantStore.user?.email }}</div>
-                <div v-if="tenantStore.isSuperadmin && tenantStore.isAdminSession" class="q-mt-xs">
-                  <q-badge color="amber" class="text-black text-weight-bold">Superadmin</q-badge>
-                </div>
-              </div>
-
-              <q-separator class="q-my-sm" />
-
-              <q-item clickable v-close-popup :to="`/${tenantStore.activeTenant?.slug}/settings`">
-                <q-item-section avatar>
-                  <q-icon name="settings" size="20px" class="text-slate-500" />
-                </q-item-section>
-                <q-item-section>Workspace Settings</q-item-section>
-              </q-item>
-
-              <q-item clickable v-close-popup @click="handleSignOut" class="text-negative">
-                <q-item-section avatar>
-                  <q-icon name="logout" size="20px" color="negative" />
-                </q-item-section>
-                <q-item-section>Sign Out</q-item-section>
-              </q-item>
-            </q-list>
-          </q-btn-dropdown>
+          <div class="text-weight-bold text-dark text-sm">
+            {{ tenantStore.activeTenant?.name }}
+          </div>
+          <div class="text-caption text-grey-7 q-ml-sm row items-center no-wrap" style="font-size: 11px;">
+            <span class="gt-xs text-grey-5">powered by</span>
+            <span class="text-weight-bold text-primary q-ml-xs">Smart Hisab</span>
+          </div>
         </div>
       </q-toolbar>
     </q-header>
@@ -160,27 +29,125 @@
     <q-drawer
       v-model="leftDrawerOpen"
       show-if-above
-      bordered
-      class="bg-slate-950 text-slate-900 border-right"
+      :mini="miniState"
       :width="260"
+      :breakpoint="600"
+      bordered
+      class="bg-white text-dark border-right"
+      @mouseover="onMouseOver"
+      @mouseleave="onMouseOut"
     >
-      <div class="drawer-content flex flex-col justify-between">
-        <div>
-          <!-- Workspace Title / Header -->
-          <div class="q-pa-md brand-section border-bottom flex items-center">
-            <q-icon name="workspaces" size="28px" class="text-primary q-mr-sm" />
-            <div>
-              <div class="text-weight-bold text-slate-900 text-subtitle1 leading-tight">
-                {{ tenantStore.activeTenant?.name || 'Workspace' }}
-              </div>
-              <div class="text-xs text-slate-500">
-                {{ tenantStore.activeTenant?.slug }}
+      <div class="drawer-content flex flex-col justify-between full-width">
+        <div class="full-width">
+          <!-- Workspace Title / Header / Tenant Selector -->
+          <div 
+            class="brand-section border-bottom flex items-center q-px-sm full-width" 
+            :class="miniState ? 'justify-center' : 'justify-start'"
+          >
+            <!-- Tenant Selector Dropdown (Shown ONLY if user has multiple tenants) -->
+            <q-btn-dropdown
+              v-if="tenantStore.myTenants && tenantStore.myTenants.length > 1"
+              flat
+              no-caps
+              dense
+              no-caret
+              align="left"
+              class="full-width tenant-sidebar-btn"
+              content-class="tenant-dropdown-menu"
+            >
+              <template #label>
+                <div class="row items-center no-wrap text-left full-width">
+                  <q-icon name="workspaces" size="20px" class="text-primary" :class="{ 'q-mr-sm': !miniState }" />
+                  <div v-if="!miniState" class="col text-ellipsis overflow-hidden">
+                    <div class="text-weight-bold text-dark text-xs leading-none">
+                      {{ tenantStore.activeTenant?.name || 'Workspace' }}
+                    </div>
+                    <div class="text-xxs text-grey-7 leading-none q-mt-xs">
+                      {{ tenantStore.activeRole || 'Member' }}
+                    </div>
+                  </div>
+                  <q-icon v-if="!miniState" name="arrow_drop_down" size="16px" class="text-grey-7 q-ml-xs" />
+                </div>
+              </template>
+
+              <!-- Dropdown List of Tenants -->
+              <q-list class="q-py-xs bg-white text-dark border-all">
+                <q-item-label header class="text-grey-7 text-xs font-semibold q-pb-xs">
+                  Switch Workspace
+                </q-item-label>
+
+                <q-item
+                  v-for="membership in tenantStore.myTenants"
+                  :key="membership.id"
+                  clickable
+                  v-close-popup
+                  :active="membership.tenants?.id === tenantStore.activeTenant?.id"
+                  active-class="active-tenant-item"
+                  class="q-py-sm tenant-select-item"
+                  @click="switchWorkspace(membership.tenants?.slug)"
+                >
+                  <q-item-section avatar>
+                    <q-avatar size="28px" class="tenant-avatar-small">
+                      {{ getInitials(membership.tenants?.name || '') }}
+                    </q-avatar>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold text-xs">
+                      {{ membership.tenants?.name }}
+                    </q-item-label>
+                    <q-item-label caption class="text-grey-6" style="font-size: 10px;">
+                      {{ membership.tenant_roles?.name || 'Member' }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side v-if="membership.tenants?.id === tenantStore.activeTenant?.id">
+                    <q-icon name="check" color="primary" size="16px" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
+
+            <!-- Otherwise, show a static tenant brand header (Single Tenant case) -->
+            <div v-else class="row items-center no-wrap q-pl-xs">
+              <q-icon name="workspaces" size="20px" class="text-primary" :class="{ 'q-mr-sm': !miniState }" />
+              <div v-if="!miniState" class="q-ml-xs">
+                <div class="text-weight-bold text-dark text-xs leading-tight">
+                  {{ tenantStore.activeTenant?.name || 'Workspace' }}
+                </div>
+                <div class="text-xxs text-grey-7 leading-none">
+                  {{ tenantStore.activeTenant?.slug }}
+                </div>
               </div>
             </div>
           </div>
 
+          <!-- User Profile Info (Top of Drawer) -->
+          <div class="border-bottom q-py-xs bg-white full-width">
+            <q-item clickable class="q-px-sm full-width" :to="`/${tenantStore.activeTenant?.slug}/settings`">
+              <q-item-section avatar>
+                <q-avatar size="28px" class="user-avatar text-white">
+                  <img
+                    v-if="tenantStore.userProfile?.avatar_url"
+                    :src="tenantStore.userProfile.avatar_url"
+                  />
+                  <span v-else>{{ userInitials }}</span>
+                </q-avatar>
+                <q-tooltip v-if="miniState" anchor="center right" self="center left" :offset="[10, 10]">
+                  {{ tenantStore.userProfile?.full_name || 'User Profile' }} ({{ tenantStore.user?.email }})
+                </q-tooltip>
+              </q-item-section>
+              <q-item-section v-if="!miniState">
+                <q-item-label class="text-weight-bold text-xs text-dark leading-tight">
+                  {{ tenantStore.userProfile?.full_name || 'User Profile' }}
+                </q-item-label>
+                <q-item-label caption class="text-caption text-grey-7 leading-none q-mt-xs" style="font-size: 10px;">
+                  {{ tenantStore.user?.email }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </div>
+
           <!-- Navigation Links -->
-          <q-list class="q-px-sm q-py-md">
+          <q-list class="q-px-sm q-py-md full-width">
             <q-item
               v-for="item in navItems"
               :key="item.toName"
@@ -193,20 +160,37 @@
               <q-item-section avatar>
                 <q-icon :name="item.icon" size="22px" />
               </q-item-section>
-              <q-item-section>{{ item.label }}</q-item-section>
+              <q-item-section v-if="!miniState">{{ item.label }}</q-item-section>
+              <q-tooltip v-if="miniState" anchor="center right" self="center left" :offset="[10, 10]">
+                {{ item.label }}
+              </q-tooltip>
             </q-item>
           </q-list>
         </div>
 
-        <!-- Footer / Version -->
-        <div class="q-pa-md text-center text-xs text-slate-400 border-top">
-          Powered by Supabase + Quasar
+        <!-- Sign Out at Drawer Bottom -->
+        <div class="border-top q-py-xs bg-white full-width">
+          <q-item 
+            clickable 
+            class="q-px-sm text-negative full-width"
+            @click="handleSignOut"
+          >
+            <q-item-section avatar>
+              <q-icon name="logout" size="20px" color="negative" />
+              <q-tooltip v-if="miniState" anchor="center right" self="center left" :offset="[10, 10]">
+                Sign Out
+              </q-tooltip>
+            </q-item-section>
+            <q-item-section v-if="!miniState">
+              <q-item-label class="text-xs text-weight-bold">Sign Out</q-item-label>
+            </q-item-section>
+          </q-item>
         </div>
       </div>
     </q-drawer>
 
     <!-- Page Container -->
-    <q-page-container class="bg-slate-900 text-slate-800 min-h-screen">
+    <q-page-container class="bg-grey-2 text-dark min-h-screen">
       <router-view v-slot="{ Component }">
         <transition name="fade-slide" mode="out-in">
           <component :is="Component" />
@@ -218,10 +202,10 @@
     <q-dialog v-model="showCreateWorkspaceDialog" persistent>
       <q-card
         style="width: 450px; max-width: 90vw; border-radius: 16px"
-        class="q-pa-md bg-white text-slate-900"
+        class="q-pa-md bg-white text-dark"
       >
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-bold text-slate-800">Create New Workspace</div>
+          <div class="text-h6 text-bold text-dark">Create New Workspace</div>
           <q-space />
           <q-btn
             icon="close"
@@ -229,7 +213,7 @@
             round
             dense
             v-close-popup
-            class="cursor-pointer text-slate-500"
+            class="cursor-pointer text-grey-7"
             :disable="createLoading"
           />
         </q-card-section>
@@ -247,7 +231,7 @@
 
           <q-form @submit.prevent="handleCreateWorkspace" class="q-gutter-y-md">
             <div>
-              <label class="text-slate-600 font-semibold q-mb-xs block text-xs"
+              <label class="text-grey-7 font-semibold q-mb-xs block text-xs"
                 >Workspace Name</label
               >
               <q-input
@@ -264,7 +248,7 @@
             </div>
 
             <div>
-              <label class="text-slate-600 font-semibold q-mb-xs block text-xs"
+              <label class="text-grey-7 font-semibold q-mb-xs block text-xs"
                 >Workspace Slug (URL)</label
               >
               <q-input
@@ -291,7 +275,7 @@
                 label="Cancel"
                 v-close-popup
                 :disable="createLoading"
-                class="cursor-pointer text-slate-500"
+                class="cursor-pointer text-grey-7"
               />
               <q-btn
                 type="submit"
@@ -311,12 +295,16 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 import { useTenantStore } from '../stores/tenant';
 import { createTenant } from '../services/multiTenant';
 
 const router = useRouter();
+const $q = useQuasar();
 const tenantStore = useTenantStore();
-const leftDrawerOpen = ref(true);
+const leftDrawerOpen = ref(false);
+const isPinned = ref(false);
+const miniState = ref(true);
 
 const showCreateWorkspaceDialog = ref(false);
 const newWorkspaceName = ref('');
@@ -392,7 +380,25 @@ const navItems = computed<NavItem[]>(() => {
 });
 
 const toggleLeftDrawer = () => {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
+  if ($q.screen.gt.xs) {
+    isPinned.value = !isPinned.value;
+    miniState.value = !isPinned.value;
+  } else {
+    leftDrawerOpen.value = !leftDrawerOpen.value;
+    miniState.value = false;
+  }
+};
+
+const onMouseOver = () => {
+  if ($q.screen.gt.xs && !isPinned.value) {
+    miniState.value = false;
+  }
+};
+
+const onMouseOut = () => {
+  if ($q.screen.gt.xs && !isPinned.value) {
+    miniState.value = true;
+  }
 };
 
 const getInitials = (name: string) => {
@@ -405,9 +411,7 @@ const getInitials = (name: string) => {
     .toUpperCase();
 };
 
-const activeTenantNameInitials = computed(() => {
-  return getInitials(tenantStore.activeTenant?.name || '');
-});
+
 
 const userInitials = computed(() => {
   const profileName = tenantStore.userProfile?.full_name || tenantStore.user?.email || '';
@@ -456,8 +460,8 @@ const handleSignOut = async () => {
 }
 
 .tenant-dropdown-btn {
-  padding: 4px 12px;
-  border-radius: 12px;
+  padding: 2px 8px;
+  border-radius: 8px;
   border: 1px solid #cbd5e1;
   background: #f8fafc;
   transition: all 0.2s ease;
@@ -465,6 +469,16 @@ const handleSignOut = async () => {
   &:hover {
     background: #f1f5f9;
     border-color: #94a3b8;
+  }
+}
+
+.tenant-sidebar-btn {
+  width: 100%;
+  border-radius: 8px;
+  padding: 4px;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.03);
   }
 }
 

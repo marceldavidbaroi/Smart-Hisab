@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex flex-center bg-grey-9 q-pa-md fullscreen" style="min-height: 100vh">
+  <q-page class="flex flex-center bg-grey-2 q-pa-md fullscreen" style="min-height: 100vh">
     <q-card
       class="pin-card no-shadow bordered rounded-borders bg-white"
       style="width: 100%; max-width: 450px"

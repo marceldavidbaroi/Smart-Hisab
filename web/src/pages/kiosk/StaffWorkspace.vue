@@ -1,20 +1,20 @@
 <template>
-  <q-page class="bg-grey-10 text-white q-pa-md">
+  <q-page class="bg-grey-2 text-dark q-pa-md">
     <div class="workspace-container q-mx-auto">
       <!-- Welcome & Shift Header -->
       <div class="row items-center justify-between q-mb-lg q-col-gutter-sm">
         <div>
-          <h1 class="text-h4 text-weight-bold q-my-none">Kiosk Workspace</h1>
-          <p class="text-subtitle2 text-grey-5 q-my-none">
+          <h1 class="text-h4 text-weight-bold q-my-none text-dark">Kiosk Workspace</h1>
+          <p class="text-subtitle2 text-grey-7 q-my-none">
             {{ currentStaffName }} —
-            <span class="capitalize text-primary">{{ currentStaffRole }}</span>
+            <span class="capitalize text-primary font-semibold">{{ currentStaffRole }}</span>
           </p>
         </div>
         <div class="row items-center q-gutter-sm">
-          <q-card class="flat bordered bg-grey-9 q-px-md q-py-sm row items-center">
+          <q-card class="flat bordered bg-white q-px-md q-py-sm row items-center text-dark">
             <q-icon name="timer" size="20px" color="primary" class="q-mr-sm" />
             <div class="column">
-              <span class="text-caption text-grey-5 leading-none">Shift Duration</span>
+              <span class="text-caption text-grey-7 leading-none">Shift Duration</span>
               <span class="text-subtitle2 text-weight-bold font-mono">{{ shiftTimeStr }}</span>
             </div>
           </q-card>
@@ -37,17 +37,17 @@
           <q-card
             flat
             bordered
-            class="action-card cursor-pointer transition-all bg-grey-9 border-grey-8 hover-card column justify-center items-center q-pa-lg"
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
             role="button"
             tabindex="0"
             v-ripple
             @click="openPosDialog"
           >
-            <q-avatar size="56px" color="green-10" text-color="green-4" class="q-mb-md">
+            <q-avatar size="56px" color="green-1" text-color="green-8" class="q-mb-md">
               <q-icon name="shopping_cart" size="28px" />
             </q-avatar>
             <div class="text-subtitle1 text-weight-bold">POS Cash Sale</div>
-            <p class="text-caption text-grey-5 text-center q-mt-xs q-mb-none">
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
               Record a direct cash purchase or walk-in transaction.
             </p>
           </q-card>
@@ -58,17 +58,17 @@
           <q-card
             flat
             bordered
-            class="action-card cursor-pointer transition-all bg-grey-9 border-grey-8 hover-card column justify-center items-center q-pa-lg"
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
             role="button"
             tabindex="0"
             v-ripple
             @click="openMealDialog"
           >
-            <q-avatar size="56px" color="orange-10" text-color="orange-4" class="q-mb-md">
+            <q-avatar size="56px" color="orange-1" text-color="orange-8" class="q-mb-md">
               <q-icon name="restaurant" size="28px" />
             </q-avatar>
             <div class="text-subtitle1 text-weight-bold">Record Meal</div>
-            <p class="text-caption text-grey-5 text-center q-mt-xs q-mb-none">
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
               Deduct or log meals for staff and contract employees.
             </p>
           </q-card>
@@ -79,17 +79,17 @@
           <q-card
             flat
             bordered
-            class="action-card cursor-pointer transition-all bg-grey-9 border-grey-8 hover-card column justify-center items-center q-pa-lg"
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
             role="button"
             tabindex="0"
             v-ripple
             @click="openAdvanceDialog"
           >
-            <q-avatar size="56px" color="blue-10" text-color="blue-4" class="q-mb-md">
+            <q-avatar size="56px" color="blue-1" text-color="blue-8" class="q-mb-md">
               <q-icon name="payments" size="28px" />
             </q-avatar>
             <div class="text-subtitle1 text-weight-bold">Cash Advance</div>
-            <p class="text-caption text-grey-5 text-center q-mt-xs q-mb-none">
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
               Distribute/request cash payroll advances for staff.
             </p>
           </q-card>
@@ -97,15 +97,14 @@
       </div>
 
       <!-- Shift History Logs Table -->
-      <q-card class="flat bordered bg-grey-9 q-pa-md">
+      <q-card class="flat bordered bg-white text-dark q-pa-md">
         <div class="text-h6 text-weight-bold q-mb-md">Logged Transactions (This Shift)</div>
         <q-table
           :rows="shiftLogs"
           :columns="logColumns"
           row-key="id"
           flat
-          dark
-          class="bg-transparent text-white"
+          class="bg-white text-dark"
           no-data-label="No transactions logged during this session."
           dense
         >
@@ -133,19 +132,19 @@
 
     <!-- Confirm Clock Out Dialog -->
     <q-dialog v-model="confirmClockOut" persistent>
-      <q-card class="bg-grey-9 text-white border-all rounded-borders q-pa-md">
+      <q-card class="bg-white text-dark border-all rounded-borders q-pa-md">
         <q-card-section class="row items-center">
-          <q-avatar icon="logout" color="red-9" text-color="white" class="q-mr-md" />
+          <q-avatar icon="logout" color="red-1" text-color="red-9" class="q-mr-md" />
           <span class="text-h6 text-weight-bold">Clock Out / Logout?</span>
         </q-card-section>
 
-        <q-card-section class="q-py-md text-grey-4">
+        <q-card-section class="q-py-md text-grey-7">
           This will terminate your current active shift session on this terminal. Any uncommitted
           logs will be lost.
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" v-close-popup color="grey-5" />
+          <q-btn flat label="Cancel" v-close-popup color="grey-7" />
           <q-btn
             flat
             label="Clock Out"
@@ -160,17 +159,17 @@
 
     <!-- POS Sale Dialog -->
     <q-dialog v-model="showPosDialog" persistent>
-      <q-card class="bg-grey-9 text-white border-all rounded-borders dialog-card q-pa-md">
+      <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold">Record POS Cash Sale</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="grey-5" />
+          <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
 
         <q-form @submit.prevent="submitPosSale" class="q-gutter-y-md q-mt-sm">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Sale Value (BDT)</label
               >
               <q-input
@@ -178,14 +177,13 @@
                 type="number"
                 filled
                 color="primary"
-                dark
-                class="custom-dark-input text-h6 font-mono"
+                class="custom-input text-h6 font-mono"
                 :rules="[(val) => (!!val && val > 0) || 'Amount must be greater than zero']"
                 hide-bottom-space
               />
             </div>
             <div>
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Optional Description</label
               >
               <q-input
@@ -193,14 +191,13 @@
                 type="textarea"
                 filled
                 color="primary"
-                dark
-                class="custom-dark-input"
+                class="custom-input"
                 rows="2"
               />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup color="grey-5" />
+            <q-btn flat label="Cancel" v-close-popup color="grey-7" />
             <q-btn
               type="submit"
               label="Record Sale"
@@ -215,17 +212,17 @@
 
     <!-- Record Meal Dialog -->
     <q-dialog v-model="showMealDialog" persistent>
-      <q-card class="bg-grey-9 text-white border-all rounded-borders dialog-card q-pa-md">
+      <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold">Record Staff / Worker Meal</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="grey-5" />
+          <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
 
         <q-form @submit.prevent="submitMeal" class="q-gutter-y-md q-mt-sm">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Consumer Category</label
               >
               <q-select
@@ -233,12 +230,11 @@
                 :options="['Contract Employee', 'Kitchen Staff', 'Canteen Customer']"
                 filled
                 color="primary"
-                dark
-                class="custom-dark-input"
+                class="custom-input"
               />
             </div>
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Meal Selection</label
               >
               <q-select
@@ -246,12 +242,11 @@
                 :options="['Standard Breakfast', 'Full Lunch Set', 'Dinner Combo']"
                 filled
                 color="primary"
-                dark
-                class="custom-dark-input"
+                class="custom-input"
               />
             </div>
             <div>
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Quantity</label
               >
               <q-input
@@ -259,15 +254,14 @@
                 type="number"
                 filled
                 color="primary"
-                dark
-                class="custom-dark-input font-mono"
+                class="custom-input font-mono"
                 :rules="[(val) => (!!val && val > 0) || 'Quantity must be 1 or more']"
                 hide-bottom-space
               />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup color="grey-5" />
+            <q-btn flat label="Cancel" v-close-popup color="grey-7" />
             <q-btn
               type="submit"
               label="Record Meal"
@@ -282,17 +276,17 @@
 
     <!-- Cash Advance Dialog -->
     <q-dialog v-model="showAdvanceDialog" persistent>
-      <q-card class="bg-grey-9 text-white border-all rounded-borders dialog-card q-pa-md">
+      <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold">Request Cash Payroll Advance</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="grey-5" />
+          <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
 
         <q-form @submit.prevent="submitAdvance" class="q-gutter-y-md q-mt-sm">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Advance Amount (BDT)</label
               >
               <q-input
@@ -300,14 +294,13 @@
                 type="number"
                 filled
                 color="primary"
-                dark
-                class="custom-dark-input text-h6 font-mono"
+                class="custom-input text-h6 font-mono"
                 :rules="[(val) => (!!val && val > 0) || 'Amount must be greater than zero']"
                 hide-bottom-space
               />
             </div>
             <div>
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Reason / Note</label
               >
               <q-input
@@ -315,8 +308,7 @@
                 type="textarea"
                 filled
                 color="primary"
-                dark
-                class="custom-dark-input"
+                class="custom-input"
                 rows="2"
                 :rules="[(val) => !!val || 'Reason is required']"
                 hide-bottom-space
@@ -324,7 +316,7 @@
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup color="grey-5" />
+            <q-btn flat label="Cancel" v-close-popup color="grey-7" />
             <q-btn
               type="submit"
               label="Request Advance"
@@ -532,10 +524,10 @@ const formatTime = (date: Date) => {
 }
 
 .hover-card:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--q-primary);
+  background: rgba(99, 102, 241, 0.04);
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
 .rounded-btn {
@@ -547,15 +539,15 @@ const formatTime = (date: Date) => {
   max-width: 450px;
 }
 
-.custom-dark-input :deep(.q-field__control) {
+.custom-input :deep(.q-field__control) {
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1;
+  color: #0f172a !important;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: #94a3b8;
   }
 
   &.q-field__control--focused {
@@ -564,11 +556,7 @@ const formatTime = (date: Date) => {
 }
 
 .border-all {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.border-grey-8 {
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .cursor-pointer {

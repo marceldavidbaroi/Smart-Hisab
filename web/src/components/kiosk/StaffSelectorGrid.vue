@@ -7,7 +7,7 @@
         class="staff-card cursor-pointer transition-all overflow-hidden relative-position"
         :class="{
           'selected-card bg-primary-dark border-primary': selectedStaffId === staff.id,
-          'bg-grey-9 border-grey-8 hover-card': selectedStaffId !== staff.id,
+          'bg-white hover-card text-dark': selectedStaffId !== staff.id,
         }"
         role="button"
         tabindex="0"
@@ -31,13 +31,13 @@
           <div class="column q-ml-md overflow-hidden">
             <span
               class="text-subtitle2 text-weight-bold ellipsis"
-              :class="selectedStaffId === staff.id ? 'text-white' : 'text-grey-2'"
+              :class="selectedStaffId === staff.id ? 'text-white' : 'text-dark'"
             >
               {{ staff.fullName }}
             </span>
             <span
               class="text-caption text-weight-medium capitalize ellipsis"
-              :class="selectedStaffId === staff.id ? 'text-grey-3' : 'text-grey-5'"
+              :class="selectedStaffId === staff.id ? 'text-grey-3' : 'text-grey-7'"
             >
               {{ staff.role }}
             </span>
@@ -48,11 +48,11 @@
 
     <!-- Empty State -->
     <div v-if="staffList.length === 0" class="col-12 text-center q-py-xl">
-      <q-icon name="group_off" size="56px" color="grey-7" class="q-mb-md" />
-      <div class="text-subtitle1 text-weight-medium text-grey-5">
+      <q-icon name="group_off" size="56px" color="grey-6" class="q-mb-md" />
+      <div class="text-subtitle1 text-weight-medium text-grey-8">
         No staff members configured for counter access.
       </div>
-      <div class="text-caption text-grey-6 q-mt-xs">
+      <div class="text-caption text-grey-7 q-mt-xs">
         Please check dashboard settings and ensure terminal access is allowed.
       </div>
     </div>
@@ -98,10 +98,10 @@ const getInitials = (name: string) => {
 }
 
 .hover-card:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--q-primary);
+  background: rgba(99, 102, 241, 0.04);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .bg-primary-dark {
@@ -111,10 +111,6 @@ const getInitials = (name: string) => {
 .border-primary {
   border-color: var(--q-primary) !important;
   box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
-}
-
-.border-grey-8 {
-  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .capitalize {

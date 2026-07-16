@@ -20,7 +20,7 @@
         <q-btn
           :flat="key.type === 'action'"
           :outline="key.type === 'number'"
-          :color="key.color || 'white'"
+          :color="key.color || 'dark'"
           :disabled="disabled || (key.value === 'submit' && pin.length < maxDigits)"
           class="keypad-btn full-width cursor-pointer q-btn--dense text-weight-bold"
           :aria-label="key.label"
@@ -85,7 +85,7 @@ const keys: KeyConfig[] = [
     label: 'Clear',
     type: 'action',
     icon: 'backspace',
-    color: 'red-4',
+    color: 'red-5',
     keyshortcut: 'Backspace',
   },
   { value: '0', display: '0', label: 'Number 0', type: 'number', keyshortcut: '0' },
@@ -178,7 +178,7 @@ defineExpose({
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(0, 0, 0, 0.12);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.filled {
@@ -208,14 +208,14 @@ defineExpose({
 .keypad-btn {
   height: 56px; /* Custom touch target size > 48px */
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
-  color: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  color: #0f172a !important;
   transition: all 0.2s ease;
 
   &:hover:not([disabled]) {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: #f1f5f9;
+    border-color: rgba(0, 0, 0, 0.24);
   }
 
   &[disabled] {
@@ -225,13 +225,13 @@ defineExpose({
 
 @keyframes border-pulse {
   0% {
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(0, 0, 0, 0.12);
   }
   50% {
     border-color: var(--q-primary);
   }
   100% {
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(0, 0, 0, 0.12);
   }
 }
 

@@ -1,13 +1,13 @@
 <template>
-  <q-page class="flex flex-center bg-grey-10 text-white q-pa-md">
+  <q-page class="flex flex-center bg-grey-2 text-dark q-pa-md">
     <div class="pair-card-container full-width">
-      <q-card class="flat bordered bg-grey-9 q-pa-lg text-white">
+      <q-card class="flat bordered bg-white q-pa-lg text-dark">
         <q-card-section class="column items-center q-pb-none text-center">
-          <q-avatar size="64px" color="grey-8" text-color="primary" class="q-mb-md">
+          <q-avatar size="64px" color="grey-3" text-color="primary" class="q-mb-md">
             <q-icon name="devices" size="36px" />
           </q-avatar>
           <h1 class="text-h5 text-weight-bold q-my-none">Pair Kiosk Terminal</h1>
-          <p class="text-caption text-grey-5 q-mt-xs q-mb-md">
+          <p class="text-caption text-grey-7 q-mt-xs q-mb-md">
             Authorize this device to process fast PIN-based staff operations.
           </p>
         </q-card-section>
@@ -28,7 +28,7 @@
             </q-banner>
 
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Device Name</label
               >
               <q-input
@@ -37,8 +37,7 @@
                 filled
                 placeholder="e.g. Counter Tablet A"
                 color="primary"
-                dark
-                class="custom-dark-input"
+                class="custom-input"
                 :rules="[(val) => !!val || 'Device name is required']"
                 hide-bottom-space
                 :disable="loading"
@@ -46,7 +45,7 @@
             </div>
 
             <div>
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Pairing Code (6 Digits)</label
               >
               <q-input
@@ -57,8 +56,7 @@
                 mask="### ###"
                 unmasked-value
                 color="primary"
-                dark
-                class="custom-dark-input text-center text-h5 font-mono tracking-widest"
+                class="custom-input text-center text-h5 font-mono tracking-widest"
                 :rules="[
                   (val) => !!val || 'Pairing code is required',
                   (val) => val.length === 6 || 'Must be exactly 6 digits',
@@ -126,15 +124,15 @@ const handlePairDevice = async () => {
   max-width: 420px;
 }
 
-.custom-dark-input :deep(.q-field__control) {
+.custom-input :deep(.q-field__control) {
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1;
+  color: #0f172a !important;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: #94a3b8;
   }
 
   &.q-field__control--focused {

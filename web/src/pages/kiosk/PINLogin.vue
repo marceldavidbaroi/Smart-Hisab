@@ -1,5 +1,5 @@
 <template>
-  <q-page class="bg-grey-10 text-white q-pa-md flex flex-center">
+  <q-page class="bg-grey-2 text-dark q-pa-md flex flex-center">
     <div class="kiosk-container full-width">
       <!-- Top banner for blocked/locked states -->
       <q-banner
@@ -22,7 +22,7 @@
         <!-- Left Column: Staff Grid (col-7) -->
         <div class="col-7 column">
           <q-card
-            class="flat bordered bg-grey-9 q-pa-md flex-grow column justify-start"
+            class="flat bordered bg-white q-pa-md flex-grow column justify-start text-dark"
             style="min-height: 500px"
           >
             <div class="row items-center justify-between q-mb-md">
@@ -32,7 +32,7 @@
                 round
                 dense
                 icon="refresh"
-                color="grey-5"
+                color="grey-7"
                 @click="loadStaff"
                 :loading="loading"
               />
@@ -50,19 +50,19 @@
         <!-- Right Column: PIN Pad (col-5) -->
         <div class="col-5 column">
           <q-card
-            class="flat bordered bg-grey-9 q-pa-md flex-grow column justify-center items-center"
+            class="flat bordered bg-white q-pa-md flex-grow column justify-center items-center text-dark"
           >
             <div v-if="selectedStaff" class="column items-center full-width text-center">
               <div class="text-subtitle1 text-weight-bold q-mb-xs">
                 Welcome back, {{ selectedStaff.fullName }}
               </div>
-              <div class="text-caption text-grey-5 q-mb-md">
+              <div class="text-caption text-grey-7 q-mb-md">
                 Enter your 4-digit PIN to authenticate
               </div>
 
               <div
                 v-if="!kioskStore.isOnline"
-                class="text-caption text-orange-4 q-mb-md text-weight-bold"
+                class="text-caption text-orange-9 q-mb-md text-weight-bold"
                 role="alert"
                 aria-live="assertive"
               >
@@ -87,7 +87,7 @@
       <div class="lt-md">
         <!-- Panel A: Select Staff -->
         <div v-if="!selectedStaff" class="column">
-          <q-card class="flat bordered bg-grey-9 q-pa-md" style="min-height: 400px">
+          <q-card class="flat bordered bg-white q-pa-md text-dark" style="min-height: 400px">
             <div class="row items-center justify-between q-mb-md">
               <div class="text-h6 text-weight-bold">Select Your Profile</div>
               <q-btn
@@ -95,7 +95,7 @@
                 round
                 dense
                 icon="refresh"
-                color="grey-5"
+                color="grey-7"
                 @click="loadStaff"
                 :loading="loading"
               />
@@ -110,14 +110,14 @@
 
         <!-- Panel B: Enter PIN -->
         <div v-else class="column">
-          <q-card class="flat bordered bg-grey-9 q-pa-md column items-center text-center">
+          <q-card class="flat bordered bg-white q-pa-md column items-center text-center text-dark">
             <div class="row items-center full-width q-mb-md">
               <q-btn
                 flat
                 round
                 dense
                 icon="arrow_back"
-                color="white"
+                color="grey-9"
                 @click="selectedStaff = null"
               />
               <q-space />
@@ -125,11 +125,11 @@
               <q-space />
               <div style="width: 32px"></div>
             </div>
-            <p class="text-caption text-grey-5 q-mb-md">Enter your 4-digit PIN</p>
+            <p class="text-caption text-grey-7 q-mb-md">Enter your 4-digit PIN</p>
 
             <div
               v-if="!kioskStore.isOnline"
-              class="text-caption text-orange-4 q-mb-md text-weight-bold"
+              class="text-caption text-orange-9 q-mb-md text-weight-bold"
               role="alert"
               aria-live="assertive"
             >
@@ -150,7 +150,7 @@
         <q-btn
           flat
           dense
-          color="grey-6"
+          color="grey-7"
           icon="power_settings_new"
           label="Exit Kiosk Mode / Unpair Device"
           class="q-px-md text-weight-bold cursor-pointer"
@@ -162,15 +162,15 @@
     <!-- First-Time PIN Setup Dialog -->
     <q-dialog v-model="showSetupDialog" persistent>
       <q-card
-        class="bg-grey-9 text-white border-all rounded-borders q-pa-md"
+        class="bg-white text-dark border-all rounded-borders q-pa-md"
         style="width: 100%; max-width: 400px"
       >
         <q-card-section class="column items-center text-center q-pt-md">
-          <q-avatar size="48px" color="grey-8" text-color="warning" class="q-mb-md">
+          <q-avatar size="48px" color="grey-3" text-color="amber-9" class="q-mb-md">
             <q-icon name="lock_reset" size="28px" />
           </q-avatar>
           <div class="text-h6 text-weight-bold">Set Private PIN</div>
-          <p class="text-caption text-grey-5 q-mt-sm">
+          <p class="text-caption text-grey-7 q-mt-sm">
             For security, you must replace your temporary PIN with a private 4-digit PIN.
           </p>
         </q-card-section>
@@ -187,7 +187,7 @@
             </q-banner>
 
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >New 4-Digit PIN</label
               >
               <q-input
@@ -197,8 +197,7 @@
                 placeholder="••••"
                 mask="####"
                 color="primary"
-                dark
-                class="custom-dark-input text-center text-h6 tracking-widest"
+                class="custom-input text-center text-h6 tracking-widest"
                 :rules="[
                   (val) => !!val || 'New PIN is required',
                   (val) => val.length === 4 || 'Must be exactly 4 digits',
@@ -209,7 +208,7 @@
             </div>
 
             <div>
-              <label class="block text-caption text-grey-4 text-weight-medium q-mb-xs"
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
                 >Confirm New PIN</label
               >
               <q-input
@@ -219,8 +218,7 @@
                 placeholder="••••"
                 mask="####"
                 color="primary"
-                dark
-                class="custom-dark-input text-center text-h6 tracking-widest"
+                class="custom-input text-center text-h6 tracking-widest"
                 :rules="[
                   (val) => !!val || 'Please confirm your PIN',
                   (val) => val === newPin || 'PINs do not match',
@@ -248,21 +246,21 @@
     <!-- Confirm Exit Kiosk Dialog -->
     <q-dialog v-model="confirmExitKiosk" persistent>
       <q-card
-        class="bg-grey-9 text-white border-all rounded-borders q-pa-md"
+        class="bg-white text-dark border-all rounded-borders q-pa-md"
         style="width: 100%; max-width: 400px"
       >
         <q-card-section class="column items-center text-center q-pt-md">
-          <q-avatar size="48px" color="red-10" text-color="red-4" class="q-mb-md">
+          <q-avatar size="48px" color="red-1" text-color="red-9" class="q-mb-md">
             <q-icon name="warning" size="28px" />
           </q-avatar>
           <div class="text-h6 text-weight-bold">Exit Kiosk Mode?</div>
-          <p class="text-caption text-grey-5 q-mt-sm">
+          <p class="text-caption text-grey-7 q-mt-sm">
             This will disconnect this terminal device. You will need a new 6-digit pairing code to
             re-link this device.
           </p>
         </q-card-section>
         <q-card-actions align="right" class="q-gutter-sm">
-          <q-btn flat label="Cancel" color="white" v-close-popup class="cursor-pointer" />
+          <q-btn flat label="Cancel" color="grey-8" v-close-popup class="cursor-pointer" />
           <q-btn
             label="Exit & Unpair"
             color="red"
@@ -419,15 +417,15 @@ const handleExitKiosk = () => {
   overflow-y: auto;
 }
 
-.custom-dark-input :deep(.q-field__control) {
+.custom-input :deep(.q-field__control) {
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1;
+  color: #0f172a !important;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: #94a3b8;
   }
 
   &.q-field__control--focused {
@@ -448,7 +446,7 @@ const handleExitKiosk = () => {
 }
 
 .border-all {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .cursor-pointer {

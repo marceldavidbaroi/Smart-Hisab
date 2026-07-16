@@ -1,14 +1,14 @@
 <template>
-  <q-layout view="hHh lpR fFf" class="bg-grey-10 text-white overflow-hidden select-none">
+  <q-layout view="hHh lpR fFf" class="bg-grey-2 text-dark overflow-hidden select-none">
     <!-- Header/Kiosk Status Bar -->
-    <q-header elevated class="bg-grey-9 text-white bordered-bottom">
+    <q-header bordered class="bg-white text-dark">
       <q-toolbar class="q-px-md" style="min-height: 56px">
-        <q-icon name="devices" size="24px" class="q-mr-sm text-primary" />
+        <q-icon name="devices" size="24px" class="text-primary q-mr-sm" />
         <div>
-          <div class="text-subtitle2 text-weight-bold leading-none">
+          <div class="text-subtitle2 text-weight-bold leading-none text-dark">
             {{ tenantName || 'Smart Hisab' }}
           </div>
-          <div class="text-caption text-grey-5 leading-none">
+          <div class="text-caption text-grey-7 leading-none">
             Terminal: {{ deviceName || 'Kiosk' }}
           </div>
         </div>
@@ -33,10 +33,10 @@
               {{ currentStaffName.charAt(0).toUpperCase() }}
             </q-avatar>
             <div class="column gt-xs">
-              <span class="text-caption text-weight-medium text-white leading-none">
+              <span class="text-caption text-weight-medium text-dark leading-none">
                 {{ currentStaffName }}
               </span>
-              <span class="text-caption text-grey-5 leading-none" style="font-size: 0.75rem">
+              <span class="text-caption text-grey-7 leading-none" style="font-size: 0.75rem">
                 {{ currentStaffRole }}
               </span>
             </div>
@@ -44,7 +44,7 @@
               flat
               dense
               round
-              color="red-4"
+              color="red-5"
               icon="logout"
               size="sm"
               class="cursor-pointer"
@@ -105,9 +105,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.bordered-bottom {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
 
 .leading-none {
   line-height: 1.25;
