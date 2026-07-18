@@ -1,6 +1,8 @@
 <template>
   <div class="signup-container">
-    <div class="text-h5 text-bold text-slate-800 q-mb-md">{{ $t('auth.signup.createAccount') }}</div>
+    <div class="text-h5 text-bold text-slate-800 q-mb-md">
+      {{ $t('auth.signup.createAccount') }}
+    </div>
     <p class="text-slate-500 q-mb-lg text-sm">{{ $t('auth.signup.subtitle') }}</p>
 
     <!-- Error Banner -->
@@ -14,9 +16,17 @@
     <!-- Success Message -->
     <div v-if="successMsg" class="text-center q-py-lg">
       <q-icon name="mark_email_read" size="72px" class="text-primary q-mb-md" />
-      <div class="text-h6 text-slate-800 text-bold q-mb-sm">{{ $t('auth.signup.verifyEmailTitle') }}</div>
-      <p class="text-slate-500 text-sm q-mb-lg" v-html="$t('auth.signup.verifyEmailText', { email: `<span class='text-slate-800 text-weight-bold'>${email}</span>` })">
-      </p>
+      <div class="text-h6 text-slate-800 text-bold q-mb-sm">
+        {{ $t('auth.signup.verifyEmailTitle') }}
+      </div>
+      <p
+        class="text-slate-500 text-sm q-mb-lg"
+        v-html="
+          $t('auth.signup.verifyEmailText', {
+            email: `<span class='text-slate-800 text-weight-bold'>${email}</span>`,
+          })
+        "
+      ></p>
       <q-btn
         color="primary"
         outline
@@ -28,9 +38,9 @@
 
     <q-form v-else @submit.prevent="handleSignup" class="q-gutter-y-md">
       <div>
-        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >{{ $t('auth.signup.fullNameLabel') }}</label
-        >
+        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+          $t('auth.signup.fullNameLabel')
+        }}</label>
         <q-input
           v-model="fullName"
           type="text"
@@ -44,9 +54,9 @@
       </div>
 
       <div>
-        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >{{ $t('auth.signup.emailLabel') }}</label
-        >
+        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+          $t('auth.signup.emailLabel')
+        }}</label>
         <q-input
           v-model="email"
           type="email"
@@ -60,9 +70,9 @@
       </div>
 
       <div>
-        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >{{ $t('auth.signup.passwordLabel') }}</label
-        >
+        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+          $t('auth.signup.passwordLabel')
+        }}</label>
         <q-input
           v-model="password"
           type="password"
@@ -91,9 +101,9 @@
       <!-- Separator -->
       <div class="row items-center q-my-lg">
         <q-separator class="col" />
-        <span class="text-slate-400 q-px-sm text-xs text-uppercase text-weight-bold"
-          >{{ $t('auth.login.orContinueWith') }}</span
-        >
+        <span class="text-slate-400 q-px-sm text-xs text-uppercase text-weight-bold">{{
+          $t('auth.login.orContinueWith')
+        }}</span>
         <q-separator class="col" />
       </div>
 

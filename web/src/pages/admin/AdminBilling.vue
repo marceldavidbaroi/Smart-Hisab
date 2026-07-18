@@ -36,13 +36,16 @@
       <div class="col-12 col-md-6">
         <q-card flat bordered class="bg-white">
           <q-card-section class="q-py-sm q-px-md border-bottom">
-            <div class="text-subtitle1 text-weight-bold text-grey-9">{{ $t('admin.billing.controlCard') }}</div>
+            <div class="text-subtitle1 text-weight-bold text-grey-9">
+              {{ $t('admin.billing.controlCard') }}
+            </div>
           </q-card-section>
 
           <q-card-section class="q-pt-md">
             <q-form @submit.prevent="updateBillingPolicy" class="q-gutter-y-md">
               <div>
-                <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                <label
+                  class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
                   >{{ $t('admin.billing.selectTenant') }}</label
                 >
                 <q-select
@@ -59,7 +62,8 @@
 
               <div v-if="selectedTenantId" class="q-gutter-y-md">
                 <div>
-                  <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                  <label
+                    class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
                     >{{ $t('admin.billing.planTier') }}</label
                   >
                   <q-select
@@ -72,7 +76,8 @@
                 </div>
 
                 <div>
-                  <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+                  <label
+                    class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
                     >{{ $t('admin.billing.paymentStatus') }}</label
                   >
                   <q-select
@@ -103,7 +108,9 @@
       <div class="col-12 col-md-6">
         <q-card flat bordered class="bg-white">
           <q-card-section class="q-py-sm q-px-md border-bottom">
-            <div class="text-subtitle1 text-weight-bold text-grey-9">{{ $t('admin.billing.featuresCard') }}</div>
+            <div class="text-subtitle1 text-weight-bold text-grey-9">
+              {{ $t('admin.billing.featuresCard') }}
+            </div>
           </q-card-section>
 
           <q-card-section class="q-pt-md">

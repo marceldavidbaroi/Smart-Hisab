@@ -21,7 +21,8 @@ declare module 'vue-i18n' {
 
 const LOCALE_KEY = 'smart-hisab-locale';
 const storedLocale = typeof window !== 'undefined' ? localStorage.getItem(LOCALE_KEY) : null;
-const initialLocale = (storedLocale && ['en-US', 'bn'].includes(storedLocale)) ? storedLocale : 'en-US';
+const initialLocale =
+  storedLocale && ['en-US', 'bn'].includes(storedLocale) ? storedLocale : 'en-US';
 
 export const i18n = createI18n({
   locale: initialLocale,
@@ -35,4 +36,3 @@ export default defineBoot(({ app }) => {
   // Set i18n instance on app
   app.use(i18n);
 });
-

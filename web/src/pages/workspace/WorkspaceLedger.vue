@@ -2,7 +2,9 @@
   <q-page class="q-pa-md bg-grey-1 text-dark">
     <div class="row items-center justify-between q-mb-md">
       <div>
-        <h1 class="text-h5 text-weight-bold text-slate-800 q-ma-none">{{ $t('workspace.ledger.title') }}</h1>
+        <h1 class="text-h5 text-weight-bold text-slate-800 q-ma-none">
+          {{ $t('workspace.ledger.title') }}
+        </h1>
         <p class="text-caption text-grey-6 q-ma-none q-mt-xs">
           {{ $t('workspace.ledger.subtitle') }}
         </p>
@@ -27,7 +29,9 @@
     <!-- Table Registry -->
     <q-card flat bordered class="q-pa-md bg-white border-all">
       <div class="row items-center justify-between q-mb-md">
-        <div class="text-subtitle1 text-weight-bold text-slate-800">{{ $t('workspace.ledger.cardTitle') }}</div>
+        <div class="text-subtitle1 text-weight-bold text-slate-800">
+          {{ $t('workspace.ledger.cardTitle') }}
+        </div>
         <q-btn
           flat
           dense

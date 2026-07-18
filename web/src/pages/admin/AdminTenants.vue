@@ -46,7 +46,9 @@
     <!-- Tenants Table -->
     <q-card flat bordered class="bg-white">
       <q-card-section class="row items-center justify-between border-bottom q-py-sm q-px-md">
-        <div class="text-subtitle1 text-weight-bold text-grey-9">{{ $t('admin.tenants.cardTitle') }}</div>
+        <div class="text-subtitle1 text-weight-bold text-grey-9">
+          {{ $t('admin.tenants.cardTitle') }}
+        </div>
         <q-btn
           flat
           round
@@ -106,7 +108,9 @@
     <q-dialog v-model="showCreateDialog" persistent>
       <q-card class="bg-white text-grey-9 q-pa-md" style="width: 100%; max-width: 500px">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold text-amber-10">{{ $t('admin.tenants.dialog.title') }}</div>
+          <div class="text-h6 text-weight-bold text-amber-10">
+            {{ $t('admin.tenants.dialog.title') }}
+          </div>
           <q-space />
           <q-btn
             icon="close"
@@ -122,9 +126,9 @@
         <q-form @submit.prevent="handleCreateTenant" class="q-gutter-y-md q-mt-md">
           <q-card-section class="q-py-none q-gutter-y-md">
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >{{ $t('admin.tenants.dialog.orgName') }}</label
-              >
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">{{
+                $t('admin.tenants.dialog.orgName')
+              }}</label>
               <q-input
                 v-model="name"
                 type="text"
@@ -139,9 +143,9 @@
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >{{ $t('admin.tenants.dialog.slug') }}</label
-              >
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">{{
+                $t('admin.tenants.dialog.slug')
+              }}</label>
               <q-input
                 v-model="slug"
                 type="text"
@@ -151,18 +155,16 @@
                 color="amber-10"
                 :rules="[
                   (val) => !!val || $t('admin.tenants.dialog.slugReq'),
-                  (val) =>
-                    /^[a-z0-9-]+$/.test(val) ||
-                    $t('admin.tenants.dialog.slugInvalid'),
+                  (val) => /^[a-z0-9-]+$/.test(val) || $t('admin.tenants.dialog.slugInvalid'),
                 ]"
                 hide-bottom-space
               />
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >{{ $t('admin.tenants.dialog.ownerEmail') }}</label
-              >
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">{{
+                $t('admin.tenants.dialog.ownerEmail')
+              }}</label>
               <q-input
                 v-model="ownerEmail"
                 type="email"
@@ -176,9 +178,9 @@
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >{{ $t('admin.tenants.dialog.parent') }}</label
-              >
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">{{
+                $t('admin.tenants.dialog.parent')
+              }}</label>
               <q-select
                 v-model="parentId"
                 :options="parentTenantOptions"
@@ -192,9 +194,9 @@
             </div>
 
             <div>
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >{{ $t('admin.tenants.dialog.tier') }}</label
-              >
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">{{
+                $t('admin.tenants.dialog.tier')
+              }}</label>
               <q-select
                 v-model="subscriptionTier"
                 :options="['free', 'pro', 'enterprise']"
@@ -205,9 +207,9 @@
             </div>
 
             <div class="q-mt-md">
-              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >{{ $t('admin.tenants.dialog.features') }}</label
-              >
+              <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption">{{
+                $t('admin.tenants.dialog.features')
+              }}</label>
               <div class="row q-col-gutter-sm q-mt-xs">
                 <div class="col-12">
                   <q-checkbox
@@ -254,7 +256,13 @@
           </q-card-section>
 
           <q-card-actions align="right" class="q-px-md q-pt-md">
-            <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" class="cursor-pointer" />
+            <q-btn
+              flat
+              :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
+              v-close-popup
+              color="grey-7"
+              class="cursor-pointer"
+            />
             <q-btn
               type="submit"
               unelevated
@@ -316,8 +324,20 @@ const getParentName = (parentUuid: string | null | undefined) => {
 };
 
 const columns = computed(() => [
-  { name: 'name', align: 'left' as const, label: t('admin.tenants.cols.name'), field: 'name', sortable: true },
-  { name: 'slug', align: 'left' as const, label: t('admin.tenants.cols.slug'), field: 'slug', sortable: true },
+  {
+    name: 'name',
+    align: 'left' as const,
+    label: t('admin.tenants.cols.name'),
+    field: 'name',
+    sortable: true,
+  },
+  {
+    name: 'slug',
+    align: 'left' as const,
+    label: t('admin.tenants.cols.slug'),
+    field: 'slug',
+    sortable: true,
+  },
   {
     name: 'parent',
     align: 'left' as const,
@@ -325,9 +345,26 @@ const columns = computed(() => [
     field: (row: Tenant) => getParentName(row.parent_id),
     sortable: true,
   },
-  { name: 'status', align: 'left' as const, label: t('admin.tenants.cols.status'), field: 'status', sortable: true },
-  { name: 'id', align: 'left' as const, label: t('admin.tenants.cols.id'), field: 'id', sortable: true },
-  { name: 'actions', align: 'right' as const, label: t('admin.tenants.cols.actions'), field: 'actions' },
+  {
+    name: 'status',
+    align: 'left' as const,
+    label: t('admin.tenants.cols.status'),
+    field: 'status',
+    sortable: true,
+  },
+  {
+    name: 'id',
+    align: 'left' as const,
+    label: t('admin.tenants.cols.id'),
+    field: 'id',
+    sortable: true,
+  },
+  {
+    name: 'actions',
+    align: 'right' as const,
+    label: t('admin.tenants.cols.actions'),
+    field: 'actions',
+  },
 ]);
 
 const autoGenerateSlug = (val: string | number | null) => {
@@ -375,7 +412,10 @@ const handleCreateTenant = async () => {
 
     await adminCreateTenant(createParams);
 
-    successMsg.value = t('admin.tenants.messages.success', { name: name.value, email: ownerEmail.value });
+    successMsg.value = t('admin.tenants.messages.success', {
+      name: name.value,
+      email: ownerEmail.value,
+    });
     showCreateDialog.value = false;
 
     // Reset form

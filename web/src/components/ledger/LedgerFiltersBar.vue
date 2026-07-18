@@ -14,7 +14,12 @@
             <q-popup-proxy cover transition-show="scale" transition-hide="scale">
               <q-date v-model="filters.start" mask="YYYY-MM-DD">
                 <div class="row items-center justify-end">
-                  <q-btn v-close-popup :label="$t('ledger.filters.closeBtn')" color="primary" flat />
+                  <q-btn
+                    v-close-popup
+                    :label="$t('ledger.filters.closeBtn')"
+                    color="primary"
+                    flat
+                  />
                 </div>
               </q-date>
             </q-popup-proxy>
@@ -36,7 +41,12 @@
             <q-popup-proxy cover transition-show="scale" transition-hide="scale">
               <q-date v-model="filters.end" mask="YYYY-MM-DD">
                 <div class="row items-center justify-end">
-                  <q-btn v-close-popup :label="$t('ledger.filters.closeBtn')" color="primary" flat />
+                  <q-btn
+                    v-close-popup
+                    :label="$t('ledger.filters.closeBtn')"
+                    color="primary"
+                    flat
+                  />
                 </div>
               </q-date>
             </q-popup-proxy>

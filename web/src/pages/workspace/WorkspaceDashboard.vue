@@ -2,7 +2,9 @@
   <q-page class="q-pa-lg">
     <div class="row items-center justify-between q-mb-xl">
       <div>
-        <h1 class="text-h4 text-bold q-my-none text-slate-850">{{ $t('workspace.dashboard.title') }}</h1>
+        <h1 class="text-h4 text-bold q-my-none text-slate-850">
+          {{ $t('workspace.dashboard.title') }}
+        </h1>
         <p class="text-slate-500 text-subtitle2 q-mt-xs q-mb-none">
           {{ $t('workspace.dashboard.subtitle') }}
           <span class="text-primary text-weight-bold">{{ tenantStore.activeTenant?.name }}</span>
@@ -22,19 +24,25 @@
         <q-card class="glass-card full-height">
           <q-card-section class="card-gradient-header row items-center q-pb-md">
             <q-icon name="info" size="24px" class="text-primary q-mr-sm" />
-            <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.dashboard.profileCardTitle') }}</div>
+            <div class="text-h6 text-bold text-slate-800">
+              {{ $t('workspace.dashboard.profileCardTitle') }}
+            </div>
           </q-card-section>
 
           <q-card-section class="q-pt-md">
             <div class="row q-col-gutter-y-md">
-               <div class="col-12 row items-center">
-                <div class="col-4 text-slate-500 text-weight-bold">{{ $t('workspace.dashboard.workspaceName') }}:</div>
+              <div class="col-12 row items-center">
+                <div class="col-4 text-slate-500 text-weight-bold">
+                  {{ $t('workspace.dashboard.workspaceName') }}:
+                </div>
                 <div class="col-8 text-weight-medium text-slate-800">
                   {{ tenantStore.activeTenant?.name }}
                 </div>
               </div>
               <div class="col-12 row items-center">
-                <div class="col-4 text-slate-500 text-weight-bold">{{ $t('workspace.dashboard.routingSlug') }}:</div>
+                <div class="col-4 text-slate-500 text-weight-bold">
+                  {{ $t('workspace.dashboard.routingSlug') }}:
+                </div>
                 <div class="col-8">
                   <q-badge
                     color="indigo-1"
@@ -46,13 +54,17 @@
                 </div>
               </div>
               <div class="col-12 row items-center">
-                <div class="col-4 text-slate-500 text-weight-bold">{{ $t('workspace.dashboard.tenantId') }}:</div>
+                <div class="col-4 text-slate-500 text-weight-bold">
+                  {{ $t('workspace.dashboard.tenantId') }}:
+                </div>
                 <div class="col-8 text-caption font-mono text-slate-500 ellipsis">
                   {{ tenantStore.activeTenant?.id }}
                 </div>
               </div>
               <div class="col-12 row items-center">
-                <div class="col-4 text-slate-500 text-weight-bold">{{ $t('workspace.dashboard.status') }}:</div>
+                <div class="col-4 text-slate-500 text-weight-bold">
+                  {{ $t('workspace.dashboard.status') }}:
+                </div>
                 <div class="col-8">
                   <q-badge
                     :color="tenantStore.activeTenant?.status === 'active' ? 'green-2' : 'orange-2'"
@@ -77,7 +89,9 @@
         <q-card class="glass-card full-height">
           <q-card-section class="card-gradient-header row items-center q-pb-md">
             <q-icon name="stars" size="24px" class="text-purple-6 q-mr-sm" />
-            <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.dashboard.featuresCardTitle') }}</div>
+            <div class="text-h6 text-bold text-slate-800">
+              {{ $t('workspace.dashboard.featuresCardTitle') }}
+            </div>
           </q-card-section>
 
           <q-card-section class="q-pt-md">

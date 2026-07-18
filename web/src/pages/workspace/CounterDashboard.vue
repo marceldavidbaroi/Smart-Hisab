@@ -14,7 +14,9 @@
         >
           {{ staffName ? staffName.charAt(0).toUpperCase() : 'S' }}
         </q-avatar>
-        <div class="text-h5 text-weight-bold text-slate-800">{{ staffName || $t('workspace.counter.staffMemberFallback') }}</div>
+        <div class="text-h5 text-weight-bold text-slate-800">
+          {{ staffName || $t('workspace.counter.staffMemberFallback') }}
+        </div>
         <q-badge
           color="secondary"
           class="q-mt-sm q-py-xs q-px-md text-weight-medium text-subtitle2"
@@ -29,7 +31,8 @@
           <div class="row justify-between items-center q-mb-sm text-sm text-slate-600">
             <span class="text-weight-medium">{{ $t('workspace.counter.terminalStatus') }}</span>
             <span class="text-positive text-weight-bold row items-center">
-              <q-icon name="fiber_manual_record" class="q-mr-xs" /> {{ $t('workspace.counter.clockedIn') }}
+              <q-icon name="fiber_manual_record" class="q-mr-xs" />
+              {{ $t('workspace.counter.clockedIn') }}
             </span>
           </div>
           <div class="row justify-between items-center text-sm text-slate-600">
@@ -45,7 +48,9 @@
           <template #avatar>
             <q-icon name="rocket" color="primary" size="sm" />
           </template>
-          <div class="text-weight-bold text-subtitle2">{{ $t('workspace.counter.kioskActiveTitle') }}</div>
+          <div class="text-weight-bold text-subtitle2">
+            {{ $t('workspace.counter.kioskActiveTitle') }}
+          </div>
           <div class="text-xs q-mt-xs">
             {{ $t('workspace.counter.kioskActiveMsg') }}
           </div>

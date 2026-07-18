@@ -1,6 +1,8 @@
 <template>
   <div class="no-tenant-container">
-    <div class="text-h5 text-bold text-slate-800 q-mb-md text-center">{{ $t('auth.noTenant.title') }}</div>
+    <div class="text-h5 text-bold text-slate-800 q-mb-md text-center">
+      {{ $t('auth.noTenant.title') }}
+    </div>
     <p class="text-slate-500 q-mb-lg text-sm text-center">
       {{ $t('auth.noTenant.subtitle') }}
     </p>
@@ -15,9 +17,9 @@
 
     <q-form @submit.prevent="handleCreateTenant" class="q-gutter-y-md">
       <div>
-        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >{{ $t('auth.noTenant.workspaceName') }}</label
-        >
+        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+          $t('auth.noTenant.workspaceName')
+        }}</label>
         <q-input
           v-model="name"
           type="text"
@@ -32,9 +34,9 @@
       </div>
 
       <div>
-        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >{{ $t('auth.noTenant.workspaceSlug') }}</label
-        >
+        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+          $t('auth.noTenant.workspaceSlug')
+        }}</label>
         <q-input
           v-model="slug"
           type="text"
@@ -44,9 +46,7 @@
           class="custom-input"
           :rules="[
             (val) => !!val || $t('auth.noTenant.workspaceSlugRequired'),
-            (val) =>
-              /^[a-z0-9-]+$/.test(val) ||
-              $t('auth.noTenant.workspaceSlugInvalid'),
+            (val) => /^[a-z0-9-]+$/.test(val) || $t('auth.noTenant.workspaceSlugInvalid'),
           ]"
           hide-bottom-space
           prefix="app.domain.com/"
@@ -74,7 +74,14 @@
     </div>
 
     <div class="q-mt-xl text-center">
-      <q-btn flat color="grey-7" icon="logout" :label="$t('auth.noTenant.signOut')" @click="handleSignOut" size="sm" />
+      <q-btn
+        flat
+        color="grey-7"
+        icon="logout"
+        :label="$t('auth.noTenant.signOut')"
+        @click="handleSignOut"
+        size="sm"
+      />
     </div>
   </div>
 </template>

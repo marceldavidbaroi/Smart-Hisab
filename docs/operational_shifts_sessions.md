@@ -36,6 +36,8 @@ Instead of treating dates and shifts as static attributes on transactions, the s
 3. **As a** Cashier / Manager, **I want to** log aggregated counter cash sales as a single POS inflow before close, **so that** expected cash matches the drawer.
 4. **As a** Shift Manager, **I want to** close the session with physical closing cash, **so that** the system reconciles expected vs actual and locks the shift.
 
+**Role inclusion:** Manager ⊃ Cashier for money ops (POS, expense, ledger read as seeded). Only Manager defaults include `sessions_open` / `sessions_close`. Customer / meal enrollment on the terminal is specified in [meal_customer_management.md](./meal_customer_management.md) and tracked in [temp_restructure.md](./temp_restructure.md).
+
 ### B. Identity & Role Planes (conjunct, not conflated)
 
 Two permission planes share a tenant but use different identities. **Do not merge Manager into `tenant_members`.**
@@ -128,6 +130,8 @@ Module key: `operational_shifts`. Used for dashboard ACL only — not for kiosk 
 | Sessions Reopen | false | false | false |
 | Log POS / expense | true | true | limited |
 | View active session | true | true | true |
+
+**Manager ⊃ Cashier** for money ops. Customer master-data write lives under `meal_management.customer_write` (Manager only by default) — see [meal_customer_management.md](./meal_customer_management.md) / [temp_restructure.md](./temp_restructure.md).
 
 System staff role templates (`tenant_id is null` or seeded per tenant): **Manager**, **Cashier**, **Staff**. Tenants may add/edit non-system staff roles.
 

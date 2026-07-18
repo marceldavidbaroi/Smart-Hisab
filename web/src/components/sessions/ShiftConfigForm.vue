@@ -19,9 +19,9 @@
       <q-form @submit.prevent="handleSubmit" class="q-gutter-y-md q-mt-sm">
         <q-card-section class="q-py-none">
           <div class="q-mb-md">
-            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-              >{{ $t('sessions.shiftForm.shiftName') }}</label
-            >
+            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+              $t('sessions.shiftForm.shiftName')
+            }}</label>
             <q-input
               v-model="form.name"
               type="text"
@@ -37,9 +37,9 @@
 
           <div class="q-mb-md row q-col-gutter-sm">
             <div class="col-6">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('sessions.shiftForm.startTime') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('sessions.shiftForm.startTime')
+              }}</label>
               <q-input
                 v-model="form.start_time"
                 filled
@@ -55,7 +55,12 @@
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                       <q-time v-model="form.start_time">
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup :label="$t('sessions.shiftForm.closeBtn')" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            :label="$t('sessions.shiftForm.closeBtn')"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-time>
                     </q-popup-proxy>
@@ -64,9 +69,9 @@
               </q-input>
             </div>
             <div class="col-6">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('sessions.shiftForm.endTime') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('sessions.shiftForm.endTime')
+              }}</label>
               <q-input
                 v-model="form.end_time"
                 filled
@@ -82,7 +87,12 @@
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                       <q-time v-model="form.end_time">
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup :label="$t('sessions.shiftForm.closeBtn')" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            :label="$t('sessions.shiftForm.closeBtn')"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-time>
                     </q-popup-proxy>
@@ -94,7 +104,9 @@
 
           <div class="row items-center justify-between q-mt-md">
             <div class="col-8">
-              <div class="text-subtitle2 text-weight-medium text-slate-800">{{ $t('sessions.shiftForm.activeStatus') }}</div>
+              <div class="text-subtitle2 text-weight-medium text-slate-800">
+                {{ $t('sessions.shiftForm.activeStatus') }}
+              </div>
               <div class="text-caption text-grey-6">
                 {{ $t('sessions.shiftForm.activeStatusDesc') }}
               </div>
@@ -104,7 +116,13 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat :label="$t('sessions.shiftForm.cancelBtn')" v-close-popup color="grey-7" :disable="saving" />
+          <q-btn
+            flat
+            :label="$t('sessions.shiftForm.cancelBtn')"
+            v-close-popup
+            color="grey-7"
+            :disable="saving"
+          />
           <q-btn
             type="submit"
             :label="isEdit ? $t('sessions.shiftForm.saveBtn') : $t('sessions.shiftForm.createBtn')"

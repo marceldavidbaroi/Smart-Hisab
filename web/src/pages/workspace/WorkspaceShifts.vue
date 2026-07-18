@@ -2,7 +2,9 @@
   <q-page class="q-pa-md bg-grey-1 text-dark">
     <div class="row items-center justify-between q-mb-md">
       <div>
-        <h1 class="text-h5 text-weight-bold text-slate-800 q-ma-none">{{ $t('workspace.shifts.title') }}</h1>
+        <h1 class="text-h5 text-weight-bold text-slate-800 q-ma-none">
+          {{ $t('workspace.shifts.title') }}
+        </h1>
         <p class="text-caption text-grey-6 q-ma-none q-mt-xs">
           {{ $t('workspace.shifts.subtitle') }}
         </p>
@@ -45,7 +47,9 @@
               :color="shift.is_active ? 'positive' : 'grey-7'"
               class="text-weight-bold uppercase q-py-xs q-px-sm"
             >
-              {{ shift.is_active ? $t('workspace.shifts.active') : $t('workspace.shifts.inactive') }}
+              {{
+                shift.is_active ? $t('workspace.shifts.active') : $t('workspace.shifts.inactive')
+              }}
             </q-badge>
           </div>
 

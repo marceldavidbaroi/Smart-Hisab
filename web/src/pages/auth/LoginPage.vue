@@ -2,7 +2,9 @@
   <div class="login-container">
     <div class="text-h5 text-bold text-slate-800 q-mb-md">
       <template v-if="route.name === 'admin-login'">{{ $t('auth.login.platformAdmin') }}</template>
-      <template v-else-if="tenantName">{{ $t('auth.login.welcomeTo', { tenant: tenantName }) }}</template>
+      <template v-else-if="tenantName">{{
+        $t('auth.login.welcomeTo', { tenant: tenantName })
+      }}</template>
       <template v-else>{{ $t('auth.login.welcomeBack') }}</template>
     </div>
     <p class="text-slate-500 q-mb-lg text-sm">
@@ -21,9 +23,9 @@
 
     <q-form @submit.prevent="handleLogin" class="q-gutter-y-md">
       <div>
-        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >{{ $t('auth.login.emailLabel') }}</label
-        >
+        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+          $t('auth.login.emailLabel')
+        }}</label>
         <q-input
           v-model="email"
           type="email"
@@ -37,9 +39,9 @@
       </div>
 
       <div>
-        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >{{ $t('auth.login.passwordLabel') }}</label
-        >
+        <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+          $t('auth.login.passwordLabel')
+        }}</label>
         <q-input
           v-model="password"
           type="password"
@@ -64,9 +66,9 @@
     <!-- Separator -->
     <div class="row items-center q-my-lg">
       <q-separator class="col" />
-      <span class="text-slate-400 q-px-sm text-xs text-uppercase text-weight-bold"
-        >{{ $t('auth.login.orContinueWith') }}</span
-      >
+      <span class="text-slate-400 q-px-sm text-xs text-uppercase text-weight-bold">{{
+        $t('auth.login.orContinueWith')
+      }}</span>
       <q-separator class="col" />
     </div>
 
@@ -211,7 +213,9 @@ const handleLogin = async () => {
         return;
       } else {
         // Logged in but doesn't have access to this specific tenant
-        errorMsg.value = t('auth.login.deniedWorkspace', { tenant: tenantName.value || tenantSlug });
+        errorMsg.value = t('auth.login.deniedWorkspace', {
+          tenant: tenantName.value || tenantSlug,
+        });
         return;
       }
     }

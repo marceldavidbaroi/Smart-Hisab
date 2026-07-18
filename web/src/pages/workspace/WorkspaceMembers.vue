@@ -3,7 +3,9 @@
     <!-- Header Title Section -->
     <div class="row items-center justify-between q-mb-lg">
       <div>
-        <h1 class="text-h4 text-bold q-my-none text-slate-800">{{ $t('workspace.members.title') }}</h1>
+        <h1 class="text-h4 text-bold q-my-none text-slate-800">
+          {{ $t('workspace.members.title') }}
+        </h1>
         <p class="text-slate-500 text-subtitle2 q-mt-xs q-mb-none">
           {{ $t('workspace.members.subtitle') }}
         </p>
@@ -79,7 +81,9 @@
         <!-- Members List Table -->
         <q-card class="glass-card">
           <q-card-section class="q-py-md border-bottom row items-center justify-between">
-            <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.members.teamTable.title') }}</div>
+            <div class="text-h6 text-bold text-slate-800">
+              {{ $t('workspace.members.teamTable.title') }}
+            </div>
             <q-btn
               flat
               round
@@ -117,7 +121,10 @@
                   </q-avatar>
                   <div>
                     <div class="text-weight-bold">
-                      {{ props.row.user_profile?.full_name || $t('workspace.members.teamTable.unregistered') }}
+                      {{
+                        props.row.user_profile?.full_name ||
+                        $t('workspace.members.teamTable.unregistered')
+                      }}
                     </div>
                     <div class="text-caption text-grey-6 font-mono">{{ props.row.user_id }}</div>
                   </div>
@@ -164,7 +171,9 @@
                 >
                   <q-tooltip>{{ $t('workspace.members.teamTable.removeTooltip') }}</q-tooltip>
                 </q-btn>
-                <span v-else class="text-caption text-grey-5">{{ $t('workspace.members.teamTable.na') }}</span>
+                <span v-else class="text-caption text-grey-5">{{
+                  $t('workspace.members.teamTable.na')
+                }}</span>
               </q-td>
             </template>
           </q-table>
@@ -175,7 +184,9 @@
       <q-tab-panel name="kiosk" class="q-pa-none">
         <q-card class="glass-card">
           <q-card-section class="q-py-md border-bottom row items-center justify-between">
-            <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.members.kioskTable.title') }}</div>
+            <div class="text-h6 text-bold text-slate-800">
+              {{ $t('workspace.members.kioskTable.title') }}
+            </div>
             <q-btn
               flat
               round
@@ -246,7 +257,9 @@
                     color="primary"
                     @click="openEditStaff(props.row)"
                   >
-                    <q-tooltip>{{ $t('workspace.members.kioskTable.editProfileTooltip') }}</q-tooltip>
+                    <q-tooltip>{{
+                      $t('workspace.members.kioskTable.editProfileTooltip')
+                    }}</q-tooltip>
                   </q-btn>
                 </div>
               </q-td>
@@ -264,7 +277,9 @@
         <q-card class="glass-card border-all bg-white text-dark">
           <q-card-section class="q-py-md border-bottom row items-center justify-between">
             <div>
-              <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.members.rolesTable.title') }}</div>
+              <div class="text-h6 text-bold text-slate-800">
+                {{ $t('workspace.members.rolesTable.title') }}
+              </div>
               <div class="text-caption text-grey-6">
                 {{ $t('workspace.members.rolesTable.subtitle') }}
               </div>
@@ -299,7 +314,11 @@
                   :color="props.value ? 'primary' : 'warning'"
                   class="text-weight-bold uppercase q-py-xs q-px-sm"
                 >
-                  {{ props.value ? $t('workspace.members.rolesTable.system') : $t('workspace.members.rolesTable.custom') }}
+                  {{
+                    props.value
+                      ? $t('workspace.members.rolesTable.system')
+                      : $t('workspace.members.rolesTable.custom')
+                  }}
                 </q-badge>
               </q-td>
             </template>
@@ -337,7 +356,9 @@
     <q-dialog v-model="showInviteDialog" persistent>
       <q-card class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md dialog-card">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.members.inviteDialog.title') }}</div>
+          <div class="text-h6 text-bold text-slate-800">
+            {{ $t('workspace.members.inviteDialog.title') }}
+          </div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
@@ -345,9 +366,9 @@
         <q-form @submit.prevent="handleInvite" class="q-gutter-y-md q-mt-md">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                >{{ $t('workspace.members.inviteDialog.emailLabel') }}</label
-              >
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                $t('workspace.members.inviteDialog.emailLabel')
+              }}</label>
               <q-input
                 v-model="inviteEmail"
                 type="email"
@@ -361,9 +382,9 @@
             </div>
 
             <div>
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                >{{ $t('workspace.members.inviteDialog.roleLabel') }}</label
-              >
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                $t('workspace.members.inviteDialog.roleLabel')
+              }}</label>
               <q-select
                 v-model="inviteRole"
                 :options="rolesOptions"
@@ -395,11 +416,17 @@
       <q-card class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md">
         <q-card-section class="row items-center">
           <q-avatar icon="warning" color="red-9" text-color="white" class="q-mr-md" />
-          <span class="text-h6 text-bold text-slate-800">{{ $t('workspace.members.removeDialog.title') }}</span>
+          <span class="text-h6 text-bold text-slate-800">{{
+            $t('workspace.members.removeDialog.title')
+          }}</span>
         </q-card-section>
 
         <q-card-section class="q-py-md text-slate-600">
-          {{ $t('workspace.members.removeDialog.message', { name: selectedMember?.user_profile?.full_name || '' }) }}
+          {{
+            $t('workspace.members.removeDialog.message', {
+              name: selectedMember?.user_profile?.full_name || '',
+            })
+          }}
         </q-card-section>
 
         <q-card-actions align="right">
@@ -420,7 +447,11 @@
       <q-card class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md dialog-card">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-bold text-slate-800">
-            {{ isEditingStaff ? $t('workspace.members.staffDialog.editTitle') : $t('workspace.members.staffDialog.addTitle') }}
+            {{
+              isEditingStaff
+                ? $t('workspace.members.staffDialog.editTitle')
+                : $t('workspace.members.staffDialog.addTitle')
+            }}
           </div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
@@ -429,9 +460,9 @@
         <q-form @submit.prevent="handleStaffSubmit" class="q-gutter-y-md q-mt-md">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                >{{ $t('workspace.members.staffDialog.fullName') }}</label
-              >
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                $t('workspace.members.staffDialog.fullName')
+              }}</label>
               <q-input
                 v-model="staffName"
                 type="text"
@@ -445,9 +476,9 @@
             </div>
 
             <div class="q-mb-md">
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                >{{ $t('workspace.members.staffDialog.phone') }}</label
-              >
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                $t('workspace.members.staffDialog.phone')
+              }}</label>
               <q-input
                 v-model="staffPhone"
                 type="tel"
@@ -461,9 +492,9 @@
             </div>
 
             <div class="q-mb-md">
-              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                >{{ $t('workspace.members.staffDialog.roleLabel') }}</label
-              >
+              <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                $t('workspace.members.staffDialog.roleLabel')
+              }}</label>
               <q-select
                 v-model="staffRole"
                 :options="roleOptions"
@@ -474,7 +505,9 @@
                 :placeholder="$t('workspace.members.staffDialog.rolePlaceholder')"
                 color="primary"
                 class="custom-input"
-                :rules="[(val: string) => !!val || $t('workspace.members.staffDialog.roleRequired')]"
+                :rules="[
+                  (val: string) => !!val || $t('workspace.members.staffDialog.roleRequired'),
+                ]"
                 hide-bottom-space
                 v-if="tenantStore.isFeatureEnabled('shift-sessions')"
               />
@@ -486,14 +519,18 @@
                 :placeholder="$t('workspace.members.staffDialog.roleInputPlaceholder')"
                 color="primary"
                 class="custom-input"
-                :rules="[(val: string) => !!val || $t('workspace.members.staffDialog.roleRequired')]"
+                :rules="[
+                  (val: string) => !!val || $t('workspace.members.staffDialog.roleRequired'),
+                ]"
                 hide-bottom-space
               />
             </div>
 
             <div class="row items-center justify-between q-mt-md">
               <div class="col-8">
-                <div class="text-weight-medium text-slate-800 text-sm">{{ $t('workspace.members.staffDialog.allowTerminal') }}</div>
+                <div class="text-weight-medium text-slate-800 text-sm">
+                  {{ $t('workspace.members.staffDialog.allowTerminal') }}
+                </div>
                 <div class="text-caption text-grey-6">
                   {{ $t('workspace.members.staffDialog.allowTerminalDesc') }}
                 </div>
@@ -503,7 +540,9 @@
 
             <div v-if="isEditingStaff" class="row items-center justify-between q-mt-md">
               <div class="col-8">
-                <div class="text-weight-medium text-slate-800 text-sm">{{ $t('workspace.members.staffDialog.activeProfile') }}</div>
+                <div class="text-weight-medium text-slate-800 text-sm">
+                  {{ $t('workspace.members.staffDialog.activeProfile') }}
+                </div>
                 <div class="text-caption text-grey-6">
                   {{ $t('workspace.members.staffDialog.activeProfileDesc') }}
                 </div>
@@ -534,7 +573,9 @@
       >
         <q-card-section class="text-center q-pt-md">
           <q-icon name="vpn_key" size="48px" color="warning" class="q-mb-md" />
-          <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.members.tempPinDialog.title') }}</div>
+          <div class="text-h6 text-bold text-slate-800">
+            {{ $t('workspace.members.tempPinDialog.title') }}
+          </div>
           <p class="text-slate-500 text-sm q-mt-sm">
             {{ $t('workspace.members.tempPinDialog.subtitle') }}
           </p>
@@ -567,7 +608,9 @@
     <q-dialog v-model="showPairingDialog" persistent>
       <q-card class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md dialog-card">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.members.pairDialog.title') }}</div>
+          <div class="text-h6 text-bold text-slate-800">
+            {{ $t('workspace.members.pairDialog.title') }}
+          </div>
           <q-space />
           <q-btn
             icon="close"
@@ -586,9 +629,9 @@
           </p>
 
           <div v-if="!pairingCode" class="q-mb-md">
-            <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-              >{{ $t('workspace.members.pairDialog.deviceName') }}</label
-            >
+            <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+              $t('workspace.members.pairDialog.deviceName')
+            }}</label>
             <q-input
               v-model="pairingDeviceName"
               type="text"
@@ -609,7 +652,9 @@
 
           <div v-else class="text-center q-py-lg">
             <div class="text-h6 text-slate-500 q-mb-xs">
-              {{ $t('workspace.members.pairDialog.verificationTitle', { device: pairingDeviceName }) }}
+              {{
+                $t('workspace.members.pairDialog.verificationTitle', { device: pairingDeviceName })
+              }}
             </div>
             <div
               class="text-h3 text-bold text-primary font-mono tracking-widest bg-grey-2 q-pa-md rounded-borders inline-block q-my-md"
@@ -623,7 +668,13 @@
         </q-card-section>
 
         <q-card-actions align="right" class="q-px-md q-pb-md">
-          <q-btn flat :label="$t('common.close')" v-close-popup color="grey-7" @click="closePairingDialog" />
+          <q-btn
+            flat
+            :label="$t('common.close')"
+            v-close-popup
+            color="grey-7"
+            @click="closePairingDialog"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -636,7 +687,11 @@
       >
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6 text-weight-bold">
-            {{ isEditingRole ? $t('workspace.members.roleDialog.editTitle') : $t('workspace.members.roleDialog.addTitle') }}
+            {{
+              isEditingRole
+                ? $t('workspace.members.roleDialog.editTitle')
+                : $t('workspace.members.roleDialog.addTitle')
+            }}
           </div>
           <q-space />
           <q-btn
@@ -653,9 +708,9 @@
         <q-form @submit.prevent="handleRoleSubmit" class="q-gutter-y-md q-mt-sm">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('workspace.members.roleDialog.roleName') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('workspace.members.roleDialog.roleName')
+              }}</label>
               <q-input
                 v-model="roleForm.name"
                 type="text"
@@ -671,9 +726,9 @@
             </div>
 
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('workspace.members.roleDialog.description') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('workspace.members.roleDialog.description')
+              }}</label>
               <q-input
                 v-model="roleForm.description"
                 type="textarea"
@@ -699,8 +754,12 @@
               </div>
               <q-item tag="label" v-ripple dense>
                 <q-item-section>
-                  <q-item-label class="text-sm">{{ $t('workspace.members.roleDialog.perms.openSession') }}</q-item-label>
-                  <q-item-label caption>{{ $t('workspace.members.roleDialog.perms.openSessionDesc') }}</q-item-label>
+                  <q-item-label class="text-sm">{{
+                    $t('workspace.members.roleDialog.perms.openSession')
+                  }}</q-item-label>
+                  <q-item-label caption>{{
+                    $t('workspace.members.roleDialog.perms.openSessionDesc')
+                  }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle
@@ -712,10 +771,12 @@
 
               <q-item tag="label" v-ripple dense>
                 <q-item-section>
-                  <q-item-label class="text-sm">{{ $t('workspace.members.roleDialog.perms.closeSession') }}</q-item-label>
-                  <q-item-label caption
-                    >{{ $t('workspace.members.roleDialog.perms.closeSessionDesc') }}</q-item-label
-                  >
+                  <q-item-label class="text-sm">{{
+                    $t('workspace.members.roleDialog.perms.closeSession')
+                  }}</q-item-label>
+                  <q-item-label caption>{{
+                    $t('workspace.members.roleDialog.perms.closeSessionDesc')
+                  }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle
@@ -732,8 +793,12 @@
               </div>
               <q-item tag="label" v-ripple dense>
                 <q-item-section>
-                  <q-item-label class="text-sm">{{ $t('workspace.members.roleDialog.perms.posSales') }}</q-item-label>
-                  <q-item-label caption>{{ $t('workspace.members.roleDialog.perms.posSalesDesc') }}</q-item-label>
+                  <q-item-label class="text-sm">{{
+                    $t('workspace.members.roleDialog.perms.posSales')
+                  }}</q-item-label>
+                  <q-item-label caption>{{
+                    $t('workspace.members.roleDialog.perms.posSalesDesc')
+                  }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle v-model="roleForm.permissions.modules.kiosk.log_pos" color="primary" />
@@ -742,8 +807,12 @@
 
               <q-item tag="label" v-ripple dense>
                 <q-item-section>
-                  <q-item-label class="text-sm">{{ $t('workspace.members.roleDialog.perms.bazaarExp') }}</q-item-label>
-                  <q-item-label caption>{{ $t('workspace.members.roleDialog.perms.bazaarExpDesc') }}</q-item-label>
+                  <q-item-label class="text-sm">{{
+                    $t('workspace.members.roleDialog.perms.bazaarExp')
+                  }}</q-item-label>
+                  <q-item-label caption>{{
+                    $t('workspace.members.roleDialog.perms.bazaarExpDesc')
+                  }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle
@@ -755,8 +824,12 @@
 
               <q-item tag="label" v-ripple dense>
                 <q-item-section>
-                  <q-item-label class="text-sm">{{ $t('workspace.members.roleDialog.perms.salaryAdvance') }}</q-item-label>
-                  <q-item-label caption>{{ $t('workspace.members.roleDialog.perms.salaryAdvanceDesc') }}</q-item-label>
+                  <q-item-label class="text-sm">{{
+                    $t('workspace.members.roleDialog.perms.salaryAdvance')
+                  }}</q-item-label>
+                  <q-item-label caption>{{
+                    $t('workspace.members.roleDialog.perms.salaryAdvanceDesc')
+                  }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-toggle
@@ -769,10 +842,20 @@
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat :label="$t('common.cancel')" v-close-popup color="grey-7" :disable="submittingRole" />
+            <q-btn
+              flat
+              :label="$t('common.cancel')"
+              v-close-popup
+              color="grey-7"
+              :disable="submittingRole"
+            />
             <q-btn
               type="submit"
-              :label="isEditingRole ? $t('workspace.members.roleDialog.saveBtn') : $t('workspace.members.roleDialog.createBtn')"
+              :label="
+                isEditingRole
+                  ? $t('workspace.members.roleDialog.saveBtn')
+                  : $t('workspace.members.roleDialog.createBtn')
+              "
               color="primary"
               class="q-px-md text-weight-bold"
               unelevated
@@ -790,7 +873,9 @@
       <q-card class="bg-white text-dark border-all rounded-borders q-pa-md">
         <q-card-section class="row items-center">
           <q-avatar icon="delete" color="red-1" text-color="red-9" class="q-mr-md" />
-          <span class="text-h6 text-weight-bold">{{ $t('workspace.members.deleteRoleDialog.title') }}</span>
+          <span class="text-h6 text-weight-bold">{{
+            $t('workspace.members.deleteRoleDialog.title')
+          }}</span>
         </q-card-section>
 
         <q-card-section class="q-py-md text-grey-7">
@@ -798,7 +883,13 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat :label="$t('common.cancel')" v-close-popup color="grey-7" :disable="deletingRole" />
+          <q-btn
+            flat
+            :label="$t('common.cancel')"
+            v-close-popup
+            color="grey-7"
+            :disable="deletingRole"
+          />
           <q-btn
             flat
             :label="$t('common.delete')"
@@ -905,9 +996,26 @@ const columns = computed(() => [
     field: 'user_profile',
     sortable: true,
   },
-  { name: 'role', align: 'left' as const, label: t('workspace.members.teamTable.cols.role'), field: 'tenant_roles', sortable: true },
-  { name: 'status', align: 'left' as const, label: t('workspace.members.teamTable.cols.status'), field: 'status', sortable: true },
-  { name: 'actions', align: 'right' as const, label: t('workspace.members.teamTable.cols.actions'), field: 'actions' },
+  {
+    name: 'role',
+    align: 'left' as const,
+    label: t('workspace.members.teamTable.cols.role'),
+    field: 'tenant_roles',
+    sortable: true,
+  },
+  {
+    name: 'status',
+    align: 'left' as const,
+    label: t('workspace.members.teamTable.cols.status'),
+    field: 'status',
+    sortable: true,
+  },
+  {
+    name: 'actions',
+    align: 'right' as const,
+    label: t('workspace.members.teamTable.cols.actions'),
+    field: 'actions',
+  },
 ]);
 
 const staffColumns = computed(() => [
@@ -925,15 +1033,31 @@ const staffColumns = computed(() => [
     field: 'role',
     sortable: true,
   },
-  { name: 'phone', align: 'left' as const, label: t('workspace.members.kioskTable.cols.phone'), field: 'phone', sortable: true },
+  {
+    name: 'phone',
+    align: 'left' as const,
+    label: t('workspace.members.kioskTable.cols.phone'),
+    field: 'phone',
+    sortable: true,
+  },
   {
     name: 'allow_terminal_login',
     align: 'center' as const,
     label: t('workspace.members.kioskTable.cols.terminalAccess'),
     field: 'allow_terminal_login',
   },
-  { name: 'is_active', align: 'center' as const, label: t('workspace.members.kioskTable.cols.active'), field: 'is_active' },
-  { name: 'actions', align: 'right' as const, label: t('workspace.members.kioskTable.cols.actions'), field: 'actions' },
+  {
+    name: 'is_active',
+    align: 'center' as const,
+    label: t('workspace.members.kioskTable.cols.active'),
+    field: 'is_active',
+  },
+  {
+    name: 'actions',
+    align: 'right' as const,
+    label: t('workspace.members.kioskTable.cols.actions'),
+    field: 'actions',
+  },
 ]);
 
 const canManage = computed(() => {
@@ -1020,7 +1144,9 @@ const handleRemove = async () => {
   successMsg.value = '';
   try {
     await removeMember(tenantStore.activeTenant.id, selectedMember.value.user_id);
-    successMsg.value = t('workspace.members.messages.removeSuccess', { name: selectedMember.value.user_profile?.full_name || '' });
+    successMsg.value = t('workspace.members.messages.removeSuccess', {
+      name: selectedMember.value.user_profile?.full_name || '',
+    });
     showConfirmRemove.value = false;
     selectedMember.value = null;
     await loadMembers();
@@ -1084,7 +1210,9 @@ const handleStaffSubmit = async () => {
         allow_terminal_login: staffAllowTerminalLogin.value,
         is_active: staffIsActive.value,
       });
-      successMsg.value = t('workspace.members.messages.updateStaffSuccess', { name: staffName.value });
+      successMsg.value = t('workspace.members.messages.updateStaffSuccess', {
+        name: staffName.value,
+      });
       showStaffDialog.value = false;
     } else {
       const newStaff = await createStaffMember({
@@ -1094,7 +1222,9 @@ const handleStaffSubmit = async () => {
         phone: staffPhone.value,
         allow_terminal_login: staffAllowTerminalLogin.value,
       });
-      successMsg.value = t('workspace.members.messages.createStaffSuccess', { name: staffName.value });
+      successMsg.value = t('workspace.members.messages.createStaffSuccess', {
+        name: staffName.value,
+      });
       showStaffDialog.value = false;
 
       if (staffAllowTerminalLogin.value) {
@@ -1119,7 +1249,9 @@ const handleResetStaffPin = async (staffMember: StaffMember) => {
     const pin = await resetStaffPin(staffMember.id);
     tempPinCode.value = pin;
     showTempPinDialog.value = true;
-    successMsg.value = t('workspace.members.messages.resetPinSuccess', { name: staffMember.full_name });
+    successMsg.value = t('workspace.members.messages.resetPinSuccess', {
+      name: staffMember.full_name,
+    });
     await loadStaff();
   } catch (err) {
     const error = err as Error;
@@ -1132,7 +1264,9 @@ const toggleTerminalLogin = async (staffMember: StaffMember) => {
     await updateStaffMember(staffMember.id, {
       allow_terminal_login: staffMember.allow_terminal_login,
     });
-    successMsg.value = t('workspace.members.messages.terminalAccessSuccess', { name: staffMember.full_name });
+    successMsg.value = t('workspace.members.messages.terminalAccessSuccess', {
+      name: staffMember.full_name,
+    });
     if (staffMember.allow_terminal_login && !staffMember.temp_pin && !staffMember.hashed_pin) {
       const pin = await resetStaffPin(staffMember.id);
       tempPinCode.value = pin;
@@ -1151,7 +1285,9 @@ const toggleStaffActive = async (staffMember: StaffMember) => {
     await updateStaffMember(staffMember.id, {
       is_active: staffMember.is_active,
     });
-    successMsg.value = t('workspace.members.messages.statusSuccess', { name: staffMember.full_name });
+    successMsg.value = t('workspace.members.messages.statusSuccess', {
+      name: staffMember.full_name,
+    });
     await loadStaff();
   } catch (err) {
     const error = err as Error;
@@ -1249,8 +1385,19 @@ const roleForm = ref<RoleFormState>({
 });
 
 const roleColumns = computed(() => [
-  { name: 'name', align: 'left' as const, label: t('workspace.members.rolesTable.cols.name'), field: 'name', sortable: true },
-  { name: 'description', align: 'left' as const, label: t('workspace.members.rolesTable.cols.description'), field: 'description' },
+  {
+    name: 'name',
+    align: 'left' as const,
+    label: t('workspace.members.rolesTable.cols.name'),
+    field: 'name',
+    sortable: true,
+  },
+  {
+    name: 'description',
+    align: 'left' as const,
+    label: t('workspace.members.rolesTable.cols.description'),
+    field: 'description',
+  },
   {
     name: 'is_system_role',
     align: 'center' as const,
@@ -1258,7 +1405,12 @@ const roleColumns = computed(() => [
     field: 'is_system_role',
     sortable: true,
   },
-  { name: 'actions', align: 'center' as const, label: t('workspace.members.rolesTable.cols.actions'), field: 'id' },
+  {
+    name: 'actions',
+    align: 'center' as const,
+    label: t('workspace.members.rolesTable.cols.actions'),
+    field: 'id',
+  },
 ]);
 
 const roleOptions = computed(() => {

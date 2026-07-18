@@ -120,7 +120,10 @@
               >{{ $t('ledger.table.methodLabel') }}
               <span class="text-capitalize">{{ row.payment_method.replace('_', ' ') }}</span></span
             >
-            <span>{{ $t('ledger.table.byLabel') }} {{ row.operator_staff?.full_name || $t('ledger.table.systemOwner') }}</span>
+            <span
+              >{{ $t('ledger.table.byLabel') }}
+              {{ row.operator_staff?.full_name || $t('ledger.table.systemOwner') }}</span
+            >
           </div>
 
           <div v-if="row.notes" class="q-mt-sm text-caption text-grey-6 border-top q-pt-xs">
@@ -148,10 +151,34 @@ defineProps<{
 const { t } = useI18n();
 
 const columns = computed<QTableColumn[]>(() => [
-  { name: 'created_at', label: t('ledger.table.cols.dateTime'), field: 'created_at', align: 'left', sortable: true },
-  { name: 'type', label: t('ledger.table.cols.type'), field: 'type', align: 'left', sortable: true },
-  { name: 'category', label: t('ledger.table.cols.category'), field: 'category', align: 'left', sortable: true },
-  { name: 'amount', label: t('ledger.table.cols.amount'), field: 'amount', align: 'right', sortable: true },
+  {
+    name: 'created_at',
+    label: t('ledger.table.cols.dateTime'),
+    field: 'created_at',
+    align: 'left',
+    sortable: true,
+  },
+  {
+    name: 'type',
+    label: t('ledger.table.cols.type'),
+    field: 'type',
+    align: 'left',
+    sortable: true,
+  },
+  {
+    name: 'category',
+    label: t('ledger.table.cols.category'),
+    field: 'category',
+    align: 'left',
+    sortable: true,
+  },
+  {
+    name: 'amount',
+    label: t('ledger.table.cols.amount'),
+    field: 'amount',
+    align: 'right',
+    sortable: true,
+  },
   {
     name: 'payment_method',
     label: t('ledger.table.cols.method'),
@@ -159,8 +186,18 @@ const columns = computed<QTableColumn[]>(() => [
     align: 'left',
     sortable: true,
   },
-  { name: 'operator', label: t('ledger.table.cols.operator'), field: 'operator_user_id', align: 'left' },
-  { name: 'session_id', label: t('ledger.table.cols.sessionId'), field: 'session_id', align: 'center' },
+  {
+    name: 'operator',
+    label: t('ledger.table.cols.operator'),
+    field: 'operator_user_id',
+    align: 'left',
+  },
+  {
+    name: 'session_id',
+    label: t('ledger.table.cols.sessionId'),
+    field: 'session_id',
+    align: 'center',
+  },
   { name: 'notes', label: t('ledger.table.cols.notes'), field: 'notes', align: 'left' },
 ]);
 

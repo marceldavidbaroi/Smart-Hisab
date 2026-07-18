@@ -13,7 +13,12 @@
         >{{ $t('sessions.banner.activeSession') }}</q-chip
       >
       <span class="text-subtitle2 text-weight-medium text-slate-800">
-        {{ $t('sessions.banner.shiftName', { name: sessionStore.activeSession.shifts?.name || $t('sessions.banner.loadingShift') }) }} — {{ $t('sessions.banner.businessDate') }}:
+        {{
+          $t('sessions.banner.shiftName', {
+            name: sessionStore.activeSession.shifts?.name || $t('sessions.banner.loadingShift'),
+          })
+        }}
+        — {{ $t('sessions.banner.businessDate') }}:
         {{ sessionStore.activeSession.business_date }}
       </span>
       <span class="text-caption text-grey-6 gt-xs">

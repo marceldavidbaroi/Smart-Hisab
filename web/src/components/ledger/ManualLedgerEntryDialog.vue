@@ -58,7 +58,8 @@
                 dense
                 prefix="৳"
                 :rules="[
-                  (val) => (val !== null && val !== undefined) || $t('ledger.manual.amountRequired'),
+                  (val) =>
+                    (val !== null && val !== undefined) || $t('ledger.manual.amountRequired'),
                   (val) => val > 0 || $t('ledger.manual.amountMin'),
                 ]"
               />

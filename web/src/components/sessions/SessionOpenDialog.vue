@@ -17,9 +17,9 @@
       <q-form @submit.prevent="handleSubmit" class="q-gutter-y-md q-mt-sm">
         <q-card-section class="q-py-none">
           <div class="q-mb-md">
-            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-              >{{ $t('sessions.open.selectShift') }}</label
-            >
+            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+              $t('sessions.open.selectShift')
+            }}</label>
             <q-select
               v-model="selectedShift"
               :options="shiftOptions"
@@ -38,9 +38,9 @@
           </div>
 
           <div class="q-mb-md">
-            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-              >{{ $t('sessions.open.openingCash') }}</label
-            >
+            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+              $t('sessions.open.openingCash')
+            }}</label>
             <q-input
               v-model.number="openingCash"
               type="number"
@@ -54,9 +54,9 @@
           </div>
 
           <div>
-            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-              >{{ $t('sessions.open.businessDate') }}</label
-            >
+            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+              $t('sessions.open.businessDate')
+            }}</label>
             <q-input
               v-model="businessDate"
               filled
@@ -72,7 +72,12 @@
                   <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                     <q-date v-model="businessDate" mask="YYYY-MM-DD">
                       <div class="row items-center justify-end">
-                        <q-btn v-close-popup :label="$t('sessions.open.closeBtn')" color="primary" flat />
+                        <q-btn
+                          v-close-popup
+                          :label="$t('sessions.open.closeBtn')"
+                          color="primary"
+                          flat
+                        />
                       </div>
                     </q-date>
                   </q-popup-proxy>
@@ -83,7 +88,13 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat :label="$t('sessions.open.cancelBtn')" v-close-popup color="grey-7" :disable="loading" />
+          <q-btn
+            flat
+            :label="$t('sessions.open.cancelBtn')"
+            v-close-popup
+            color="grey-7"
+            :disable="loading"
+          />
           <q-btn
             type="submit"
             :label="$t('sessions.open.openBtn')"

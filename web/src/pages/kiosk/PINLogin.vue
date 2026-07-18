@@ -13,7 +13,13 @@
         </template>
         {{ errorMessage }}
         <template #action>
-          <q-btn flat color="white" :label="$t('kioskUI.login.exitDialog.cancelBtn')" @click="errorMessage = ''" size="sm" />
+          <q-btn
+            flat
+            color="white"
+            :label="$t('kioskUI.login.exitDialog.cancelBtn')"
+            @click="errorMessage = ''"
+            size="sm"
+          />
         </template>
       </q-banner>
 
@@ -187,9 +193,9 @@
             </q-banner>
 
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('kioskUI.login.setup.newPin') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('kioskUI.login.setup.newPin')
+              }}</label>
               <q-input
                 v-model="newPin"
                 type="password"
@@ -208,9 +214,9 @@
             </div>
 
             <div>
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('kioskUI.login.setup.confirmPin') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('kioskUI.login.setup.confirmPin')
+              }}</label>
               <q-input
                 v-model="confirmPin"
                 type="password"
@@ -259,7 +265,13 @@
           </p>
         </q-card-section>
         <q-card-actions align="right" class="q-gutter-sm">
-          <q-btn flat :label="$t('kioskUI.login.exitDialog.cancelBtn')" color="grey-8" v-close-popup class="cursor-pointer" />
+          <q-btn
+            flat
+            :label="$t('kioskUI.login.exitDialog.cancelBtn')"
+            color="grey-8"
+            v-close-popup
+            class="cursor-pointer"
+          />
           <q-btn
             :label="$t('kioskUI.login.exitDialog.exitBtn')"
             color="red"
@@ -349,7 +361,9 @@ const handleSubmitPin = async (pin: string) => {
       setupErrorMessage.value = '';
       showSetupDialog.value = true;
     } else {
-      showSuccess(t('kioskUI.login.welcome', { name: selectedStaff.value.fullName }), { timeout: 1500 });
+      showSuccess(t('kioskUI.login.welcome', { name: selectedStaff.value.fullName }), {
+        timeout: 1500,
+      });
       void router.push({ name: 'kiosk-workspace' });
     }
   } else {

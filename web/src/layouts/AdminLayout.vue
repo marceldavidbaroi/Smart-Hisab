@@ -1,172 +1,180 @@
 <template>
-   <q-layout view="hHh Lpr lFf" class="admin-layout">
-     <!-- Header -->
-     <q-header elevated class="bg-slate-950 border-bottom text-slate-800">
-       <q-toolbar class="q-py-sm">
-         <q-btn
-           flat
-           dense
-           round
-           icon="menu"
-           aria-label="Menu"
-           class="q-mr-sm text-slate-600"
-           @click="toggleLeftDrawer"
-         />
- 
-         <div class="row items-center q-gutter-sm">
-           <q-icon name="admin_panel_settings" size="28px" class="text-amber-800" />
-           <q-toolbar-title class="text-weight-bold text-slate-900">
-             {{ $t('admin.layout.console') }}
-           </q-toolbar-title>
-           <q-badge color="amber" text-color="black" class="text-weight-bold uppercase">
-             {{ $t('admin.layout.superadmin') }}
-           </q-badge>
-         </div>
- 
-         <q-space />
- 
-         <!-- Language Switcher Toggle -->
-         <q-btn-toggle
-           v-model="locale"
-           toggle-color="primary"
-           color="indigo-1"
-           text-color="primary"
-           toggle-text-color="white"
-           flat
-           dense
-           unelevated
-           class="q-mr-sm text-xs text-weight-bold"
-           style="font-size: 11px; height: 32px; border-radius: 8px; padding: 2px; border: 1.5px solid var(--q-primary);"
-           :options="toggleOptions"
-         />
+  <q-layout view="hHh Lpr lFf" class="admin-layout">
+    <!-- Header -->
+    <q-header elevated class="bg-slate-950 border-bottom text-slate-800">
+      <q-toolbar class="q-py-sm">
+        <q-btn
+          flat
+          dense
+          round
+          icon="menu"
+          aria-label="Menu"
+          class="q-mr-sm text-slate-600"
+          @click="toggleLeftDrawer"
+        />
 
-         <!-- View Workspaces Button -->
-         <q-btn
-           flat
-           no-caps
-           icon="launch"
-           :label="$t('admin.layout.workspaceView')"
-           color="amber-9"
-           class="q-mr-md"
-           @click="goToWorkspace"
-         />
- 
-         <!-- User Profile Dropdown -->
-         <div class="row items-center no-wrap">
-           <q-btn-dropdown flat round dense class="user-dropdown-btn">
-             <template #label>
-               <q-avatar size="32px" class="user-avatar text-white">
-                 <img
-                   v-if="tenantStore.userProfile?.avatar_url"
-                   :src="tenantStore.userProfile.avatar_url"
-                 />
-                 <span v-else>{{ userInitials }}</span>
-               </q-avatar>
-             </template>
- 
-             <q-list style="min-width: 220px" class="bg-slate-950 text-slate-900 border-all q-py-sm">
-               <div class="q-px-md q-py-sm">
-                 <div class="text-weight-bold text-amber-900">
-                   {{ tenantStore.userProfile?.full_name || $t('admin.layout.adminUser') }}
-                 </div>
-                 <div class="text-caption text-slate-500">{{ tenantStore.user?.email }}</div>
-                 <div class="q-mt-xs">
-                   <q-badge color="amber" class="text-black text-weight-bold">{{ $t('admin.layout.superadmin') }}</q-badge>
-                 </div>
-               </div>
- 
-               <q-separator class="q-my-sm" />
- 
-               <q-item clickable v-close-popup @click="handleSignOut" class="text-negative">
-                 <q-item-section avatar>
-                   <q-icon name="logout" size="20px" color="negative" />
-                 </q-item-section>
-                 <q-item-section>{{ $t('admin.layout.signOut') }}</q-item-section>
-               </q-item>
-             </q-list>
-           </q-btn-dropdown>
-         </div>
-       </q-toolbar>
-     </q-header>
- 
-     <!-- Sidebar Drawer -->
-     <q-drawer
-       v-model="leftDrawerOpen"
-       show-if-above
-       bordered
-       class="bg-slate-950 text-slate-900 border-right"
-       :width="260"
-     >
-       <div class="drawer-content flex flex-col justify-between">
-         <div>
-           <!-- Brand Logo/Header -->
-           <div class="q-pa-md brand-section border-bottom flex items-center">
-             <q-icon name="shield" size="28px" class="text-amber-800 q-mr-sm" />
-             <div>
-               <div class="text-weight-bold text-slate-900 text-subtitle1 leading-tight">
-                 {{ $t('admin.layout.globalControl') }}
-               </div>
-               <div class="text-xs text-slate-500">{{ $t('admin.layout.platformAdmin') }}</div>
-             </div>
-           </div>
- 
-           <!-- Navigation Links -->
-           <q-list class="q-px-sm q-py-md">
-             <q-item
-               clickable
-               exact
-               to="/admin/dashboard"
-               class="nav-link-item q-mb-sm"
-               active-class="nav-active-item"
-             >
-               <q-item-section avatar>
-                 <q-icon name="dashboard" size="22px" />
-               </q-item-section>
-               <q-item-section>{{ $t('admin.layout.dashboard') }}</q-item-section>
-             </q-item>
- 
-             <q-item
-               clickable
-               to="/admin/tenants"
-               class="nav-link-item q-mb-sm"
-               active-class="nav-active-item"
-             >
-               <q-item-section avatar>
-                 <q-icon name="business" size="22px" />
-               </q-item-section>
-               <q-item-section>{{ $t('admin.layout.tenants') }}</q-item-section>
-             </q-item>
- 
-             <q-item
-               clickable
-               to="/admin/billing"
-               class="nav-link-item q-mb-sm"
-               active-class="nav-active-item"
-             >
-               <q-item-section avatar>
-                 <q-icon name="credit_card" size="22px" />
-               </q-item-section>
-               <q-item-section>{{ $t('admin.layout.billing') }}</q-item-section>
-             </q-item>
-           </q-list>
-         </div>
- 
-         <!-- Footer / Version -->
-         <div class="q-pa-md text-center text-xs text-slate-400 border-top">
-           {{ $t('admin.layout.version') }}
-         </div>
-       </div>
-     </q-drawer>
- 
-     <!-- Page Container -->
-     <q-page-container class="bg-slate-900 text-slate-800 min-h-screen">
-       <router-view v-slot="{ Component }">
-         <transition name="fade-slide" mode="out-in">
-           <component :is="Component" />
-         </transition>
-       </router-view>
-     </q-page-container>
-   </q-layout>
+        <div class="row items-center q-gutter-sm">
+          <q-icon name="admin_panel_settings" size="28px" class="text-amber-800" />
+          <q-toolbar-title class="text-weight-bold text-slate-900">
+            {{ $t('admin.layout.console') }}
+          </q-toolbar-title>
+          <q-badge color="amber" text-color="black" class="text-weight-bold uppercase">
+            {{ $t('admin.layout.superadmin') }}
+          </q-badge>
+        </div>
+
+        <q-space />
+
+        <!-- Language Switcher Toggle -->
+        <q-btn-toggle
+          v-model="locale"
+          toggle-color="primary"
+          color="indigo-1"
+          text-color="primary"
+          toggle-text-color="white"
+          flat
+          dense
+          unelevated
+          class="q-mr-sm text-xs text-weight-bold"
+          style="
+            font-size: 11px;
+            height: 32px;
+            border-radius: 8px;
+            padding: 2px;
+            border: 1.5px solid var(--q-primary);
+          "
+          :options="toggleOptions"
+        />
+
+        <!-- View Workspaces Button -->
+        <q-btn
+          flat
+          no-caps
+          icon="launch"
+          :label="$t('admin.layout.workspaceView')"
+          color="amber-9"
+          class="q-mr-md"
+          @click="goToWorkspace"
+        />
+
+        <!-- User Profile Dropdown -->
+        <div class="row items-center no-wrap">
+          <q-btn-dropdown flat round dense class="user-dropdown-btn">
+            <template #label>
+              <q-avatar size="32px" class="user-avatar text-white">
+                <img
+                  v-if="tenantStore.userProfile?.avatar_url"
+                  :src="tenantStore.userProfile.avatar_url"
+                />
+                <span v-else>{{ userInitials }}</span>
+              </q-avatar>
+            </template>
+
+            <q-list style="min-width: 220px" class="bg-slate-950 text-slate-900 border-all q-py-sm">
+              <div class="q-px-md q-py-sm">
+                <div class="text-weight-bold text-amber-900">
+                  {{ tenantStore.userProfile?.full_name || $t('admin.layout.adminUser') }}
+                </div>
+                <div class="text-caption text-slate-500">{{ tenantStore.user?.email }}</div>
+                <div class="q-mt-xs">
+                  <q-badge color="amber" class="text-black text-weight-bold">{{
+                    $t('admin.layout.superadmin')
+                  }}</q-badge>
+                </div>
+              </div>
+
+              <q-separator class="q-my-sm" />
+
+              <q-item clickable v-close-popup @click="handleSignOut" class="text-negative">
+                <q-item-section avatar>
+                  <q-icon name="logout" size="20px" color="negative" />
+                </q-item-section>
+                <q-item-section>{{ $t('admin.layout.signOut') }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </div>
+      </q-toolbar>
+    </q-header>
+
+    <!-- Sidebar Drawer -->
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      bordered
+      class="bg-slate-950 text-slate-900 border-right"
+      :width="260"
+    >
+      <div class="drawer-content flex flex-col justify-between">
+        <div>
+          <!-- Brand Logo/Header -->
+          <div class="q-pa-md brand-section border-bottom flex items-center">
+            <q-icon name="shield" size="28px" class="text-amber-800 q-mr-sm" />
+            <div>
+              <div class="text-weight-bold text-slate-900 text-subtitle1 leading-tight">
+                {{ $t('admin.layout.globalControl') }}
+              </div>
+              <div class="text-xs text-slate-500">{{ $t('admin.layout.platformAdmin') }}</div>
+            </div>
+          </div>
+
+          <!-- Navigation Links -->
+          <q-list class="q-px-sm q-py-md">
+            <q-item
+              clickable
+              exact
+              to="/admin/dashboard"
+              class="nav-link-item q-mb-sm"
+              active-class="nav-active-item"
+            >
+              <q-item-section avatar>
+                <q-icon name="dashboard" size="22px" />
+              </q-item-section>
+              <q-item-section>{{ $t('admin.layout.dashboard') }}</q-item-section>
+            </q-item>
+
+            <q-item
+              clickable
+              to="/admin/tenants"
+              class="nav-link-item q-mb-sm"
+              active-class="nav-active-item"
+            >
+              <q-item-section avatar>
+                <q-icon name="business" size="22px" />
+              </q-item-section>
+              <q-item-section>{{ $t('admin.layout.tenants') }}</q-item-section>
+            </q-item>
+
+            <q-item
+              clickable
+              to="/admin/billing"
+              class="nav-link-item q-mb-sm"
+              active-class="nav-active-item"
+            >
+              <q-item-section avatar>
+                <q-icon name="credit_card" size="22px" />
+              </q-item-section>
+              <q-item-section>{{ $t('admin.layout.billing') }}</q-item-section>
+            </q-item>
+          </q-list>
+        </div>
+
+        <!-- Footer / Version -->
+        <div class="q-pa-md text-center text-xs text-slate-400 border-top">
+          {{ $t('admin.layout.version') }}
+        </div>
+      </div>
+    </q-drawer>
+
+    <!-- Page Container -->
+    <q-page-container class="bg-slate-900 text-slate-800 min-h-screen">
+      <router-view v-slot="{ Component }">
+        <transition name="fade-slide" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </q-page-container>
+  </q-layout>
 </template>
 
 <script setup lang="ts">

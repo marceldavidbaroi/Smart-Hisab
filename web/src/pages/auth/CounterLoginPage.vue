@@ -200,7 +200,10 @@ const handleLogin = async () => {
         localStorage.setItem('staff_session_name', data.full_name);
         localStorage.setItem('staff_session_role', data.role);
 
-        successMsg.value = t('auth.counter.welcomeStaff', { name: data.full_name, role: data.role });
+        successMsg.value = t('auth.counter.welcomeStaff', {
+          name: data.full_name,
+          role: data.role,
+        });
 
         setTimeout(() => {
           void router.push(`/${tenantSlug.value}/counter/dashboard`);

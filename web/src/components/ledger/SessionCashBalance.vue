@@ -9,9 +9,9 @@
     style="font-size: 13px"
   >
     <div class="row items-center no-wrap">
-      <span class="text-caption text-indigo-1 q-mr-xs text-weight-normal"
-        >{{ $t('ledger.cash.expectedDrawerCash') }}</span
-      >
+      <span class="text-caption text-indigo-1 q-mr-xs text-weight-normal">{{
+        $t('ledger.cash.expectedDrawerCash')
+      }}</span>
       <span v-if="loading">
         <q-spinner size="14px" color="white" class="q-ml-xs" />
       </span>

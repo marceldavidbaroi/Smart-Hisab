@@ -210,12 +210,19 @@ const columns = computed(() => [
     field: (row: SessionWithStaff) => row.shifts?.name || t('sessions.history.unknownShift'),
     sortable: true,
   },
-  { name: 'status', align: 'center' as const, label: t('sessions.history.cols.status'), field: 'status', sortable: true },
+  {
+    name: 'status',
+    align: 'center' as const,
+    label: t('sessions.history.cols.status'),
+    field: 'status',
+    sortable: true,
+  },
   {
     name: 'opened_by',
     align: 'left' as const,
     label: t('sessions.history.cols.openedBy'),
-    field: (row: SessionWithStaff) => row.opened_by_staff?.full_name || t('sessions.history.systemUser'),
+    field: (row: SessionWithStaff) =>
+      row.opened_by_staff?.full_name || t('sessions.history.systemUser'),
     sortable: true,
   },
   {
@@ -246,6 +253,11 @@ const columns = computed(() => [
     field: 'variance',
     sortable: true,
   },
-  { name: 'actions', align: 'center' as const, label: t('sessions.history.cols.actions'), field: 'id' },
+  {
+    name: 'actions',
+    align: 'center' as const,
+    label: t('sessions.history.cols.actions'),
+    field: 'id',
+  },
 ]);
 </script>

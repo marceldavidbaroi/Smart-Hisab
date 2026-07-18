@@ -12,7 +12,9 @@
       <!-- Welcome & Shift Header -->
       <div class="row items-center justify-between q-mb-lg q-col-gutter-sm">
         <div>
-          <h1 class="text-h4 text-weight-bold q-my-none text-dark">{{ $t('kioskUI.workspace.title') }}</h1>
+          <h1 class="text-h4 text-weight-bold q-my-none text-dark">
+            {{ $t('kioskUI.workspace.title') }}
+          </h1>
           <p class="text-subtitle2 text-grey-7 q-my-none">
             {{ currentStaffName }} —
             <span class="capitalize text-primary font-semibold">{{ currentStaffRole }}</span>
@@ -22,7 +24,9 @@
           <q-card class="flat bordered bg-white q-px-md q-py-sm row items-center text-dark">
             <q-icon name="timer" size="20px" color="primary" class="q-mr-sm" />
             <div class="column">
-              <span class="text-caption text-grey-7 leading-none">{{ $t('kioskUI.workspace.shiftDuration') }}</span>
+              <span class="text-caption text-grey-7 leading-none">{{
+                $t('kioskUI.workspace.shiftDuration')
+              }}</span>
               <span class="text-subtitle2 text-weight-bold font-mono">{{ shiftTimeStr }}</span>
             </div>
           </q-card>
@@ -73,7 +77,8 @@
                   <strong class="text-slate-800">{{
                     sessionStore.activeSession.business_date
                   }}</strong>
-                  | {{ $t('kioskUI.workspace.openedByLabel') }} <strong class="text-slate-800">{{ currentStaffName }}</strong> |
+                  | {{ $t('kioskUI.workspace.openedByLabel') }}
+                  <strong class="text-slate-800">{{ currentStaffName }}</strong> |
                   {{ $t('kioskUI.workspace.openingCashLabel') }}
                   <strong class="text-slate-800"
                     >{{ sessionStore.activeSession.opening_cash }} BDT</strong
@@ -137,7 +142,9 @@
             <q-avatar size="56px" color="green-1" text-color="green-8" class="q-mb-md">
               <q-icon name="shopping_cart" size="28px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">{{ $t('kioskUI.workspace.actions.posSale.title') }}</div>
+            <div class="text-subtitle1 text-weight-bold">
+              {{ $t('kioskUI.workspace.actions.posSale.title') }}
+            </div>
             <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
               {{ $t('kioskUI.workspace.actions.posSale.desc') }}
             </p>
@@ -159,7 +166,9 @@
             <q-avatar size="56px" color="orange-1" text-color="orange-8" class="q-mb-md">
               <q-icon name="restaurant" size="28px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">{{ $t('kioskUI.workspace.actions.recordMeal.title') }}</div>
+            <div class="text-subtitle1 text-weight-bold">
+              {{ $t('kioskUI.workspace.actions.recordMeal.title') }}
+            </div>
             <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
               {{ $t('kioskUI.workspace.actions.recordMeal.desc') }}
             </p>
@@ -181,12 +190,82 @@
             <q-avatar size="56px" color="blue-1" text-color="blue-8" class="q-mb-md">
               <q-icon name="payments" size="28px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">{{ $t('kioskUI.workspace.actions.cashAdvance.title') }}</div>
+            <div class="text-subtitle1 text-weight-bold">
+              {{ $t('kioskUI.workspace.actions.cashAdvance.title') }}
+            </div>
             <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
               {{ $t('kioskUI.workspace.actions.cashAdvance.desc') }}
             </p>
           </q-card>
         </div>
+
+        <!-- Action 4: Baki / Extra Charge -->
+        <div v-if="isMealManagementEnabled && canLogBaki" class="col-12 col-sm-4">
+          <q-card
+            flat
+            bordered
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
+            role="button"
+            tabindex="0"
+            v-ripple
+            @click="showBakiDialog = true"
+          >
+            <q-avatar size="56px" color="red-1" text-color="red-8" class="q-mb-md">
+              <q-icon name="assignment_late" size="28px" />
+            </q-avatar>
+            <div class="text-subtitle1 text-weight-bold">
+              {{ $t('kioskUI.workspace.actions.bakiCharge.title') }}
+            </div>
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
+              {{ $t('kioskUI.workspace.actions.bakiCharge.desc') }}
+            </p>
+          </q-card>
+        </div>
+
+        <!-- Action 5: Customer Collection -->
+        <div v-if="isMealManagementEnabled && canLogCollection" class="col-12 col-sm-4">
+          <q-card
+            flat
+            bordered
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
+            role="button"
+            tabindex="0"
+            v-ripple
+            @click="showCollectionDialog = true"
+          >
+            <q-avatar size="56px" color="teal-1" text-color="teal-8" class="q-mb-md">
+              <q-icon name="payments" size="28px" />
+            </q-avatar>
+            <div class="text-subtitle1 text-weight-bold">
+              {{ $t('kioskUI.workspace.actions.collection.title') }}
+            </div>
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
+              {{ $t('kioskUI.workspace.actions.collection.desc') }}
+            </p>
+          </q-card>
+        </div>
+      </div>
+
+      <!-- Contract Worker Attendance Grid -->
+      <div
+        v-if="
+          isMealManagementEnabled &&
+          canToggleAttendance &&
+          canReadCustomers &&
+          sessionStore.hasActiveSession
+        "
+        class="q-mb-lg"
+      >
+        <AttendanceGrid
+          :customers="customersStore.customers.filter((c) => c.category === 'contract_worker')"
+          :attendance-today="customersStore.attendanceToday"
+          :shift-names="['Breakfast', 'Lunch', 'Dinner', 'Snack']"
+          :loading="customersStore.loading"
+          :disabled="isActionBlocked"
+          @toggle="handleToggleAttendance"
+        />
       </div>
 
       <!-- Shift History Logs Table -->
@@ -240,7 +319,9 @@
       <q-card class="bg-white text-dark border-all rounded-borders q-pa-md">
         <q-card-section class="row items-center">
           <q-avatar icon="logout" color="red-1" text-color="red-9" class="q-mr-md" />
-          <span class="text-h6 text-weight-bold">{{ $t('kioskUI.workspace.clockOutDialog.title') }}</span>
+          <span class="text-h6 text-weight-bold">{{
+            $t('kioskUI.workspace.clockOutDialog.title')
+          }}</span>
         </q-card-section>
 
         <q-card-section class="q-py-md text-grey-7">
@@ -248,7 +329,12 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" />
+          <q-btn
+            flat
+            :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
+            v-close-popup
+            color="grey-7"
+          />
           <q-btn
             flat
             :label="$t('kioskUI.workspace.clockOutDialog.confirmBtn')"
@@ -265,7 +351,9 @@
     <q-dialog v-model="showPosDialog" persistent>
       <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">{{ $t('kioskUI.workspace.actions.posSale.title') }}</div>
+          <div class="text-h6 text-weight-bold">
+            {{ $t('kioskUI.workspace.actions.posSale.title') }}
+          </div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
@@ -273,9 +361,9 @@
         <q-form @submit.prevent="submitPosSale" class="q-gutter-y-md q-mt-sm">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('ledger.manual.amount') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('ledger.manual.amount')
+              }}</label>
               <q-input
                 v-model.number="posAmount"
                 type="number"
@@ -287,9 +375,9 @@
               />
             </div>
             <div>
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('sessions.close.notesLabel') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('sessions.close.notesLabel')
+              }}</label>
               <q-input
                 v-model="posDescription"
                 type="textarea"
@@ -301,7 +389,12 @@
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" />
+            <q-btn
+              flat
+              :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
+              v-close-popup
+              color="grey-7"
+            />
             <q-btn
               type="submit"
               :label="$t('ledger.manual.saveBtn')"
@@ -318,7 +411,9 @@
     <q-dialog v-model="showMealDialog" persistent>
       <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">{{ $t('kioskUI.workspace.actions.recordMeal.title') }}</div>
+          <div class="text-h6 text-weight-bold">
+            {{ $t('kioskUI.workspace.actions.recordMeal.title') }}
+          </div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
@@ -365,7 +460,12 @@
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" />
+            <q-btn
+              flat
+              :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
+              v-close-popup
+              color="grey-7"
+            />
             <q-btn
               type="submit"
               :label="$t('kioskUI.workspace.actions.recordMeal.title')"
@@ -382,7 +482,9 @@
     <q-dialog v-model="showAdvanceDialog" persistent>
       <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">{{ $t('kioskUI.workspace.actions.cashAdvance.title') }}</div>
+          <div class="text-h6 text-weight-bold">
+            {{ $t('kioskUI.workspace.actions.cashAdvance.title') }}
+          </div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
@@ -390,9 +492,9 @@
         <q-form @submit.prevent="submitAdvance" class="q-gutter-y-md q-mt-sm">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('ledger.manual.amount') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('ledger.manual.amount')
+              }}</label>
               <q-input
                 v-model.number="advanceAmount"
                 type="number"
@@ -404,9 +506,9 @@
               />
             </div>
             <div>
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('sessions.close.notesLabel') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('sessions.close.notesLabel')
+              }}</label>
               <q-input
                 v-model="advanceReason"
                 type="textarea"
@@ -420,7 +522,12 @@
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" />
+            <q-btn
+              flat
+              :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
+              v-close-popup
+              color="grey-7"
+            />
             <q-btn
               type="submit"
               :label="$t('kioskUI.workspace.actions.cashAdvance.title')"
@@ -441,6 +548,25 @@
       :session-id="sessionStore.activeSession.id"
       @closed="handleSessionClosed"
     />
+
+    <!-- Customers Baki & Collection Dialogs -->
+    <BakiChargeDialog
+      v-if="sessionStore.activeSession"
+      v-model="showBakiDialog"
+      :session-id="sessionStore.activeSession.id"
+      :device-token="kioskStore.deviceToken"
+      :staff-id="kioskStore.currentStaff?.id"
+      @saved="onBakiRecorded"
+    />
+
+    <CollectionDialog
+      v-if="sessionStore.activeSession"
+      v-model="showCollectionDialog"
+      :session-id="sessionStore.activeSession.id"
+      :device-token="kioskStore.deviceToken"
+      :staff-id="kioskStore.currentStaff?.id"
+      @saved="onCollectionRecorded"
+    />
   </q-page>
 </template>
 
@@ -458,6 +584,10 @@ import SessionCloseDialog from '../../components/sessions/SessionCloseDialog.vue
 import SessionCashBalance from '../../components/ledger/SessionCashBalance.vue';
 import { formatMoney } from '../../utils/format';
 import { useI18n } from 'vue-i18n';
+import { useCustomersStore } from '../../stores/customers';
+import AttendanceGrid from '../../components/customers/AttendanceGrid.vue';
+import BakiChargeDialog from '../../components/customers/BakiChargeDialog.vue';
+import CollectionDialog from '../../components/customers/CollectionDialog.vue';
 
 const router = useRouter();
 const kioskStore = useKioskStore();
@@ -475,6 +605,21 @@ const isStaffPayrollEnabled = ref(false);
 
 const showOpenDialog = ref(false);
 const showCloseDialog = ref(false);
+
+const customersStore = useCustomersStore();
+const showBakiDialog = ref(false);
+const showCollectionDialog = ref(false);
+
+const canToggleAttendance = computed(() =>
+  kioskStore.hasStaffPermission('meal_management', 'attendance_write'),
+);
+const canLogBaki = computed(() => kioskStore.hasStaffPermission('meal_management', 'baki_write'));
+const canLogCollection = computed(() =>
+  kioskStore.hasStaffPermission('meal_management', 'collections_write'),
+);
+const canReadCustomers = computed(() =>
+  kioskStore.hasStaffPermission('meal_management', 'customer_read'),
+);
 
 const ledgerStore = useLedgerStore();
 
@@ -497,23 +642,84 @@ const isActionBlocked = computed(() => {
   return isShiftSessionsEnabled.value && !sessionStore.hasActiveSession;
 });
 
+async function loadCustomersData(businessDate: string) {
+  if (isMealManagementEnabled.value && canReadCustomers.value) {
+    try {
+      await customersStore.fetchCustomers({ activeOnly: true });
+      await customersStore.fetchAttendanceForDate(businessDate);
+    } catch (e) {
+      console.error('Failed to load customers/attendance data', e);
+    }
+  }
+}
+
 watch(
   () => sessionStore.activeSession,
   async (session) => {
-    if (session && isFinancialLedgerEnabled.value) {
-      if (canReadCashBalance.value) {
-        await ledgerStore.fetchCashBalance(session.id);
+    if (session) {
+      if (isFinancialLedgerEnabled.value) {
+        if (canReadCashBalance.value) {
+          await ledgerStore.fetchCashBalance(session.id);
+        }
+        if (canReadSessionLedger.value) {
+          await ledgerStore.fetchEntries({ sessionId: session.id });
+        }
       }
-      if (canReadSessionLedger.value) {
-        await ledgerStore.fetchEntries({ sessionId: session.id });
-      }
+      await loadCustomersData(session.business_date);
     } else {
       ledgerStore.clearLedger();
+      customersStore.clearCustomers();
     }
   },
   { immediate: true },
 );
 
+async function handleToggleAttendance(params: { customerId: string; shiftName: string }) {
+  if (!sessionStore.activeSession) return;
+  try {
+    await customersStore.toggleAttendance({
+      customerId: params.customerId,
+      sessionId: sessionStore.activeSession.id,
+      shiftName: params.shiftName,
+      deviceToken: kioskStore.deviceToken,
+      staffId: kioskStore.currentStaff?.id,
+    });
+
+    showSuccess(t('customers.feedback.attendanceUpdated'));
+
+    if (isFinancialLedgerEnabled.value && canReadSessionLedger.value) {
+      await ledgerStore.fetchEntries({ sessionId: sessionStore.activeSession.id });
+    }
+  } catch (e) {
+    void showError(e instanceof Error ? e.message : 'Toggle attendance failed');
+  }
+}
+
+async function onBakiRecorded() {
+  if (!sessionStore.activeSession) return;
+  if (isFinancialLedgerEnabled.value) {
+    if (canReadSessionLedger.value) {
+      await ledgerStore.fetchEntries({ sessionId: sessionStore.activeSession.id });
+    }
+    if (canReadCashBalance.value) {
+      await ledgerStore.fetchCashBalance(sessionStore.activeSession.id);
+    }
+  }
+  await customersStore.fetchCustomers({ activeOnly: true });
+}
+
+async function onCollectionRecorded() {
+  if (!sessionStore.activeSession) return;
+  if (isFinancialLedgerEnabled.value) {
+    if (canReadSessionLedger.value) {
+      await ledgerStore.fetchEntries({ sessionId: sessionStore.activeSession.id });
+    }
+    if (canReadCashBalance.value) {
+      await ledgerStore.fetchCashBalance(sessionStore.activeSession.id);
+    }
+  }
+  await customersStore.fetchCustomers({ activeOnly: true });
+}
 async function checkFeatureGate() {
   const tenantId = kioskStore.tenantId;
   if (!tenantId) return;
@@ -571,16 +777,51 @@ interface ShiftLog {
 const shiftLogs = ref<ShiftLog[]>([]);
 
 const logColumns = computed(() => [
-  { name: 'time', align: 'left' as const, label: t('ledger.table.cols.dateTime'), field: 'time', sortable: true },
-  { name: 'type', align: 'left' as const, label: t('ledger.table.cols.type'), field: 'type', sortable: true },
-  { name: 'details', align: 'left' as const, label: t('ledger.table.cols.notes'), field: 'details' },
+  {
+    name: 'time',
+    align: 'left' as const,
+    label: t('ledger.table.cols.dateTime'),
+    field: 'time',
+    sortable: true,
+  },
+  {
+    name: 'type',
+    align: 'left' as const,
+    label: t('ledger.table.cols.type'),
+    field: 'type',
+    sortable: true,
+  },
+  {
+    name: 'details',
+    align: 'left' as const,
+    label: t('ledger.table.cols.notes'),
+    field: 'details',
+  },
   { name: 'value', align: 'right' as const, label: t('ledger.table.cols.amount'), field: 'value' },
 ]);
 
 const ledgerColumns = computed<QTableColumn[]>(() => [
-  { name: 'time', align: 'left', label: t('ledger.table.cols.dateTime'), field: 'created_at', sortable: true },
-  { name: 'type', align: 'left', label: t('ledger.table.cols.type'), field: 'type', sortable: true },
-  { name: 'category', align: 'left', label: t('ledger.table.cols.category'), field: 'category', sortable: true },
+  {
+    name: 'time',
+    align: 'left',
+    label: t('ledger.table.cols.dateTime'),
+    field: 'created_at',
+    sortable: true,
+  },
+  {
+    name: 'type',
+    align: 'left',
+    label: t('ledger.table.cols.type'),
+    field: 'type',
+    sortable: true,
+  },
+  {
+    name: 'category',
+    align: 'left',
+    label: t('ledger.table.cols.category'),
+    field: 'category',
+    sortable: true,
+  },
   { name: 'value', align: 'right', label: t('ledger.table.cols.amount'), field: 'amount' },
 ]);
 

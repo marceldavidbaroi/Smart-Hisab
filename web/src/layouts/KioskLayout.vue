@@ -26,7 +26,13 @@
           dense
           unelevated
           class="q-mr-sm text-xs text-weight-bold"
-          style="font-size: 11px; height: 32px; border-radius: 8px; padding: 2px; border: 1.5px solid var(--q-primary);"
+          style="
+            font-size: 11px;
+            height: 32px;
+            border-radius: 8px;
+            padding: 2px;
+            border: 1.5px solid var(--q-primary);
+          "
           :options="toggleOptions"
         />
 
@@ -39,7 +45,9 @@
             style="min-height: 24px"
           >
             <q-icon :name="isOnline ? 'wifi' : 'wifi_off'" size="14px" class="q-mr-xs" />
-            <span class="gt-xs">{{ isOnline ? $t('layouts.kiosk.online') : $t('layouts.kiosk.offline') }}</span>
+            <span class="gt-xs">{{
+              isOnline ? $t('layouts.kiosk.online') : $t('layouts.kiosk.offline')
+            }}</span>
           </q-badge>
 
           <!-- Active Staff Member -->

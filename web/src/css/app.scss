@@ -1,8 +1,62 @@
 // app global css for light theme
 
+:root {
+  // Radius scale — modern standard
+  --radius-xs: 4px; // chips/tags density, scrollbar
+  --radius-sm: 6px; // compact inputs / dense controls
+  --radius-md: 8px; // buttons, list rows, table cells
+  --radius-lg: 12px; // banners, menus, small cards
+  --radius-xl: 16px; // cards, dialogs, panels
+  --radius-2xl: 24px; // large sheets / full-bleed panels
+  --radius-full: 9999px; // pills, FABs, toggles
+}
+
 body {
   background-color: #f8fafc;
   color: #0f172a;
+}
+
+// Utility classes — prefer these over hardcoded px
+.rounded-xs {
+  border-radius: var(--radius-xs) !important;
+}
+.rounded-sm {
+  border-radius: var(--radius-sm) !important;
+}
+.rounded-md,
+.rounded-btn {
+  border-radius: var(--radius-md) !important;
+}
+.rounded-lg {
+  border-radius: var(--radius-lg) !important;
+}
+.rounded-xl {
+  border-radius: var(--radius-xl) !important;
+}
+.rounded-2xl {
+  border-radius: var(--radius-2xl) !important;
+}
+.rounded-full {
+  border-radius: var(--radius-full) !important;
+}
+
+// Common surfaces
+.dialog-card,
+.q-dialog__inner > .q-card,
+.q-card {
+  border-radius: var(--radius-xl);
+}
+
+.q-banner {
+  border-radius: var(--radius-lg);
+}
+
+.q-menu {
+  border-radius: var(--radius-lg);
+}
+
+.q-chip {
+  border-radius: var(--radius-lg);
 }
 
 // Custom styles for dialogs / components in light theme
@@ -24,7 +78,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 
 ::-webkit-scrollbar-thumb:hover {

@@ -161,8 +161,7 @@ const loadPlatformStats = async () => {
     activePaidCount.value = pc || 0;
   } catch (err) {
     const error = err as Error;
-    errorMsg.value =
-      error.message || t('admin.dashboard.metricsError');
+    errorMsg.value = error.message || t('admin.dashboard.metricsError');
   } finally {
     loading.value = false;
   }

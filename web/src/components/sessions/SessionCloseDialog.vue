@@ -18,9 +18,9 @@
         <q-form @submit.prevent="handleSubmit" class="q-gutter-y-md q-mt-sm">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('sessions.close.closingCash') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('sessions.close.closingCash')
+              }}</label>
               <q-input
                 v-model.number="closingCash"
                 type="number"
@@ -28,15 +28,17 @@
                 dense
                 color="primary"
                 class="custom-input font-mono"
-                :rules="[(val) => (val !== null && val >= 0) || $t('sessions.close.closingCashMin')]"
+                :rules="[
+                  (val) => (val !== null && val >= 0) || $t('sessions.close.closingCashMin'),
+                ]"
                 hide-bottom-space
               />
             </div>
 
             <div>
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >{{ $t('sessions.close.notesLabel') }}</label
-              >
+              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                $t('sessions.close.notesLabel')
+              }}</label>
               <q-input
                 v-model="notes"
                 type="textarea"
@@ -50,7 +52,13 @@
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat :label="$t('sessions.close.cancelBtn')" v-close-popup color="grey-7" :disable="loading" />
+            <q-btn
+              flat
+              :label="$t('sessions.close.cancelBtn')"
+              v-close-popup
+              color="grey-7"
+              :disable="loading"
+            />
             <q-btn
               type="submit"
               :label="$t('sessions.close.closeBtn')"
@@ -75,7 +83,9 @@
             size="72px"
             class="q-mb-sm"
           />
-          <div class="text-h6 text-weight-bold text-center">{{ $t('sessions.close.reconciled') }}</div>
+          <div class="text-h6 text-weight-bold text-center">
+            {{ $t('sessions.close.reconciled') }}
+          </div>
         </q-card-section>
 
         <q-card-section class="q-py-md text-slate-800">
@@ -105,7 +115,8 @@
             v-if="closedResult.variance !== 0"
             class="q-mt-md q-pa-sm bg-red-1 text-negative rounded-borders text-caption"
           >
-            ⚠️ <strong>{{ $t('sessions.close.varianceException') }}</strong> {{ $t('sessions.close.varianceWarning') }}
+            ⚠️ <strong>{{ $t('sessions.close.varianceException') }}</strong>
+            {{ $t('sessions.close.varianceWarning') }}
           </div>
         </q-card-section>
 

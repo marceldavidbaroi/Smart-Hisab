@@ -146,10 +146,13 @@ Handles employee registry, attendance logs, mid-month cash advances, and periodi
 
 Manages flat-rate contract workers (charged a fixed daily rate if present for any contracted shifts), walk-in credit (baki) customers, and collections.
 
+**Ops model:** Manager on the paired **terminal** enrolls customers / meal rates and runs cashier money flow (Manager ⊃ Cashier). Owner / tenant Admin on **workspace** handle reports, statements, and oversight (full access retained). Change map: [temp_restructure.md](./temp_restructure.md).
+
 ### Submodules
 1.  **Customer Profiles:**
     *   Registry of customers with categories: `Contract Workers` (daily flat rate, e.g., 200 taka, for selected shifts) or `Walk-in Baki` (credit items).
     *   Tracks a running `outstanding_balance` per customer (supporting segment payments and prepaid advances).
+    *   **Primary create/edit UI:** kiosk `StaffWorkspace` (Manager + `customer_write`). Workspace pages remain for Owner/Admin.
 2.  **Daily Contract Attendance Tracker:**
     *   Fast-access grid UI of active contract workers.
     *   One-tap shift attendance toggling (Breakfast, Lunch, Dinner, Snack).

@@ -88,7 +88,8 @@ export default {
       deniedView: 'You do not have permission to view operational sessions.',
       failedLoad: 'Failed to load sessions registry',
       reopenDialogTitle: 'Reopen Operational Session?',
-      reopenDialogMsg: 'Are you sure you want to reopen this session? This will unlock transaction modifications associated with this session.',
+      reopenDialogMsg:
+        'Are you sure you want to reopen this session? This will unlock transaction modifications associated with this session.',
       reopenBtn: 'Reopen Session',
       reopenSuccess: 'Operational session successfully reopened.',
       failedReopen: 'Failed to reopen session',
@@ -116,11 +117,13 @@ export default {
       clockedIn: 'Clocked In',
       clockInTime: 'Clock In Time:',
       kioskActiveTitle: 'Kiosk Mode Active',
-      kioskActiveMsg: 'POS transactions, attendance logs, and cash drawer management will be fully operational in Phase 4.',
+      kioskActiveMsg:
+        'POS transactions, attendance logs, and cash drawer management will be fully operational in Phase 4.',
     },
     members: {
       title: 'Members & Kiosks',
-      subtitle: 'Manage your organization team, kiosk staff profiles, and terminal device pairings.',
+      subtitle:
+        'Manage your organization team, kiosk staff profiles, and terminal device pairings.',
       inviteMemberBtn: 'Invite Member',
       pairDeviceBtn: 'Pair New Device',
       addStaffBtn: 'Add Kiosk Staff',
@@ -180,7 +183,8 @@ export default {
       },
       removeDialog: {
         title: 'Remove Team Member?',
-        message: 'Are you sure you want to remove {name} from this workspace? This action will immediately revoke their access to all tenant-scoped resources.',
+        message:
+          'Are you sure you want to remove {name} from this workspace? This action will immediately revoke their access to all tenant-scoped resources.',
         confirmBtn: 'Confirm Remove',
       },
       staffDialog: {
@@ -197,7 +201,8 @@ export default {
         roleInputPlaceholder: 'e.g. Cook, Cashier, Server',
         roleRequired: 'Role is required',
         allowTerminal: 'Allow Terminal Login',
-        allowTerminalDesc: 'Allow this profile to authenticate on paired kiosk devices via 4-digit PIN.',
+        allowTerminalDesc:
+          'Allow this profile to authenticate on paired kiosk devices via 4-digit PIN.',
         activeProfile: 'Active Profile',
         activeProfileDesc: 'Enable or temporarily disable this staff member.',
         saveBtn: 'Save Profile',
@@ -205,17 +210,20 @@ export default {
       tempPinDialog: {
         title: 'Temporary PIN Code',
         subtitle: 'Hand over this temporary PIN code to the staff member.',
-        warning: 'Warning: This code will not be shown again. The staff member will be forced to change it on their first login.',
+        warning:
+          'Warning: This code will not be shown again. The staff member will be forced to change it on their first login.',
         gotItBtn: 'Got It',
       },
       pairDialog: {
         title: 'Pair Terminal Device',
-        subtitle: 'Enter a descriptive name for the device (e.g. Counter Tablet A) and generate a 6-digit verification code.',
+        subtitle:
+          'Enter a descriptive name for the device (e.g. Counter Tablet A) and generate a 6-digit verification code.',
         deviceName: 'Device Name',
         deviceNamePlaceholder: 'e.g. Counter Kiosk 1',
         generateBtn: 'Generate Code',
         verificationTitle: 'Verification Code for {device}',
-        verificationDesc: 'Enter this code on the target device\'s Pairing Screen. This code is valid for 30 minutes.',
+        verificationDesc:
+          "Enter this code on the target device's Pairing Screen. This code is valid for 30 minutes.",
       },
       roleDialog: {
         addTitle: 'Create Custom Staff Role',
@@ -246,7 +254,8 @@ export default {
       },
       deleteRoleDialog: {
         title: 'Delete Staff Role?',
-        message: 'Are you sure you want to delete the staff role {name}? This action is permanent and will fail if any staff members are currently assigned to this role.',
+        message:
+          'Are you sure you want to delete the staff role {name}? This action is permanent and will fail if any staff members are currently assigned to this role.',
       },
       messages: {
         loadMembersFailed: 'Failed to load workspace members.',
@@ -292,14 +301,17 @@ export default {
       accessScopes: {
         title: 'Access Scopes',
         privilegesTitle: 'Editing Privileges',
-        privilegesDesc: 'Branding settings are only configurable by users with the Owner or Admin role. Normal members can only view settings.',
+        privilegesDesc:
+          'Branding settings are only configurable by users with the Owner or Admin role. Normal members can only view settings.',
         planTitle: 'Subscription Plan',
-        planDesc: 'Feature flags and subscription tiers are platform-level policies that can only be altered by a platform superadmin in the superadmin portal.',
+        planDesc:
+          'Feature flags and subscription tiers are platform-level policies that can only be altered by a platform superadmin in the superadmin portal.',
       },
       dangerZone: {
         title: 'Danger Zone',
         deleteTitle: 'Delete Workspace',
-        deleteDesc: 'Permanently delete this workspace and all associated data, including members, settings, devices, shifts, and ledgers. This action is irreversible.',
+        deleteDesc:
+          'Permanently delete this workspace and all associated data, including members, settings, devices, shifts, and ledgers. This action is irreversible.',
         deleteBtn: 'Delete Workspace',
       },
       localization: {
@@ -312,7 +324,8 @@ export default {
         saveBtn: 'Save Preferences',
         ownerOnly: 'Only the workspace Owner can change localization preferences.',
         appliesTitle: 'How it applies',
-        appliesDesc: 'Amounts and dates in ledgers, sessions, and reports use these settings for display. Defaults for Bangladesh canteens: BDT, Asia/Dhaka, BD, DD/MM/YYYY.',
+        appliesDesc:
+          'Amounts and dates in ledgers, sessions, and reports use these settings for display. Defaults for Bangladesh canteens: BDT, Asia/Dhaka, BD, DD/MM/YYYY.',
         preview: 'Preview',
       },
       kioskDevices: {
@@ -392,7 +405,8 @@ export default {
       createAccount: 'Create Account',
       subtitle: 'Register to set up and manage workspaces.',
       verifyEmailTitle: 'Verify Your Email',
-      verifyEmailText: 'We have sent a verification link to {email}. Please check your inbox and spam folder.',
+      verifyEmailText:
+        'We have sent a verification link to {email}. Please check your inbox and spam folder.',
       backToLogin: 'Back to Login',
       fullNameLabel: 'Full Name',
       fullNameRequired: 'Full name is required',
@@ -420,7 +434,8 @@ export default {
     },
     pending: {
       title: 'Workspace Access Pending',
-      subtitle: 'Your account was registered successfully, but this platform is currently invitation-only. Please contact an administrator to be assigned to a workspace, or check your inbox for pending invitations.',
+      subtitle:
+        'Your account was registered successfully, but this platform is currently invitation-only. Please contact an administrator to be assigned to a workspace, or check your inbox for pending invitations.',
       checkStatus: 'Check Status / Refresh',
       signOut: 'Sign Out',
       accessDetected: 'Workspace access detected! Redirecting...',
@@ -496,7 +511,8 @@ export default {
       expectedCash: 'Expected Cash:',
       variance: 'Variance:',
       varianceException: 'Variance Exception:',
-      varianceWarning: "The physical drawer count does not match the system's ledger expected cash.",
+      varianceWarning:
+        "The physical drawer count does not match the system's ledger expected cash.",
       dismissBtn: 'Dismiss',
       messages: {
         closeFailed: 'Failed to close session',
@@ -537,7 +553,8 @@ export default {
       endTimeRequired: 'End time is required',
       closeBtn: 'Close',
       activeStatus: 'Active Status',
-      activeStatusDesc: 'Deactivating a shift prevents it from being chosen when opening a session.',
+      activeStatusDesc:
+        'Deactivating a shift prevents it from being chosen when opening a session.',
       cancelBtn: 'Cancel',
       saveBtn: 'Save Changes',
       createBtn: 'Create',
@@ -726,7 +743,8 @@ export default {
       businessDateLabel: 'Business Date:',
       openedByLabel: 'Opened by:',
       openingCashLabel: 'Opening cash:',
-      sessionBlockedWarning: 'Register initialization is required. Action cards are temporarily blocked.',
+      sessionBlockedWarning:
+        'Register initialization is required. Action cards are temporarily blocked.',
       actions: {
         posSale: {
           title: 'POS Cash Sale',
@@ -739,6 +757,14 @@ export default {
         cashAdvance: {
           title: 'Cash Advance',
           desc: 'Issue emergency salary advances or daily wages to staff.',
+        },
+        bakiCharge: {
+          title: 'Baki / Extra Charge',
+          desc: 'Log walk-in credit or contract-worker extras.',
+        },
+        collection: {
+          title: 'Record Collection',
+          desc: 'Log customer credit clearing or advance payment.',
         },
       },
       clockOutDialog: {
@@ -816,7 +842,8 @@ export default {
       paymentStatus: 'Payment Account Status',
       updateBtn: 'Update Subscription policy',
       featuresCard: 'Module Feature Toggles',
-      featuresDesc: 'Updating these checks immediately updates `tenant_settings.enabled_features` column for this tenant.',
+      featuresDesc:
+        'Updating these checks immediately updates `tenant_settings.enabled_features` column for this tenant.',
       saveBtn: 'Save Feature Policies',
       noTenantSelected: 'Select a tenant workspace on the left to edit its modules.',
       messages: {
@@ -828,13 +855,145 @@ export default {
       },
     },
   },
+  customers: {
+    nav: {
+      label: 'Customers',
+    },
+    list: {
+      title: 'Customers',
+      subtitle: 'Contract workers and walk-in credit customers',
+      empty: 'No customers yet.',
+      createBtn: 'Add Customer',
+      searchPlaceholder: 'Search by name or phone',
+      filterCategory: 'Category',
+      filterActive: 'Active only',
+      applyBtn: 'Apply',
+      clearBtn: 'Clear',
+      categories: {
+        all: 'All categories',
+        contract_worker: 'Contract Worker',
+        walk_in_baki: 'Walk-in Baki',
+      },
+      cols: {
+        name: 'Name',
+        category: 'Category',
+        phone: 'Phone',
+        outstanding: 'Outstanding',
+        factoryUnit: 'Unit',
+        status: 'Status',
+        active: 'Active',
+        inactive: 'Inactive',
+      },
+    },
+    detail: {
+      title: 'Customer Statement',
+      backBtn: 'Back to customers',
+      outstanding: 'Outstanding Balance',
+      prepaid: 'Prepaid Credit',
+      editBtn: 'Edit profile',
+      collectBtn: 'Record collection',
+      emptyStatement: 'No activity in this range.',
+      tabs: {
+        all: 'All',
+        attendance: 'Attendance',
+        baki: 'Baki / Extras',
+        collections: 'Collections',
+      },
+      cols: {
+        date: 'Date',
+        type: 'Type',
+        description: 'Description',
+        amount: 'Amount',
+        method: 'Method',
+        session: 'Session',
+      },
+      types: {
+        attendance: 'Daily contract charge',
+        baki: 'Credit / extra',
+        collection: 'Collection',
+      },
+    },
+    form: {
+      createTitle: 'Add Customer',
+      editTitle: 'Edit Customer',
+      fullName: 'Full name',
+      fullNameRequired: 'Name is required',
+      category: 'Category',
+      categoryRequired: 'Category is required',
+      phone: 'Phone',
+      dailyRate: 'Daily contract rate',
+      dailyRateRequired: 'Daily rate is required for contract workers',
+      contractShifts: 'Contracted shifts',
+      factoryUnit: 'Factory / unit',
+      isActive: 'Active',
+      cancelBtn: 'Cancel',
+      saveBtn: 'Save',
+      categories: {
+        contract_worker: 'Contract Worker',
+        walk_in_baki: 'Walk-in Baki',
+      },
+    },
+    attendance: {
+      title: 'Contract Attendance',
+      subtitle: 'Tap a shift to mark present',
+      empty: 'No active contract workers.',
+      noSession: 'No open operational session',
+      present: 'Present',
+      absent: 'Absent',
+      rateCharged: 'Daily rate applied',
+      rateRefunded: 'Daily rate refunded',
+    },
+    baki: {
+      title: 'Baki / Extra Charge',
+      customer: 'Customer',
+      customerRequired: 'Select a customer',
+      itemsDescription: 'Items / note',
+      itemsRequired: 'Description is required',
+      amount: 'Amount',
+      amountRequired: 'Amount is required',
+      amountMin: 'Amount must be greater than zero',
+      cancelBtn: 'Cancel',
+      saveBtn: 'Save charge',
+      success: 'Charge recorded',
+    },
+    collections: {
+      title: 'Record Collection',
+      customer: 'Customer',
+      customerRequired: 'Select a customer',
+      amount: 'Amount',
+      amountRequired: 'Amount is required',
+      amountMin: 'Amount must be greater than zero',
+      paymentMethod: 'Payment method',
+      paymentMethodRequired: 'Payment method is required',
+      notes: 'Notes',
+      cancelBtn: 'Cancel',
+      saveBtn: 'Record payment',
+      success: 'Collection recorded',
+      methods: {
+        cash: 'Cash',
+        mobile_wallet: 'Mobile Wallet',
+        bank_transfer: 'Bank Transfer',
+      },
+    },
+    errors: {
+      sessionClosed: 'This operational session is closed.',
+      sessionRequiredCash: 'An open session is required for cash collections.',
+      notContractWorker: 'Customer is not a contract worker or has no daily rate.',
+      permissionDenied: 'You do not have permission for this action.',
+      loadFailed: 'Failed to load customers.',
+    },
+    feedback: {
+      saved: 'Customer saved',
+      attendanceUpdated: 'Attendance updated',
+    },
+  },
   errors: {
     notFoundTitle: 'Oops. Nothing here...',
     goHome: 'Go Home',
     forbiddenTitle: 'Access Forbidden',
-    forbiddenText: 'You do not have permission to access this resource or view this workspace. If you believe this is an error, contact your tenant administrator or support.',
+    forbiddenText:
+      'You do not have permission to access this resource or view this workspace. If you believe this is an error, contact your tenant administrator or support.',
     backSafety: 'Back to Safety',
     signInDifferent: 'Sign In as Different User',
   },
 };
-

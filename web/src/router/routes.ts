@@ -159,6 +159,30 @@ const routes: RouteRecordRaw[] = [
           },
         },
       },
+      {
+        path: 'customers',
+        name: 'workspace-customers',
+        component: () => import('@/pages/workspace/WorkspaceCustomers.vue'),
+        meta: {
+          requiredFeature: 'meal-management',
+          requiredModulePermission: {
+            module: 'meal_management',
+            permission: 'customer_read',
+          },
+        },
+      },
+      {
+        path: 'customers/:customerId',
+        name: 'workspace-customer-detail',
+        component: () => import('@/pages/workspace/WorkspaceCustomerDetail.vue'),
+        meta: {
+          requiredFeature: 'meal-management',
+          requiredModulePermission: {
+            module: 'meal_management',
+            permission: 'statement_read',
+          },
+        },
+      },
     ],
   },
 

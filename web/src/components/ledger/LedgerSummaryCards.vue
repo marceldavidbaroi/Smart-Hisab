@@ -5,7 +5,9 @@
       <q-card flat bordered class="bg-white border-all">
         <q-card-section class="q-py-sm">
           <div class="row justify-between items-center no-wrap">
-            <span class="text-caption text-grey-7 text-weight-medium">{{ $t('ledger.summary.inflow') }}</span>
+            <span class="text-caption text-grey-7 text-weight-medium">{{
+              $t('ledger.summary.inflow')
+            }}</span>
             <q-icon name="trending_up" size="20px" class="text-positive" />
           </div>
           <div v-if="loading" class="q-mt-sm">
@@ -23,7 +25,9 @@
       <q-card flat bordered class="bg-white border-all">
         <q-card-section class="q-py-sm">
           <div class="row justify-between items-center no-wrap">
-            <span class="text-caption text-grey-7 text-weight-medium">{{ $t('ledger.summary.outflow') }}</span>
+            <span class="text-caption text-grey-7 text-weight-medium">{{
+              $t('ledger.summary.outflow')
+            }}</span>
             <q-icon name="trending_down" size="20px" class="text-negative" />
           </div>
           <div v-if="loading" class="q-mt-sm">
@@ -41,7 +45,9 @@
       <q-card flat bordered class="bg-white border-all">
         <q-card-section class="q-py-sm">
           <div class="row justify-between items-center no-wrap">
-            <span class="text-caption text-grey-7 text-weight-medium">{{ $t('ledger.summary.netProfit') }}</span>
+            <span class="text-caption text-grey-7 text-weight-medium">{{
+              $t('ledger.summary.netProfit')
+            }}</span>
             <q-icon
               :name="(summary?.net_profit_loss ?? 0) >= 0 ? 'show_chart' : 'error_outline'"
               size="20px"
@@ -67,7 +73,9 @@
       <q-card flat bordered class="bg-white border-all">
         <q-card-section class="q-py-sm">
           <div class="row justify-between items-center no-wrap">
-            <span class="text-caption text-grey-7 text-weight-medium">{{ $t('ledger.summary.receivables') }}</span>
+            <span class="text-caption text-grey-7 text-weight-medium">{{
+              $t('ledger.summary.receivables')
+            }}</span>
             <q-icon name="call_received" size="20px" class="text-indigo" />
           </div>
           <div v-if="loading" class="q-mt-sm">
@@ -85,7 +93,9 @@
       <q-card flat bordered class="bg-white border-all">
         <q-card-section class="q-py-sm">
           <div class="row justify-between items-center no-wrap">
-            <span class="text-caption text-grey-7 text-weight-medium">{{ $t('ledger.summary.payables') }}</span>
+            <span class="text-caption text-grey-7 text-weight-medium">{{
+              $t('ledger.summary.payables')
+            }}</span>
             <q-icon name="call_made" size="20px" class="text-orange-9" />
           </div>
           <div v-if="loading" class="q-mt-sm">
@@ -103,7 +113,9 @@
       <q-card flat bordered class="bg-white border-all">
         <q-card-section class="q-py-sm">
           <div class="row justify-between items-center no-wrap">
-            <span class="text-caption text-grey-7 text-weight-medium">{{ $t('ledger.summary.posRevenue') }}</span>
+            <span class="text-caption text-grey-7 text-weight-medium">{{
+              $t('ledger.summary.posRevenue')
+            }}</span>
             <q-icon name="point_of_sale" size="20px" class="text-primary" />
           </div>
           <div v-if="loading" class="q-mt-sm">
@@ -121,7 +133,9 @@
       <q-card flat bordered class="bg-white border-all">
         <q-card-section class="q-py-sm">
           <div class="row justify-between items-center no-wrap">
-            <span class="text-caption text-grey-7 text-weight-medium">{{ $t('ledger.summary.procurement') }}</span>
+            <span class="text-caption text-grey-7 text-weight-medium">{{
+              $t('ledger.summary.procurement')
+            }}</span>
             <q-icon name="shopping_cart" size="20px" class="text-blue-grey-7" />
           </div>
           <div v-if="loading" class="q-mt-sm">
@@ -139,7 +153,9 @@
       <q-card flat bordered class="bg-white border-all">
         <q-card-section class="q-py-sm">
           <div class="row justify-between items-center no-wrap">
-            <span class="text-caption text-grey-7 text-weight-medium">{{ $t('ledger.summary.payroll') }}</span>
+            <span class="text-caption text-grey-7 text-weight-medium">{{
+              $t('ledger.summary.payroll')
+            }}</span>
             <q-icon name="payments" size="20px" class="text-teal" />
           </div>
           <div v-if="loading" class="q-mt-sm">

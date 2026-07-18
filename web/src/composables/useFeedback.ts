@@ -26,16 +26,11 @@ export function showError(message: string, title?: string): Promise<void> {
 }
 
 /** Parse API/unknown error and show as error dialog. */
-export function showApiError(
-  err: unknown,
-  fallback?: string,
-  title?: string,
-): Promise<void> {
+export function showApiError(err: unknown, fallback?: string, title?: string): Promise<void> {
   const fallbackMsg = fallback || i18n.global.t('feedback.somethingWentWrong');
   const displayTitle = title || i18n.global.t('feedback.errorTitle');
   return showError(extractApiErrorMessage(err, fallbackMsg), displayTitle);
 }
-
 
 export function showSuccess(message: string, options?: ToastOptions): void {
   const config: Record<string, unknown> = {

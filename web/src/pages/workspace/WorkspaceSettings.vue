@@ -2,7 +2,9 @@
   <q-page class="q-pa-lg">
     <div class="row items-center justify-between q-mb-md">
       <div>
-        <h1 class="text-h4 text-bold q-my-none text-slate-850">{{ $t('workspace.settings.title') }}</h1>
+        <h1 class="text-h4 text-bold q-my-none text-slate-850">
+          {{ $t('workspace.settings.title') }}
+        </h1>
         <p class="text-slate-500 text-subtitle2 q-mt-xs q-mb-none">
           {{ $t('workspace.settings.subtitle') }}
         </p>
@@ -19,9 +21,24 @@
       narrow-indicator
       dense
     >
-      <q-tab name="general" :label="$t('workspace.settings.tabs.general')" icon="settings" class="q-py-sm" />
-      <q-tab name="preferences" :label="$t('workspace.settings.tabs.preferences')" icon="tune" class="q-py-sm" />
-      <q-tab name="kiosk" :label="$t('workspace.settings.tabs.kiosk')" icon="devices" class="q-py-sm" />
+      <q-tab
+        name="general"
+        :label="$t('workspace.settings.tabs.general')"
+        icon="settings"
+        class="q-py-sm"
+      />
+      <q-tab
+        name="preferences"
+        :label="$t('workspace.settings.tabs.preferences')"
+        icon="tune"
+        class="q-py-sm"
+      />
+      <q-tab
+        name="kiosk"
+        :label="$t('workspace.settings.tabs.kiosk')"
+        icon="devices"
+        class="q-py-sm"
+      />
     </q-tabs>
 
     <!-- Error Banner -->
@@ -48,29 +65,31 @@
           <div class="col-12 col-md-8">
             <q-card class="glass-card">
               <q-card-section class="q-py-md border-bottom">
-                <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.branding.title') }}</div>
+                <div class="text-h6 text-bold text-slate-800">
+                  {{ $t('workspace.settings.branding.title') }}
+                </div>
               </q-card-section>
 
               <q-card-section class="q-pt-md">
                 <q-form @submit.prevent="saveSettings" class="q-gutter-y-md">
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.branding.nameLabel') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.branding.nameLabel')
+                    }}</label>
                     <q-input v-model="workspaceName" filled disable class="custom-input" />
                   </div>
 
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.branding.slugLabel') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.branding.slugLabel')
+                    }}</label>
                     <q-input v-model="workspaceSlug" filled disable class="custom-input" />
                   </div>
 
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.branding.logoUrl') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.branding.logoUrl')
+                    }}</label>
                     <q-input
                       v-model="logoUrl"
                       type="url"
@@ -83,9 +102,9 @@
                   </div>
 
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.branding.themeColor') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.branding.themeColor')
+                    }}</label>
                     <q-input
                       v-model="themeColor"
                       filled
@@ -94,7 +113,10 @@
                       class="custom-input"
                       :disable="!canEdit"
                       :rules="[
-                        (val) => !val || /^#[0-9A-F]{6}$/i.test(val) || $t('workspace.settings.branding.themeColorInvalid'),
+                        (val) =>
+                          !val ||
+                          /^#[0-9A-F]{6}$/i.test(val) ||
+                          $t('workspace.settings.branding.themeColorInvalid'),
                       ]"
                       hide-bottom-space
                     >
@@ -127,16 +149,22 @@
             <q-card class="glass-card full-height">
               <q-card-section class="q-py-md border-bottom row items-center">
                 <q-icon name="shield" size="24px" class="text-amber-800 q-mr-sm" />
-                <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.accessScopes.title') }}</div>
+                <div class="text-h6 text-bold text-slate-800">
+                  {{ $t('workspace.settings.accessScopes.title') }}
+                </div>
               </q-card-section>
 
               <q-card-section class="q-pt-md">
-                <div class="text-subtitle2 q-mb-sm text-amber-9">{{ $t('workspace.settings.accessScopes.privilegesTitle') }}</div>
+                <div class="text-subtitle2 q-mb-sm text-amber-9">
+                  {{ $t('workspace.settings.accessScopes.privilegesTitle') }}
+                </div>
                 <p class="text-sm text-slate-500 q-mb-lg">
                   {{ $t('workspace.settings.accessScopes.privilegesDesc') }}
                 </p>
 
-                <div class="text-subtitle2 q-mb-sm text-indigo-8">{{ $t('workspace.settings.accessScopes.planTitle') }}</div>
+                <div class="text-subtitle2 q-mb-sm text-indigo-8">
+                  {{ $t('workspace.settings.accessScopes.planTitle') }}
+                </div>
                 <p class="text-sm text-slate-500">
                   {{ $t('workspace.settings.accessScopes.planDesc') }}
                 </p>
@@ -149,13 +177,17 @@
             <q-card class="glass-card border-danger">
               <q-card-section class="q-py-md border-bottom bg-red-50 text-red-900 row items-center">
                 <q-icon name="warning" size="24px" class="q-mr-sm text-red-9" />
-                <div class="text-h6 text-bold text-red-9">{{ $t('workspace.settings.dangerZone.title') }}</div>
+                <div class="text-h6 text-bold text-red-9">
+                  {{ $t('workspace.settings.dangerZone.title') }}
+                </div>
               </q-card-section>
 
               <q-card-section class="q-pa-md bg-white">
                 <div class="row items-center justify-between no-wrap q-col-gutter-md">
                   <div class="col-12 col-sm-8">
-                    <div class="text-subtitle2 text-bold text-slate-900">{{ $t('workspace.settings.dangerZone.deleteTitle') }}</div>
+                    <div class="text-subtitle2 text-bold text-slate-900">
+                      {{ $t('workspace.settings.dangerZone.deleteTitle') }}
+                    </div>
                     <p class="text-sm text-slate-500 q-mb-none q-mt-xs">
                       {{ $t('workspace.settings.dangerZone.deleteDesc') }}
                     </p>
@@ -182,7 +214,9 @@
           <div class="col-12 col-md-8">
             <q-card class="glass-card">
               <q-card-section class="q-py-md border-bottom">
-                <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.localization.title') }}</div>
+                <div class="text-h6 text-bold text-slate-800">
+                  {{ $t('workspace.settings.localization.title') }}
+                </div>
                 <div class="text-caption text-grey-7 q-mt-xs">
                   {{ $t('workspace.settings.localization.subtitle') }}
                 </div>
@@ -191,9 +225,9 @@
               <q-card-section class="q-pt-md">
                 <q-form @submit.prevent="savePreferences" class="q-gutter-y-md">
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.localization.currency') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.localization.currency')
+                    }}</label>
                     <q-select
                       v-model="prefCurrency"
                       :options="currencyOptions"
@@ -207,9 +241,9 @@
                   </div>
 
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.localization.timezone') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.localization.timezone')
+                    }}</label>
                     <q-select
                       v-model="prefTimezone"
                       :options="timezoneOptions"
@@ -223,9 +257,9 @@
                   </div>
 
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.localization.region') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.localization.region')
+                    }}</label>
                     <q-select
                       v-model="prefRegion"
                       :options="regionOptions"
@@ -239,9 +273,9 @@
                   </div>
 
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.localization.dateFormat') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.localization.dateFormat')
+                    }}</label>
                     <q-select
                       v-model="prefDateFormat"
                       :options="dateFormatOptions"
@@ -275,7 +309,9 @@
             <q-card class="glass-card full-height">
               <q-card-section class="q-py-md border-bottom row items-center">
                 <q-icon name="info" size="24px" class="text-primary q-mr-sm" />
-                <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.localization.appliesTitle') }}</div>
+                <div class="text-h6 text-bold text-slate-800">
+                  {{ $t('workspace.settings.localization.appliesTitle') }}
+                </div>
               </q-card-section>
               <q-card-section class="q-pt-md">
                 <p class="text-sm text-slate-500 q-mb-md">
@@ -298,7 +334,9 @@
           <div class="col-12 col-md-8">
             <q-card class="glass-card">
               <q-card-section class="q-py-md border-bottom text-slate-800">
-                <div class="text-h6 text-bold">{{ $t('workspace.settings.kioskDevices.title') }}</div>
+                <div class="text-h6 text-bold">
+                  {{ $t('workspace.settings.kioskDevices.title') }}
+                </div>
               </q-card-section>
 
               <q-card-section class="q-pa-none">
@@ -366,7 +404,9 @@
           <div class="col-12 col-md-4">
             <q-card class="glass-card text-slate-800">
               <q-card-section class="q-py-md border-bottom">
-                <div class="text-h6 text-bold">{{ $t('workspace.settings.generatePairing.title') }}</div>
+                <div class="text-h6 text-bold">
+                  {{ $t('workspace.settings.generatePairing.title') }}
+                </div>
               </q-card-section>
 
               <q-card-section class="q-pt-md">
@@ -413,16 +453,18 @@
                   </p>
 
                   <div>
-                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >{{ $t('workspace.settings.generatePairing.nameLabel') }}</label
-                    >
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs">{{
+                      $t('workspace.settings.generatePairing.nameLabel')
+                    }}</label>
                     <q-input
                       v-model="deviceNameInput"
                       filled
                       :placeholder="$t('workspace.settings.generatePairing.nameLabel')"
                       color="primary"
                       class="custom-input"
-                      :rules="[(val) => !!val || $t('workspace.settings.generatePairing.nameRequired')]"
+                      :rules="[
+                        (val) => !!val || $t('workspace.settings.generatePairing.nameRequired'),
+                      ]"
                       hide-bottom-space
                     />
                   </div>
@@ -450,7 +492,9 @@
         class="q-pa-md bg-white text-slate-900"
       >
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-bold text-red-9">{{ $t('workspace.settings.deleteDialog.title') }}</div>
+          <div class="text-h6 text-bold text-red-9">
+            {{ $t('workspace.settings.deleteDialog.title') }}
+          </div>
           <q-space />
           <q-btn
             icon="close"
@@ -465,7 +509,12 @@
 
         <q-card-section class="q-pt-md">
           <p class="text-sm text-slate-600 q-mb-md">
-            {{ $t('workspace.settings.deleteDialog.desc', { name: workspaceName, slug: workspaceSlug }) }}
+            {{
+              $t('workspace.settings.deleteDialog.desc', {
+                name: workspaceName,
+                slug: workspaceSlug,
+              })
+            }}
           </p>
 
           <q-input
@@ -510,9 +559,15 @@
           <q-avatar size="48px" color="red-1" text-color="red-5" class="q-mb-md">
             <q-icon name="link_off" size="28px" />
           </q-avatar>
-          <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.disconnectDialog.title') }}</div>
+          <div class="text-h6 text-bold text-slate-800">
+            {{ $t('workspace.settings.disconnectDialog.title') }}
+          </div>
           <p class="text-sm text-slate-500 q-mt-sm">
-            {{ $t('workspace.settings.disconnectDialog.desc', { name: deviceToDisconnect?.device_name || '' }) }}
+            {{
+              $t('workspace.settings.disconnectDialog.desc', {
+                name: deviceToDisconnect?.device_name || '',
+              })
+            }}
           </p>
         </q-card-section>
 
@@ -647,8 +702,19 @@ const deviceColumns = computed<DeviceColumn[]>(() => [
     align: 'left',
     sortable: true,
   },
-  { name: 'status', label: t('workspace.settings.kioskDevices.cols.status'), field: 'status', align: 'left' },
-  { name: 'paired_at', label: t('workspace.settings.kioskDevices.cols.pairedAt'), field: 'paired_at', align: 'left', sortable: true },
+  {
+    name: 'status',
+    label: t('workspace.settings.kioskDevices.cols.status'),
+    field: 'status',
+    align: 'left',
+  },
+  {
+    name: 'paired_at',
+    label: t('workspace.settings.kioskDevices.cols.pairedAt'),
+    field: 'paired_at',
+    align: 'left',
+    sortable: true,
+  },
   {
     name: 'last_active_at',
     label: t('workspace.settings.kioskDevices.cols.lastActive'),
@@ -656,7 +722,12 @@ const deviceColumns = computed<DeviceColumn[]>(() => [
     align: 'left',
     sortable: true,
   },
-  { name: 'actions', label: t('workspace.settings.kioskDevices.cols.actions'), field: 'actions', align: 'right' },
+  {
+    name: 'actions',
+    label: t('workspace.settings.kioskDevices.cols.actions'),
+    field: 'actions',
+    align: 'right',
+  },
 ]);
 
 const isOwner = computed(() => {

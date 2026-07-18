@@ -39,7 +39,13 @@
           dense
           unelevated
           class="q-mr-sm text-xs text-weight-bold"
-          style="font-size: 11px; height: 32px; border-radius: 8px; padding: 2px; border: 1.5px solid var(--q-primary);"
+          style="
+            font-size: 11px;
+            height: 32px;
+            border-radius: 8px;
+            padding: 2px;
+            border: 1.5px solid var(--q-primary);
+          "
           :options="toggleOptions"
         />
       </q-toolbar>
@@ -241,7 +247,9 @@
               </q-tooltip>
             </q-item-section>
             <q-item-section v-if="!miniState">
-              <q-item-label class="text-xs text-weight-bold">{{ $t('layouts.workspace.signOut') }}</q-item-label>
+              <q-item-label class="text-xs text-weight-bold">{{
+                $t('layouts.workspace.signOut')
+              }}</q-item-label>
             </q-item-section>
           </q-item>
         </div>
@@ -265,7 +273,9 @@
         class="q-pa-md bg-white text-dark"
       >
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-bold text-dark">{{ $t('layouts.workspace.createNewWorkspace') }}</div>
+          <div class="text-h6 text-bold text-dark">
+            {{ $t('layouts.workspace.createNewWorkspace') }}
+          </div>
           <q-space />
           <q-btn
             icon="close"
@@ -291,7 +301,9 @@
 
           <q-form @submit.prevent="handleCreateWorkspace" class="q-gutter-y-md">
             <div>
-              <label class="text-grey-7 font-semibold q-mb-xs block text-xs">{{ $t('layouts.workspace.workspaceName') }}</label>
+              <label class="text-grey-7 font-semibold q-mb-xs block text-xs">{{
+                $t('layouts.workspace.workspaceName')
+              }}</label>
               <q-input
                 v-model="newWorkspaceName"
                 type="text"
@@ -306,9 +318,9 @@
             </div>
 
             <div>
-              <label class="text-grey-7 font-semibold q-mb-xs block text-xs"
-                >{{ $t('layouts.workspace.workspaceSlug') }}</label
-              >
+              <label class="text-grey-7 font-semibold q-mb-xs block text-xs">{{
+                $t('layouts.workspace.workspaceSlug')
+              }}</label>
               <q-input
                 v-model="newWorkspaceSlug"
                 type="text"
@@ -318,9 +330,7 @@
                 class="custom-input"
                 :rules="[
                   (val) => !!val || $t('layouts.workspace.workspaceSlugRequired'),
-                  (val) =>
-                    /^[a-z0-9-]+$/.test(val) ||
-                    $t('layouts.workspace.workspaceSlugInvalid'),
+                  (val) => /^[a-z0-9-]+$/.test(val) || $t('layouts.workspace.workspaceSlugInvalid'),
                 ]"
                 hide-bottom-space
                 prefix="app.domain.com/"
@@ -494,6 +504,16 @@ const navItems = computed<NavItem[]>(() => {
       requiredModulePermission: {
         module: 'financial_ledger',
         permission: 'dashboard_read',
+      },
+    },
+    {
+      label: t('customers.nav.label'),
+      icon: 'face',
+      toName: 'workspace-customers',
+      requiredFeature: 'meal-management',
+      requiredModulePermission: {
+        module: 'meal_management',
+        permission: 'customer_read',
       },
     },
   ];

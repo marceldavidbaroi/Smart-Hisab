@@ -23,3 +23,12 @@ $positive: #21ba45;
 $negative: #c10015;
 $info: #31ccec;
 $warning: #f2c037;
+
+// Border radius — modern scale (Quasar-native vars only)
+$generic-border-radius: 8px; // inputs, tables, .rounded-borders
+$button-border-radius: 8px;
+$button-push-border-radius: 8px;
+$button-rounded-border-radius: 9999px; // pill buttons
+$table-border-radius: 8px;
+$tooltip-border-radius: 8px;
+$chat-message-border-radius: 12px;

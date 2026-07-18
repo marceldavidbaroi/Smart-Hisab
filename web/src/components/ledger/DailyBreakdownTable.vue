@@ -75,7 +75,8 @@
               class="font-mono text-weight-bold"
               :class="row.net_profit >= 0 ? 'text-positive' : 'text-negative'"
             >
-              {{ $t('ledger.daily.netLabel') }} {{ row.net_profit >= 0 ? '+' : '' }}{{ formatMoney(row.net_profit) }}
+              {{ $t('ledger.daily.netLabel') }} {{ row.net_profit >= 0 ? '+' : ''
+              }}{{ formatMoney(row.net_profit) }}
             </span>
           </div>
 
@@ -182,7 +183,13 @@ const columns = computed<QTableColumn[]>(() => [
     align: 'left',
     sortable: true,
   },
-  { name: 'total_inflow', label: t('ledger.daily.cols.inflow'), field: 'total_inflow', align: 'right', sortable: true },
+  {
+    name: 'total_inflow',
+    label: t('ledger.daily.cols.inflow'),
+    field: 'total_inflow',
+    align: 'right',
+    sortable: true,
+  },
   {
     name: 'total_outflow',
     label: t('ledger.daily.cols.outflow'),
@@ -190,19 +197,50 @@ const columns = computed<QTableColumn[]>(() => [
     align: 'right',
     sortable: true,
   },
-  { name: 'net_profit', label: t('ledger.daily.cols.netProfit'), field: 'net_profit', align: 'right', sortable: true },
+  {
+    name: 'net_profit',
+    label: t('ledger.daily.cols.netProfit'),
+    field: 'net_profit',
+    align: 'right',
+    sortable: true,
+  },
   { name: 'pos_sales', label: t('ledger.daily.cols.posSales'), field: 'pos_sales', align: 'right' },
-  { name: 'debt_collections', label: t('ledger.daily.cols.debtCollection'), field: 'debt_collections', align: 'right' },
-  { name: 'raw_materials', label: t('ledger.daily.cols.rawMaterials'), field: 'raw_materials', align: 'right' },
-  { name: 'payroll_expenses', label: t('ledger.daily.cols.payroll'), field: 'payroll_expenses', align: 'right' },
+  {
+    name: 'debt_collections',
+    label: t('ledger.daily.cols.debtCollection'),
+    field: 'debt_collections',
+    align: 'right',
+  },
+  {
+    name: 'raw_materials',
+    label: t('ledger.daily.cols.rawMaterials'),
+    field: 'raw_materials',
+    align: 'right',
+  },
+  {
+    name: 'payroll_expenses',
+    label: t('ledger.daily.cols.payroll'),
+    field: 'payroll_expenses',
+    align: 'right',
+  },
   {
     name: 'supplier_payouts',
     label: t('ledger.daily.cols.supplierPayouts'),
     field: 'supplier_payouts',
     align: 'right',
   },
-  { name: 'staff_advances', label: t('ledger.daily.cols.staffAdvances'), field: 'staff_advances', align: 'right' },
-  { name: 'overhead_expenses', label: t('ledger.daily.cols.overhead'), field: 'overhead_expenses', align: 'right' },
+  {
+    name: 'staff_advances',
+    label: t('ledger.daily.cols.staffAdvances'),
+    field: 'staff_advances',
+    align: 'right',
+  },
+  {
+    name: 'overhead_expenses',
+    label: t('ledger.daily.cols.overhead'),
+    field: 'overhead_expenses',
+    align: 'right',
+  },
 ]);
 
 const categoryCols = [

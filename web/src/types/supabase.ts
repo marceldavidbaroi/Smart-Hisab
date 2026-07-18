@@ -33,6 +33,259 @@ export type Database = {
   };
   public: {
     Tables: {
+      baki_transactions: {
+        Row: {
+          amount: number;
+          business_date: string;
+          created_at: string;
+          created_by_staff_id: string | null;
+          created_by_user_id: string | null;
+          customer_id: string;
+          id: string;
+          items_description: string;
+          session_id: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          amount: number;
+          business_date: string;
+          created_at?: string;
+          created_by_staff_id?: string | null;
+          created_by_user_id?: string | null;
+          customer_id: string;
+          id?: string;
+          items_description: string;
+          session_id: string;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          business_date?: string;
+          created_at?: string;
+          created_by_staff_id?: string | null;
+          created_by_user_id?: string | null;
+          customer_id?: string;
+          id?: string;
+          items_description?: string;
+          session_id?: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'baki_transactions_created_by_staff_id_fkey';
+            columns: ['created_by_staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'baki_transactions_customer_id_fkey';
+            columns: ['customer_id'];
+            isOneToOne: false;
+            referencedRelation: 'customers';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'baki_transactions_session_id_fkey';
+            columns: ['session_id'];
+            isOneToOne: false;
+            referencedRelation: 'sessions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'baki_transactions_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      customer_collections: {
+        Row: {
+          amount: number;
+          collected_at: string;
+          collected_by_staff_id: string | null;
+          collected_by_user_id: string | null;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          notes: string | null;
+          payment_method: string;
+          session_id: string | null;
+          tenant_id: string;
+        };
+        Insert: {
+          amount: number;
+          collected_at?: string;
+          collected_by_staff_id?: string | null;
+          collected_by_user_id?: string | null;
+          created_at?: string;
+          customer_id: string;
+          id?: string;
+          notes?: string | null;
+          payment_method: string;
+          session_id?: string | null;
+          tenant_id: string;
+        };
+        Update: {
+          amount?: number;
+          collected_at?: string;
+          collected_by_staff_id?: string | null;
+          collected_by_user_id?: string | null;
+          created_at?: string;
+          customer_id?: string;
+          id?: string;
+          notes?: string | null;
+          payment_method?: string;
+          session_id?: string | null;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'customer_collections_collected_by_staff_id_fkey';
+            columns: ['collected_by_staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'customer_collections_customer_id_fkey';
+            columns: ['customer_id'];
+            isOneToOne: false;
+            referencedRelation: 'customers';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'customer_collections_session_id_fkey';
+            columns: ['session_id'];
+            isOneToOne: false;
+            referencedRelation: 'sessions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'customer_collections_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      customer_daily_attendance: {
+        Row: {
+          attended_shifts: string[];
+          business_date: string;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          rate_applied: number;
+          session_id: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          attended_shifts: string[];
+          business_date: string;
+          created_at?: string;
+          customer_id: string;
+          id?: string;
+          rate_applied: number;
+          session_id: string;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          attended_shifts?: string[];
+          business_date?: string;
+          created_at?: string;
+          customer_id?: string;
+          id?: string;
+          rate_applied?: number;
+          session_id?: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'customer_daily_attendance_customer_id_fkey';
+            columns: ['customer_id'];
+            isOneToOne: false;
+            referencedRelation: 'customers';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'customer_daily_attendance_session_id_fkey';
+            columns: ['session_id'];
+            isOneToOne: false;
+            referencedRelation: 'sessions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'customer_daily_attendance_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      customers: {
+        Row: {
+          category: string;
+          contract_daily_rate: number | null;
+          contract_shifts: string[] | null;
+          created_at: string;
+          factory_unit: string | null;
+          full_name: string;
+          id: string;
+          is_active: boolean;
+          outstanding_balance: number;
+          phone: string | null;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          category: string;
+          contract_daily_rate?: number | null;
+          contract_shifts?: string[] | null;
+          created_at?: string;
+          factory_unit?: string | null;
+          full_name: string;
+          id?: string;
+          is_active?: boolean;
+          outstanding_balance?: number;
+          phone?: string | null;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          category?: string;
+          contract_daily_rate?: number | null;
+          contract_shifts?: string[] | null;
+          created_at?: string;
+          factory_unit?: string | null;
+          full_name?: string;
+          id?: string;
+          is_active?: boolean;
+          outstanding_balance?: number;
+          phone?: string | null;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'customers_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       device_pairings: {
         Row: {
           created_at: string;
@@ -861,6 +1114,31 @@ export type Database = {
         };
         Returns: string;
       };
+      record_baki_transaction: {
+        Args: {
+          p_amount: number;
+          p_customer_id: string;
+          p_device_token?: string;
+          p_items_description: string;
+          p_session_id: string;
+          p_staff_id?: string;
+          p_tenant_id: string;
+        };
+        Returns: number;
+      };
+      record_customer_collection: {
+        Args: {
+          p_amount: number;
+          p_customer_id: string;
+          p_device_token?: string;
+          p_notes?: string;
+          p_payment_method: string;
+          p_session_id: string;
+          p_staff_id?: string;
+          p_tenant_id: string;
+        };
+        Returns: number;
+      };
       reset_staff_pin: { Args: { p_staff_id: string }; Returns: string };
       set_staff_pin:
         | {
@@ -877,6 +1155,20 @@ export type Database = {
             Args: { p_new_pin: string; p_staff_id: string; p_temp_pin: string };
             Returns: boolean;
           };
+      toggle_contract_attendance: {
+        Args: {
+          p_customer_id: string;
+          p_device_token?: string;
+          p_session_id: string;
+          p_shift_name: string;
+          p_staff_id?: string;
+          p_tenant_id: string;
+        };
+        Returns: {
+          action_taken: string;
+          new_balance: number;
+        }[];
+      };
       verify_pairing_code: {
         Args: { p_code: string; p_device_name: string };
         Returns: Json;
