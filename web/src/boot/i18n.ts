@@ -19,15 +19,20 @@ declare module 'vue-i18n' {
 }
 /* eslint-enable @typescript-eslint/no-empty-object-type */
 
-export default defineBoot(({ app }) => {
-  const i18n = createI18n({
-    locale: 'en-US',
-    fallbackLocale: 'en-US',
-    legacy: false,
-    globalInjection: true,
-    messages,
-  });
+const LOCALE_KEY = 'smart-hisab-locale';
+const storedLocale = typeof window !== 'undefined' ? localStorage.getItem(LOCALE_KEY) : null;
+const initialLocale = (storedLocale && ['en-US', 'bn'].includes(storedLocale)) ? storedLocale : 'en-US';
 
+export const i18n = createI18n({
+  locale: initialLocale,
+  fallbackLocale: 'en-US',
+  legacy: false,
+  globalInjection: true,
+  messages,
+});
+
+export default defineBoot(({ app }) => {
   // Set i18n instance on app
   app.use(i18n);
 });
+

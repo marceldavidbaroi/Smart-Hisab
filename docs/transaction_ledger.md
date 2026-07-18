@@ -1,191 +1,377 @@
-# Detailed Specification: Transaction Ledger (`financial-ledger`)
+# RFC: Transaction Ledger (`financial-ledger`)
 
-This document provides a detailed specification for the **Transaction Ledger** module. This module serves as the central book of accounts (ledger) for each tenant, compiling all operational cash flows, digital payments, bank transfers, and automated ledger postings from other modules into a single, immutable, and auditable ledger log.
+This document is the Technical Specification (RFC) for the **Transaction Ledger** module. This module is the central book of accounts for each tenant: an append-only register of operational cash flows, digital payments, bank transfers, and automated postings from other modules into a single, immutable, auditable ledger.
 
----
+### Key Objectives
+* **Central Bookkeeping Ledger:** Maintain a single consolidated register (`transaction_ledger`) for all inflows and outflows across the tenant workspace.
+* **Automated Double-Entry Integration:** Receive postings from Meal & Customer (`POS`, `Debt Collection`), Procurement (`Raw Materials`, `Supplier Payout`), and Staff Attendance & Payroll (`Payroll`, `Staff Advance`), plus session close discrepancies (`Bazar Discrepancy` / `Bazar Surplus`).
+* **Temporal & Session Isolation:** Optionally link rows to `session_id` so shift cash reconciliation and drawer expected-cash math work.
+* **Immutable Audit Log:** Block `UPDATE` and `DELETE` at RLS and trigger level.
+* **Financial Dashboard & Daily Breakdown:** Aggregate net P/L, expenses, receivables, payables, and per-day category cost breakdowns.
+* **Localization:** Format amounts with tenant currency (default BDT / `৳`) and locale (default `bn`) via `Intl.NumberFormat` at the presentation layer.
 
-## 1. Feature Overview & Objectives
-
-The **Transaction Ledger** module is the financial foundation of the Canteen Management System. It acts as an append-only transaction repository that integrates with all business operations (meal billing, customer payments, ingredient buying, supplier payouts, and staff salary/advances). It enforces strict double-entry ledger bookkeeping concepts and ensures full auditing transparency.
-
-### Key Objectives:
-*   **Central Bookkeeping Ledger**: Maintain a single, consolidated register (`transaction_ledger`) tracking all financial movements (inflows and outflows) across the entire tenant workspace.
-*   **Automated Double-Entry Integration**: Receive automated financial postings from external modules:
-    *   `POS` (counter sales) and `Debt Collection` (customer payments) from the **Meal & Customer Management** module.
-    *   `Raw Materials` (bazar buying) and `Supplier Payout` (payouts to suppliers) from the **Procurement & Supplier Management** module.
-    *   `Payroll` (salaries) and `Staff Advance` (employee advances) from the **Staff Attendance & Payroll** module.
-*   **Temporal & Session Isolation**: Track the operational cash drawer by linking transactions back to active `session_id` records. This powers the shift cash reconciliation engine.
-*   **Immutable Transaction Audit Logs**: Block all database-level `UPDATE` and `DELETE` queries on the ledger table, guaranteeing that once a record is created, it cannot be tampered with or deleted.
-*   **Real-Time Tenant Financial Dashboard**: Aggregate historical and active records to calculate metrics including net profit/loss, total expenses, outstanding customer credit, and outstanding supplier debt.
-*   **Daily Financial & Cost Breakdown**: Provide a granular reporting query that breaks down daily transaction totals, net profit/loss, and cost breakdowns by category (POS sales, raw ingredients, payroll, staff advances, supplier payouts, and cash discrepancies) to give owners full control over daily trends.
-*   **Dynamic Localization & Currency Formatting**: Standardize amount displays utilizing the tenant's chosen currency (default: BDT/`৳`) and language locale (default: `bn`) at the presentation layer using JavaScript localization libraries (`Intl.NumberFormat`).
-
----
-
-## 2. User Stories
-
-### Persona A: Canteen Owner (Admin/Owner Role)
-1.  **As a** Canteen Owner,  
-    **I want to** view a consolidated list of all financial inflows and outflows across cash, bank transfers, and mobile wallets,  
-    **So that** I have absolute visibility into all financial activities in my business.
-2.  **As a** Canteen Owner,  
-    **I want to** view a financial dashboard displaying real-time metrics for net profit/loss, total expenses, outstanding customer receivables, and supplier payables over any date range,  
-    **So that** I can assess the health of my business and make strategic payouts.
-3.  **As a** Canteen Owner,  
-    **I want to** view a detailed daily financial breakdown (daily profit, total revenue, total expense, and individual cost category breakdowns like bazar expenses, staff salaries, and cash shortages) for any specific date range,  
-    **So that** I can analyze which specific expenses/costs are cutting into my profit margin day by day.
-4.  **As a** Canteen Owner,  
-    **I want to** log manual entries (e.g. cash withdrawals, capital additions, and overhead costs like utility bills or shop rent) directly into the ledger,  
-    **So that** my bookkeeping is comprehensive and reflects off-system costs.
-5.  **As a** Canteen Owner,  
-    **I want to** ensure that past ledger entries are immutable and cannot be deleted or edited under any circumstances,  
-    **So that** my staff cannot falsify financial records or cover up drawer shortages.
-
-### Persona B: Shift Manager (Default Admin Role)
-1.  **As a** Shift Manager,  
-    **I want to** view a list of all transactions associated with my active shift session,  
-    **So that** I can cross-verify sales collections and market expenses before closing the drawer.
-2.  **As a** Shift Manager,  
-    **I want to** see the running cash balance of the drawer dynamically calculated from active session transactions,  
-    **So that** I know exactly how much physical cash should be in the register.
+### Implementation Status (as of this RFC)
+| Layer | Status |
+| :--- | :--- |
+| Feature flag `financial-ledger` | Seeded; admin / tenant toggles exist |
+| DB table / RPCs / RLS / immutability triggers | Not migrated |
+| Pinia / routes / UI | Not built |
+| Upstream `sessions` + `enforce_closed_session_lock` | Specced in [operational_shifts_sessions.md](./operational_shifts_sessions.md); lock **trigger** attaches in this module’s migration |
+| Downstream auto-posting modules | Spec-only; call internal `post_ledger_entry` when those modules ship |
 
 ---
 
-## 3. Data Model
+## 1. PRODUCT & SECURITY
 
-All ledger entries are strictly isolated by tenant using a `tenant_id` column protected by Row-Level Security (RLS).
+### A. User Stories
+
+#### Persona A: Canteen Owner (Owner Role)
+1. **As a** Canteen Owner, **I want to** view a consolidated list of all financial inflows and outflows across cash, bank transfers, and mobile wallets, **so that** I have visibility into all financial activity.
+2. **As a** Canteen Owner, **I want to** view a financial dashboard (net P/L, total expenses, customer receivables, supplier payables) over any date range, **so that** I can assess business health.
+3. **As a** Canteen Owner, **I want to** view a daily financial breakdown (revenue, expense, net, and category costs) for a date range, **so that** I can see which costs erode margin day by day.
+4. **As a** Canteen Owner, **I want to** log manual entries (withdrawals, capital, rent, utilities) into the ledger, **so that** off-system costs are bookkept.
+5. **As a** Canteen Owner, **I want** past ledger entries to be immutable, **so that** staff cannot falsify records or cover shortages.
+
+#### Persona B: Shift Manager (Kiosk Staff — Manager Role)
+1. **As a** Shift Manager, **I want to** view transactions linked to my active session, **so that** I can verify collections and expenses before closing the drawer.
+2. **As a** Shift Manager, **I want to** see the running cash balance for the active session, **so that** I know how much physical cash should be in the register.
+
+### B. Identity & Role Planes (conjunct, not conflated)
+
+Two permission planes share a tenant but use different identities. **Do not merge Manager into `tenant_members`.**
+
+| Plane | Who | Auth | Permission source |
+| :--- | :--- | :--- | :--- |
+| **Workspace** | Owner (immutable) + configurable `tenant_roles` | Supabase Auth | `tenant_roles.permissions` |
+| **Kiosk / floor** | Manager, Cashier, Staff | Device token + PIN | `staff_roles.permissions` |
 
 ```mermaid
-erDiagram
-    tenants ||--o{ transaction_ledger : "owns"
-    auth_users ||--o{ transaction_ledger : "records/operates"
-    sessions ||--o{ transaction_ledger : "contextualizes (optional)"
-
-    %% Conceptual flow of double entry events posting to ledger
-    customer_collections ||..o{ transaction_ledger : "automatically posts (inflow)"
-    bazar_expenses ||..o{ transaction_ledger : "automatically posts (outflow)"
-    vendor_payments ||..o{ transaction_ledger : "automatically posts (outflow)"
-    salary_disbursals ||..o{ transaction_ledger : "automatically posts (outflow)"
-    staff_advances ||..o{ transaction_ledger : "automatically posts (outflow)"
+flowchart LR
+  subgraph workspace [Workspace plane]
+    Owner[Owner immutable]
+    CustomRoles[Configurable tenant_roles]
+    Members[tenant_members]
+    Owner --> Members
+    CustomRoles --> Members
+  end
+  subgraph kiosk [Kiosk plane]
+    StaffRoles[staff_roles]
+    Staff[staff_members]
+    StaffRoles --> Staff
+    Device[paired_devices plus PIN]
+    Staff --> Device
+  end
+  Staff -.->|"optional user_id"| Members
 ```
 
-### Table Definitions
+**Rules:**
+* **Manual ledger write and finance dashboard** are workspace Auth operations (`ledger_write_manual`, `dashboard_read`).
+* **Session-scoped ledger read and cash balance** are primarily kiosk operations (`session_ledger_read`, `cash_balance_read`).
+* Owner may also read the full ledger and dashboard via workspace routes.
+* Automated postings from other modules never go through the client; they call `post_ledger_entry` inside `security definer` RPCs.
 
-#### 1. `transaction_ledger` (Unified Transaction Ledger)
-The single table acting as the tenant's append-only financial ledger.
+### C. Permission Control Matrices
 
-| Column Name | Type | Constraints | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | `uuid` | Primary Key, `default gen_random_uuid()` | Unique ledger entry identifier. |
-| `tenant_id` | `uuid` | Foreign Key -> `tenants.id`, `not null` | Scopes this ledger record to a tenant. |
-| `session_id` | `uuid` | Foreign Key -> `sessions.id`, Nullable | Links the transaction to an operational session. Nullable for off-shift ledger events (e.g. bank payouts). |
-| `type` | `text` | `not null`, `check (type in ('inflow', 'outflow'))` | Direction of funds. |
-| `category` | `text` | `not null` | Category classification (e.g., `POS`, `Debt Collection`, `Raw Materials`, `Payroll`, `Supplier Payout`, `Staff Advance`, `Bazar Discrepancy`, `Bazar Surplus`, `Overhead`, `Manual Inflow`, `Manual Outflow`). |
-| `amount` | `numeric(12, 2)` | `not null`, `check (amount >= 0)` | Transaction value. |
-| `payment_method` | `text` | `not null`, `check (payment_method in ('cash', 'bank_transfer', 'mobile_wallet'))` | Settled payment channel. |
-| `operator_user_id`| `uuid` | Foreign Key -> `auth.users`, Nullable | Web/Dashboard administrator who initiated the ledger log. |
-| `operator_staff_id`| `uuid` | Foreign Key -> `staff_members.id`, Nullable | Counter terminal staff member who initiated the ledger log. |
-| `notes` | `text` | Nullable | Audit note or descriptive reference. |
-| `created_at` | `timestamptz` | `default now()`, `not null` | Epoch timestamp of creation. |
-| `updated_at` | `timestamptz` | `default now()`, `not null` | Audit tracking (immutable). |
+#### C1. Workspace (`tenant_roles`)
 
-### Constraints & Indexes
-
-1.  **Foreign Key Indexes**:
-    ```sql
-    create index idx_transaction_ledger_tenant_id on public.transaction_ledger(tenant_id);
-    create index idx_transaction_ledger_session_id on public.transaction_ledger(session_id);
-    create index idx_transaction_ledger_operator_user_id on public.transaction_ledger(operator_user_id);
-    create index idx_transaction_ledger_operator_staff_id on public.transaction_ledger(operator_staff_id);
-    ```
-2.  **Performance & Query Optimization Indexes**:
-    ```sql
-    -- For date range filtering on financial ledger reports
-    create index idx_transaction_ledger_created_at on public.transaction_ledger(created_at desc);
-
-    -- For dashboard aggregation queries (Summing inflow/outflow by category per tenant)
-    create index idx_transaction_ledger_type_cat on public.transaction_ledger(tenant_id, type, category);
-    ```
-
----
-
-## 4. Permission Control & Row-Level Security (RLS)
-
-All entries are strictly isolated using Tenant Row-Level Security. Permissions are dynamic, evaluated via the `permissions` JSONB field in `tenant_roles`.
-
-### Dynamic Permission Schema
-
-For the **Transaction Ledger** module, the permissions configuration under `tenant_roles.permissions` is structured as follows:
+Module key: `financial_ledger`. Feature gate: `enabled_features['financial-ledger'] === true`.
 
 ```json
 {
   "modules": {
     "financial_ledger": {
-      "ledger_read": "all",              // Options: "all" | "self" | "none"
-      "ledger_write_manual": true,       // Options: true | false (allows manual inflows/outflows logging)
-      "dashboard_read": true             // Options: true | false (allows viewing the financial metrics dashboard)
+      "ledger_read": "all",
+      "ledger_write_manual": true,
+      "dashboard_read": true
     }
   }
 }
 ```
 
-### Default Role Mapping Matrix
+`ledger_read` values: `"all"` | `"self"` | `"none"`. Boolean keys are true/false.
 
-Below is the default role mapping. The `Owner` role is system-defined and immutable.
+| Operation | Configurable office role (e.g. Admin / Accountant) | Owner (immutable) | Platform Superadmin |
+| :--- | :--- | :--- | :--- |
+| Ledger Read | `"all"` or `"self"` (configurable) | Yes (`all`) | Bypass RLS |
+| Ledger Manual Insert | configurable (default false for Admin) | Yes | Bypass RLS |
+| Dashboard / Daily Breakdown Read | configurable | Yes | Bypass RLS |
 
-| Operations | Cashier / Operator (Default Member) | Shift Manager (Default Admin) | Owner (Default Immutable) | Platform Superadmin |
-| :--- | :--- | :--- | :--- | :--- |
-| **Ledger (Read)** | `ledger_read` = `"self"` | `ledger_read` = `"all"` | Yes (All) | Yes (Bypass RLS) |
-| **Ledger (Manual Insert)** | `ledger_write_manual` = `false` | `ledger_write_manual` = `false` | Yes (All) | Yes (Bypass RLS) |
-| **Dashboard (Read)** | `dashboard_read` = `false` | `dashboard_read` = `true` | Yes (All) | Yes (Bypass RLS) |
+**Owner immutability:** System `Owner` (`tenant_id is null`, `permissions = {"all": true}`) cannot be edited or deleted.
 
-### Core RLS Policies (SQL Implementation)
+**Suggested defaults for seeded office roles:**
+| Role | `ledger_read` | `ledger_write_manual` | `dashboard_read` |
+| :--- | :--- | :--- | :--- |
+| Admin | `"all"` | `false` | `true` |
+| Accountant (if seeded) | `"all"` | `false` | `true` |
+| Owner | `all` via `permissions.all` | Yes | Yes |
 
-```sql
--- Enable Row-Level Security
-alter table public.transaction_ledger enable row level security;
+#### C2. Kiosk (`staff_roles`)
 
--- SELECT: Read Ledger Entries
-create policy "Users can view ledger entries based on role scope"
-  on public.transaction_ledger for select
-  using (
-    tenant_id = tenant_id and (
-      -- Superadmins bypass RLS checks
-      exists (
-        select 1 from public.user_profiles
-        where id = auth.uid() and is_superadmin = true
-      ) or
-      -- Check for 'all' scope
-      (public.get_ledger_read_scope(tenant_id) = 'all') or
-      -- Check for 'self' scope (only transactions logged by the current user)
-      (public.get_ledger_read_scope(tenant_id) = 'self' and operator_id = auth.uid())
-    )
-  );
-
--- INSERT: Record Manual Ledger Entries
-create policy "Users can insert manual ledger entries if authorized"
-  on public.transaction_ledger for insert
-  with check (
-    tenant_id = tenant_id and (
-      public.has_module_permission(tenant_id, 'financial_ledger', 'ledger_write_manual')
-    )
-  );
-
--- UPDATE/DELETE: Blocked at policy level to enforce absolute immutability
-create policy "Ledger entries cannot be updated by anyone"
-  on public.transaction_ledger for update
-  using (false);
-
-create policy "Ledger entries cannot be deleted by anyone"
-  on public.transaction_ledger for delete
-  using (false);
+```json
+{
+  "modules": {
+    "financial_ledger": {
+      "session_ledger_read": true,
+      "cash_balance_read": true
+    }
+  }
+}
 ```
 
-#### Helper Function: Get Ledger Read Scope Dynamically
+| Operation | Manager (default) | Cashier (default) | Staff (generic) |
+| :--- | :--- | :--- | :--- |
+| Session ledger read (active session rows) | true | true | false |
+| Cash register running balance | true | true | false |
+
+**Feature gate:** Workspace routes use `requiredFeature: 'financial-ledger'`. Kiosk UI for session ledger / cash balance also requires the feature flag.
+
+### D. Authentication & Authorization
+
+1. **Workspace (Owner / office):** Supabase Auth + `tenant_members`. Used for ledger list, manual entry, dashboard, daily breakdown. RPCs check `has_module_permission` / `get_ledger_read_scope`.
+2. **Kiosk (Manager / Cashier):** Device token + PIN. Client calls `get_cash_register_running_balance` and session-scoped list via RPC or RLS-safe select after staff context is established. Capabilities from `has_staff_permission(staff_id, 'financial_ledger', …)`.
+3. **Route guards:** Workspace — `requiredFeature` + `requiredModulePermission` on `tenant_roles`. Kiosk — pairing + staff PIN; hide session ledger / cash chip unless staff role grants it.
+4. **Database:** RLS on `transaction_ledger`. Mutations that insert (manual or automated) go through `security definer` RPCs. Direct client `UPDATE`/`DELETE` denied by RLS and trigger.
+
+---
+
+## 2. BACKEND & DATA
+
+### A. Data Modeling
+
+```mermaid
+erDiagram
+    tenants ||--o{ transaction_ledger : owns
+    sessions ||--o{ transaction_ledger : "contextualizes optional"
+    auth_users ||--o{ transaction_ledger : "operator_user_id"
+    staff_members ||--o{ transaction_ledger : "operator_staff_id"
+
+    customer_collections ||..o{ transaction_ledger : "auto posts inflow"
+    bazar_expenses ||..o{ transaction_ledger : "auto posts outflow"
+    vendor_payments ||..o{ transaction_ledger : "auto posts outflow"
+    salary_disbursals ||..o{ transaction_ledger : "auto posts outflow"
+    staff_advances ||..o{ transaction_ledger : "auto posts outflow"
+```
+
+#### Table: `public.transaction_ledger`
+
+Append-only financial ledger for the tenant.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK, `default gen_random_uuid()` | Ledger entry id |
+| `tenant_id` | `uuid` | FK → `tenants.id`, `not null` | Tenant scope |
+| `session_id` | `uuid` | FK → `sessions.id`, nullable | Operational session; null for off-shift events (e.g. bank payouts) |
+| `type` | `text` | `not null`, `check (type in ('inflow', 'outflow'))` | Fund direction |
+| `category` | `text` | `not null`, see allowed set below | Classification |
+| `amount` | `numeric(12, 2)` | `not null`, `check (amount >= 0)` | Absolute amount (sign via `type`) |
+| `payment_method` | `text` | `not null`, `check (payment_method in ('cash', 'bank_transfer', 'mobile_wallet'))` | Settlement channel |
+| `operator_user_id` | `uuid` | FK → `auth.users`, nullable | Workspace actor who logged the entry |
+| `operator_staff_id` | `uuid` | FK → `staff_members.id`, nullable | Kiosk staff who logged the entry |
+| `notes` | `text` | nullable | Audit note |
+| `created_at` | `timestamptz` | `not null`, `default now()` | Creation epoch |
+| `updated_at` | `timestamptz` | `not null`, `default now()` | Present for schema consistency; **never updated** (immutable rows) |
+
+**Allowed `category` values** (enforce with `check`):
+
+| Category | Typical `type` | Source |
+| :--- | :--- | :--- |
+| `POS` | inflow | Counter aggregated sales / meal module |
+| `Debt Collection` | inflow | Customer payments |
+| `Raw Materials` | outflow | Bazar / procurement |
+| `Supplier Payout` | outflow | Vendor payments |
+| `Payroll` | outflow | Salary disbursal |
+| `Staff Advance` | outflow | Advances |
+| `Bazar Discrepancy` | outflow | Session close short |
+| `Bazar Surplus` | inflow | Session close over |
+| `Overhead` | outflow | Manual / overhead |
+| `Manual Inflow` | inflow | Manual capital / adjustment |
+| `Manual Outflow` | outflow | Manual withdrawal / adjustment |
+
+At least one of `operator_user_id` / `operator_staff_id` should be set for human-initiated rows; automated posts may set the initiating staff/user from the calling RPC context.
+
+#### Indexes
+
 ```sql
-create or replace function public.get_ledger_read_scope(
-  p_tenant_id uuid
-)
+create index idx_transaction_ledger_tenant_id
+  on public.transaction_ledger (tenant_id);
+
+create index idx_transaction_ledger_session_id
+  on public.transaction_ledger (session_id);
+
+create index idx_transaction_ledger_operator_user_id
+  on public.transaction_ledger (operator_user_id);
+
+create index idx_transaction_ledger_operator_staff_id
+  on public.transaction_ledger (operator_staff_id);
+
+create index idx_transaction_ledger_created_at
+  on public.transaction_ledger (created_at desc);
+
+create index idx_transaction_ledger_type_cat
+  on public.transaction_ledger (tenant_id, type, category);
+
+create index idx_transaction_ledger_tenant_created
+  on public.transaction_ledger (tenant_id, created_at desc);
+```
+
+### B. Database Integration
+
+1. **Migration:** `supabase/migrations/YYYYMMDDHHMMSS_transaction_ledger.sql` (after shifts/sessions migration so `sessions` + `enforce_closed_session_lock` exist).
+2. **Contents:** table, indexes, category check, RLS policies, helpers, RPCs, immutability trigger, **attach** `check_transaction_session_lock` → `enforce_closed_session_lock`.
+3. **Role JSONB seed:** Update default Admin / custom role templates with `modules.financial_ledger` keys; update Manager / Cashier `staff_roles` with kiosk keys.
+4. **Types:** Regenerate `web/src/types/supabase.ts` after migrate.
+5. **Existing data:** Table is greenfield; no backfill. Close-session expected cash in sessions module already tolerates missing ledger until this ships.
+
+### C. API Surface & Design
+
+No separate REST server. Client uses Supabase JS (`supabase.from` / `supabase.rpc`).
+
+#### 1. List ledger entries (workspace)
+
+| Op | Client call | Notes |
+| :--- | :--- | :--- |
+| List | `from('transaction_ledger').select('*, operator_staff:staff_members!operator_staff_id(full_name)').eq('tenant_id', tid).order('created_at', { ascending: false }).range(from, to)` | RLS via `get_ledger_read_scope` |
+| Filter | `.eq('type', …)`, `.eq('category', …)`, `.eq('payment_method', …)`, `.eq('session_id', …)`, `.gte/lte('created_at', …)` | Client-side filters |
+
+**Response row (example):**
+```json
+{
+  "id": "uuid",
+  "tenant_id": "uuid",
+  "session_id": "uuid",
+  "type": "inflow",
+  "category": "POS",
+  "amount": 12500.50,
+  "payment_method": "cash",
+  "operator_user_id": null,
+  "operator_staff_id": "uuid",
+  "notes": "Counter sales",
+  "created_at": "2026-07-18T14:30:00Z",
+  "updated_at": "2026-07-18T14:30:00Z"
+}
+```
+
+#### 2. `rpc('log_manual_ledger_entry')` — workspace
+
+**Request:**
+```json
+{
+  "p_tenant_id": "uuid",
+  "p_session_id": null,
+  "p_type": "outflow",
+  "p_category": "Overhead",
+  "p_amount": 3500.00,
+  "p_payment_method": "bank_transfer",
+  "p_notes": "July electricity"
+}
+```
+
+**Success response:** `uuid` (new ledger id). Sets `operator_user_id = auth.uid()`.
+
+**Categories allowed for manual path:** `Overhead`, `Manual Inflow`, `Manual Outflow` (and matching `type`). Reject others with validation error.
+
+#### 3. `rpc('get_tenant_financial_summary')` — workspace dashboard
+
+**Request:**
+```json
+{
+  "p_tenant_id": "uuid",
+  "p_start_date": "2026-07-01T00:00:00Z",
+  "p_end_date": "2026-07-31T23:59:59Z"
+}
+```
+
+**Success response (row):**
+```json
+{
+  "total_inflow": 450000.00,
+  "total_outflow": 312000.00,
+  "net_profit_loss": 138000.00,
+  "outstanding_receivables": 22000.00,
+  "outstanding_payables": 8500.00,
+  "cash_sales_pos": 280000.00,
+  "market_expenses": 95000.00,
+  "payroll_expenses": 60000.00
+}
+```
+
+Requires `dashboard_read`. Receivables/payables come from `customers` / `suppliers` outstanding balances when those tables exist; until then return `0` (guard with `to_regclass` or null-safe stubs).
+
+#### 4. `rpc('get_daily_financial_breakdown')` — workspace
+
+**Request:**
+```json
+{
+  "p_tenant_id": "uuid",
+  "p_start_date": "2026-07-01",
+  "p_end_date": "2026-07-18"
+}
+```
+
+**Success response:** array of daily rows (see RPC return columns in §F).
+
+#### 5. `rpc('get_cash_register_running_balance')` — workspace or kiosk
+
+**Request:**
+```json
+{
+  "p_tenant_id": "uuid",
+  "p_session_id": "uuid"
+}
+```
+
+**Success response:** `numeric` (expected physical cash).
+
+Formula: `opening_cash + cash inflows − cash outflows` for that session. Used by session close and kiosk banner.
+
+Kiosk clients: grant execute to `anon` + `authenticated`; authorize inside RPC (device/staff path optional Phase 4 — MVP may require Auth-linked staff or call from `security definer` close_session only). MVP: callable by authenticated workspace users with `dashboard_read` or `ledger_read`, and by kiosk via staff-permission check when `p_device_token` + `p_staff_id` overload is added. **Ship single signature first** (tenant + session); kiosk uses it after PIN session with authenticated staff JWT if available, else Phase 4 overload.
+
+#### 6. Internal: `post_ledger_entry` — not a public client RPC
+
+Called only from other modules’ `security definer` functions. Inserts one ledger row with validation + closed-session lock trigger. Do **not** `grant execute` to `anon` / `authenticated` (or grant only to roles used by definer functions).
+
+### D. API Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Owner as WorkspaceOwner
+    actor Manager as KioskManager
+    participant App as QuasarApp
+    participant LedgerStore as ledgerPinia
+    participant DB as SupabaseDB
+    participant Other as OtherModuleRPC
+
+    Note over Owner, DB: Manual entry
+    Owner->>App: Submit ManualLedgerEntryDialog
+    App->>DB: rpc log_manual_ledger_entry
+    Note over DB: has_module_permission ledger_write_manual
+    DB-->>LedgerStore: new id
+    LedgerStore->>LedgerStore: refetch list
+
+    Note over Owner, DB: Dashboard
+    Owner->>App: Open finance dashboard
+    App->>DB: rpc get_tenant_financial_summary
+    App->>DB: rpc get_daily_financial_breakdown
+    DB-->>App: aggregates
+
+    Note over Manager, DB: Active session cash
+    Manager->>App: View StaffWorkspace
+    App->>DB: rpc get_cash_register_running_balance
+    DB-->>App: expected cash
+
+    Note over Other, DB: Automated posting
+    Other->>DB: post_ledger_entry inside security definer
+    Note over DB: Trigger enforce_closed_session_lock
+    DB-->>Other: ledger id
+```
+
+### E. RLS Helpers & Policies
+
+```sql
+alter table public.transaction_ledger enable row level security;
+
+create or replace function public.get_ledger_read_scope(p_tenant_id uuid)
 returns text
 security definer
 stable
@@ -223,16 +409,108 @@ begin
   );
 end;
 $$;
+
+-- SELECT
+create policy "Users can view ledger entries by read scope"
+  on public.transaction_ledger for select
+  using (
+    exists (
+      select 1 from public.user_profiles
+      where id = auth.uid() and is_superadmin = true
+    )
+    or public.get_ledger_read_scope(tenant_id) = 'all'
+    or (
+      public.get_ledger_read_scope(tenant_id) = 'self'
+      and (
+        operator_user_id = auth.uid()
+        or operator_staff_id in (
+          select id from public.staff_members
+          where user_id = auth.uid()
+            and tenant_id = transaction_ledger.tenant_id
+        )
+      )
+    )
+  );
+
+-- INSERT: prefer RPCs; policy allows Auth path only when manual write permitted
+create policy "Users can insert ledger when manual write allowed"
+  on public.transaction_ledger for insert
+  with check (
+    public.has_module_permission(tenant_id, 'financial_ledger', 'ledger_write_manual')
+  );
+
+-- UPDATE / DELETE: deny everyone (immutability also enforced by trigger)
+create policy "Ledger entries cannot be updated"
+  on public.transaction_ledger for update
+  using (false);
+
+create policy "Ledger entries cannot be deleted"
+  on public.transaction_ledger for delete
+  using (false);
 ```
 
----
+> `has_module_permission` is defined in the shifts/sessions RFC (workspace JSONB booleans). Reuse it; do not redefine unless this migration lands first.
 
-## 5. API Flow & Lifecycle Operations
+### F. RPC Implementations
 
-### Database RPC Functions
+#### 1. `post_ledger_entry` (internal helper)
 
-#### 1. Record Manual Ledger Entry: `log_manual_ledger_entry`
-Allows authorized users (Owners/Admins) to log manual financial inflows/outflows (e.g. utilities, rent, capital injections).
+```sql
+create or replace function public.post_ledger_entry(
+  p_tenant_id uuid,
+  p_session_id uuid,
+  p_type text,
+  p_category text,
+  p_amount numeric,
+  p_payment_method text,
+  p_operator_user_id uuid default null,
+  p_operator_staff_id uuid default null,
+  p_notes text default null
+)
+returns uuid
+security definer
+set search_path = public
+language plpgsql
+as $$
+declare
+  v_id uuid;
+begin
+  if p_type not in ('inflow', 'outflow') then
+    raise exception 'Invalid transaction type.' using errcode = '22023';
+  end if;
+
+  if p_amount is null or p_amount <= 0 then
+    raise exception 'Transaction amount must be greater than zero.' using errcode = '22023';
+  end if;
+
+  if p_payment_method not in ('cash', 'bank_transfer', 'mobile_wallet') then
+    raise exception 'Invalid payment method.' using errcode = '22023';
+  end if;
+
+  if p_category not in (
+    'POS', 'Debt Collection', 'Raw Materials', 'Supplier Payout',
+    'Payroll', 'Staff Advance', 'Bazar Discrepancy', 'Bazar Surplus',
+    'Overhead', 'Manual Inflow', 'Manual Outflow'
+  ) then
+    raise exception 'Invalid ledger category.' using errcode = '22023';
+  end if;
+
+  insert into public.transaction_ledger (
+    tenant_id, session_id, type, category, amount, payment_method,
+    operator_user_id, operator_staff_id, notes
+  )
+  values (
+    p_tenant_id, p_session_id, p_type, p_category, p_amount, p_payment_method,
+    p_operator_user_id, p_operator_staff_id, p_notes
+  )
+  returning id into v_id;
+
+  return v_id;
+end;
+$$;
+```
+
+#### 2. `log_manual_ledger_entry`
 
 ```sql
 create or replace function public.log_manual_ledger_entry(
@@ -249,39 +527,29 @@ security definer
 set search_path = public
 language plpgsql
 as $$
-declare
-  v_new_id uuid;
 begin
-  -- 1. Enforce validation rules
-  if p_type not in ('inflow', 'outflow') then
-    raise exception 'Invalid transaction type. Must be inflow or outflow.';
+  if auth.uid() is null then
+    raise exception 'Authentication required.' using errcode = '42501';
   end if;
 
-  if p_amount <= 0.00 then
-    raise exception 'Transaction amount must be greater than zero.';
-  end if;
-
-  if p_payment_method not in ('cash', 'bank_transfer', 'mobile_wallet') then
-    raise exception 'Invalid payment method.';
-  end if;
-
-  -- 2. Verify authorization
   if not public.has_module_permission(p_tenant_id, 'financial_ledger', 'ledger_write_manual') then
-    raise exception 'Unauthorized. User does not have manual ledger write permissions.';
+    raise exception 'Permission denied: ledger_write_manual.' using errcode = '42501';
   end if;
 
-  -- 3. Log the entry
-  insert into public.transaction_ledger (
-    tenant_id,
-    session_id,
-    type,
-    category,
-    amount,
-    payment_method,
-    operator_id,
-    notes
-  )
-  values (
+  if p_category not in ('Overhead', 'Manual Inflow', 'Manual Outflow') then
+    raise exception 'Manual entries must use Overhead, Manual Inflow, or Manual Outflow.'
+      using errcode = '22023';
+  end if;
+
+  if p_category = 'Manual Inflow' and p_type <> 'inflow' then
+    raise exception 'Manual Inflow requires type inflow.' using errcode = '22023';
+  end if;
+
+  if p_category in ('Manual Outflow', 'Overhead') and p_type <> 'outflow' then
+    raise exception 'Overhead / Manual Outflow require type outflow.' using errcode = '22023';
+  end if;
+
+  return public.post_ledger_entry(
     p_tenant_id,
     p_session_id,
     p_type,
@@ -289,17 +557,14 @@ begin
     p_amount,
     p_payment_method,
     auth.uid(),
+    null,
     p_notes
-  )
-  returning id into v_new_id;
-
-  return v_new_id;
+  );
 end;
 $$;
 ```
 
-#### 2. Get Tenant Financial Summary (Dashboard): `get_tenant_financial_summary`
-Aggregates and compiles the financial dashboard reports for a given tenant over a specific date range.
+#### 3. `get_tenant_financial_summary`
 
 ```sql
 create or replace function public.get_tenant_financial_summary(
@@ -318,50 +583,51 @@ returns table (
   payroll_expenses numeric(12, 2)
 )
 security definer
-set search_path = public
 stable
+set search_path = public
 language plpgsql
 as $$
 declare
-  v_inflow numeric(12, 2) := 0.00;
-  v_outflow numeric(12, 2) := 0.00;
-  v_receivables numeric(12, 2) := 0.00;
-  v_payables numeric(12, 2) := 0.00;
-  v_pos numeric(12, 2) := 0.00;
-  v_market numeric(12, 2) := 0.00;
-  v_payroll numeric(12, 2) := 0.00;
+  v_inflow numeric(12, 2) := 0;
+  v_outflow numeric(12, 2) := 0;
+  v_receivables numeric(12, 2) := 0;
+  v_payables numeric(12, 2) := 0;
+  v_pos numeric(12, 2) := 0;
+  v_market numeric(12, 2) := 0;
+  v_payroll numeric(12, 2) := 0;
 begin
-  -- 1. Verify authorization
   if not public.has_module_permission(p_tenant_id, 'financial_ledger', 'dashboard_read') then
-    raise exception 'Unauthorized to view financial dashboard summary.';
+    raise exception 'Permission denied: dashboard_read.' using errcode = '42501';
   end if;
 
-  -- 2. Aggregate inflows & category specific metrics
-  select 
-    coalesce(sum(case when type = 'inflow' then amount else 0.00 end), 0.00),
-    coalesce(sum(case when type = 'outflow' then amount else 0.00 end), 0.00),
-    coalesce(sum(case when category = 'POS' then amount else 0.00 end), 0.00),
-    coalesce(sum(case when category = 'Raw Materials' then amount else 0.00 end), 0.00),
-    coalesce(sum(case when category = 'Payroll' then amount else 0.00 end), 0.00)
-  into 
-    v_inflow, v_outflow, v_pos, v_market, v_payroll
+  select
+    coalesce(sum(case when type = 'inflow' then amount else 0 end), 0),
+    coalesce(sum(case when type = 'outflow' then amount else 0 end), 0),
+    coalesce(sum(case when category = 'POS' then amount else 0 end), 0),
+    coalesce(sum(case when category = 'Raw Materials' then amount else 0 end), 0),
+    coalesce(sum(case when category = 'Payroll' then amount else 0 end), 0)
+  into v_inflow, v_outflow, v_pos, v_market, v_payroll
   from public.transaction_ledger
   where tenant_id = p_tenant_id
     and created_at >= p_start_date
     and created_at <= p_end_date;
 
-  -- 3. Fetch outstanding receivables (customer debt balance) from customers
-  select coalesce(sum(outstanding_balance), 0.00) into v_receivables
-  from public.customers
-  where tenant_id = p_tenant_id;
+  if to_regclass('public.customers') is not null then
+    execute format(
+      'select coalesce(sum(outstanding_balance), 0) from public.customers where tenant_id = %L',
+      p_tenant_id
+    ) into v_receivables;
+  end if;
 
-  -- 4. Fetch outstanding payables (supplier debt balance) from suppliers
-  select coalesce(sum(outstanding_balance), 0.00) into v_payables
-  from public.suppliers
-  where tenant_id = p_tenant_id;
+  if to_regclass('public.suppliers') is not null then
+    execute format(
+      'select coalesce(sum(outstanding_balance), 0) from public.suppliers where tenant_id = %L',
+      p_tenant_id
+    ) into v_payables;
+  end if;
 
-  return query 
-  select 
+  return query
+  select
     v_inflow,
     v_outflow,
     (v_inflow - v_outflow),
@@ -374,8 +640,7 @@ end;
 $$;
 ```
 
-#### 3. Get Cash Register Running Balance: `get_cash_register_running_balance`
-Returns the expected physical cash drawer balance for an active session to support reconciliation.
+#### 4. `get_cash_register_running_balance`
 
 ```sql
 create or replace function public.get_cash_register_running_balance(
@@ -384,30 +649,31 @@ create or replace function public.get_cash_register_running_balance(
 )
 returns numeric(12, 2)
 security definer
-set search_path = public
 stable
+set search_path = public
 language plpgsql
 as $$
 declare
-  v_opening numeric(12, 2) := 0.00;
-  v_inflow numeric(12, 2) := 0.00;
-  v_outflow numeric(12, 2) := 0.00;
+  v_opening numeric(12, 2) := 0;
+  v_inflow numeric(12, 2) := 0;
+  v_outflow numeric(12, 2) := 0;
 begin
-  -- Fetch opening cash from the session metadata
-  select coalesce(opening_cash, 0.00) into v_opening
+  select coalesce(opening_cash, 0) into v_opening
   from public.sessions
   where id = p_session_id and tenant_id = p_tenant_id;
 
-  -- Sum Cash Inflows for the session
-  select coalesce(sum(amount), 0.00) into v_inflow
+  if not found then
+    raise exception 'Session not found.' using errcode = 'P0002';
+  end if;
+
+  select coalesce(sum(amount), 0) into v_inflow
   from public.transaction_ledger
   where tenant_id = p_tenant_id
     and session_id = p_session_id
     and type = 'inflow'
     and payment_method = 'cash';
 
-  -- Sum Cash Outflows for the session
-  select coalesce(sum(amount), 0.00) into v_outflow
+  select coalesce(sum(amount), 0) into v_outflow
   from public.transaction_ledger
   where tenant_id = p_tenant_id
     and session_id = p_session_id
@@ -419,8 +685,9 @@ end;
 $$;
 ```
 
-#### 4. Get Daily Financial Breakdown (Daily Profit & Cost Breakdown): `get_daily_financial_breakdown`
-Returns a tabular view of daily financial performance with total revenues, total operational expenses, net daily profit, and itemized cost breakdowns for a given date range.
+> Sessions module `calculate_expected_cash` should call this logic (or duplicate the same cash aggregate) once ledger exists.
+
+#### 5. `get_daily_financial_breakdown`
 
 ```sql
 create or replace function public.get_daily_financial_breakdown(
@@ -446,81 +713,464 @@ returns table (
   manual_outflows numeric(12, 2)
 )
 security definer
-set search_path = public
 stable
+set search_path = public
 language plpgsql
 as $$
 begin
-  -- 1. Verify authorization
   if not public.has_module_permission(p_tenant_id, 'financial_ledger', 'dashboard_read') then
-    raise exception 'Unauthorized to view financial breakdown reports.';
+    raise exception 'Permission denied: dashboard_read.' using errcode = '42501';
   end if;
 
-  -- 2. Return daily aggregation table
   return query
-  select 
-    (created_at timezone 'UTC')::date as trans_date,
-    coalesce(sum(case when type = 'inflow' then amount else 0.00 end), 0.00) as total_in,
-    coalesce(sum(case when type = 'outflow' then amount else 0.00 end), 0.00) as total_out,
-    (
-      coalesce(sum(case when type = 'inflow' then amount else 0.00 end), 0.00) -
-      coalesce(sum(case when type = 'outflow' then amount else 0.00 end), 0.00)
-    ) as net_prof,
-    coalesce(sum(case when category = 'POS' then amount else 0.00 end), 0.00) as pos,
-    coalesce(sum(case when category = 'Debt Collection' then amount else 0.00 end), 0.00) as debt,
-    coalesce(sum(case when category = 'Raw Materials' then amount else 0.00 end), 0.00) as raw,
-    coalesce(sum(case when category = 'Payroll' then amount else 0.00 end), 0.00) as payroll,
-    coalesce(sum(case when category = 'Supplier Payout' then amount else 0.00 end), 0.00) as payout,
-    coalesce(sum(case when category = 'Staff Advance' then amount else 0.00 end), 0.00) as advance,
-    coalesce(sum(case when category = 'Bazar Discrepancy' then amount else 0.00 end), 0.00) as discrepancy,
-    coalesce(sum(case when category = 'Bazar Surplus' then amount else 0.00 end), 0.00) as surplus,
-    coalesce(sum(case when category = 'Overhead' then amount else 0.00 end), 0.00) as overhead,
-    coalesce(sum(case when category = 'Manual Inflow' then amount else 0.00 end), 0.00) as man_in,
-    coalesce(sum(case when category = 'Manual Outflow' then amount else 0.00 end), 0.00) as man_out
-  from public.transaction_ledger
-  where tenant_id = p_tenant_id
-    and (created_at timezone 'UTC')::date >= p_start_date
-    and (created_at timezone 'UTC')::date <= p_end_date
-  group by (created_at timezone 'UTC')::date
-  order by trans_date desc;
+  select
+    (tl.created_at at time zone 'UTC')::date as transaction_date,
+    coalesce(sum(case when tl.type = 'inflow' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.type = 'outflow' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.type = 'inflow' then tl.amount else 0 end), 0)
+      - coalesce(sum(case when tl.type = 'outflow' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'POS' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Debt Collection' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Raw Materials' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Payroll' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Supplier Payout' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Staff Advance' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Bazar Discrepancy' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Bazar Surplus' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Overhead' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Manual Inflow' then tl.amount else 0 end), 0),
+    coalesce(sum(case when tl.category = 'Manual Outflow' then tl.amount else 0 end), 0)
+  from public.transaction_ledger tl
+  where tl.tenant_id = p_tenant_id
+    and (tl.created_at at time zone 'UTC')::date >= p_start_date
+    and (tl.created_at at time zone 'UTC')::date <= p_end_date
+  group by (tl.created_at at time zone 'UTC')::date
+  order by 1 desc;
 end;
 $$;
 ```
 
----
-
-## 6. Immutable Ledger Constraints & Closed Session Locks
-
-To guarantee strict compliance, the central ledger table incorporates database triggers preventing any structural adjustments after record ingestion.
-
-### 1. Closed Operational Session Lock Trigger
-When other modules trigger automated double-entry postings to the ledger, the ledger ensures the associated session is not already closed. This prevents retroactively adding transactions to a closed business date/shift.
-
-```sql
--- Trigger attached to transaction_ledger checking session locking status
-create trigger check_transaction_session_lock
-before insert or update or delete
-on public.transaction_ledger
-for each row
-execute function public.enforce_closed_session_lock();
-```
-*(Note: `public.enforce_closed_session_lock()` is defined under the **Operational Shifts & Sessions** specifications).*
-
-### 2. Absolute Audit Record Immutability Trigger
-To ensure the audit log is completely append-only and cannot be tampered with by any database user (including superadmins/owners), updates and deletions are hard-blocked at the database constraint level.
+#### 6. Immutability & closed-session lock triggers
 
 ```sql
 create or replace function public.block_ledger_modifications()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 begin
-  raise exception 'Immutable Ledger Rule: Manual updates and deletions of ledger transactions are strictly prohibited.';
+  raise exception
+    'Immutable Ledger Rule: updates and deletions of ledger transactions are prohibited.'
+    using errcode = 'P0001';
   return null;
 end;
-$$ language plpgsql;
+$$;
 
 create trigger enforce_ledger_immutability
-before update or delete
-on public.transaction_ledger
+before update or delete on public.transaction_ledger
 for each row
 execute function public.block_ledger_modifications();
+
+-- Function defined in operational_shifts_sessions migration
+create trigger check_transaction_session_lock
+before insert or update or delete on public.transaction_ledger
+for each row
+execute function public.enforce_closed_session_lock();
 ```
+
+### G. Error Handling (Backend)
+
+| Condition | SQLSTATE / code | Client message (example) | HTTP (PostgREST) |
+| :--- | :--- | :--- | :--- |
+| Not authenticated | `42501` | Authentication required | 401 / 403 |
+| Missing module permission | `42501` | Permission denied: ledger_write_manual | 403 |
+| Invalid type / amount / method / category | `22023` | Transaction amount must be greater than zero | 400 |
+| Session not found | `P0002` | Session not found | 404-ish / 400 |
+| Closed-session mutation | `P0001` | Transaction is locked… | 400 |
+| Immutable update/delete | `P0001` | Immutable Ledger Rule… | 400 |
+| Unhandled server error | — | PostgREST generic | 500 |
+
+Client maps `error.code` / `error.message` via `useFeedback` (`showApiError`).
+
+**Grants:**
+```sql
+grant execute on function public.log_manual_ledger_entry(uuid, uuid, text, text, numeric, text, text)
+  to authenticated;
+
+grant execute on function public.get_tenant_financial_summary(uuid, timestamptz, timestamptz)
+  to authenticated;
+
+grant execute on function public.get_daily_financial_breakdown(uuid, date, date)
+  to authenticated;
+
+grant execute on function public.get_cash_register_running_balance(uuid, uuid)
+  to authenticated;
+
+-- Internal helper: no grant to anon/authenticated (called only from other definer RPCs)
+revoke all on function public.post_ledger_entry(
+  uuid, uuid, text, text, numeric, text, uuid, uuid, text
+) from public;
+```
+
+---
+
+## 3. FRONTEND ARCHITECTURE
+
+### A. State Management
+
+| State | Scope | Location |
+| :--- | :--- | :--- |
+| Ledger list + filters | Page / store | Pinia `web/src/stores/ledger.ts` |
+| Financial summary + daily breakdown | Store cache keyed by date range | Same store |
+| Manual entry form | Local dialog state | `ManualLedgerEntryDialog.vue` |
+| Session cash balance | Store (active session) | `ledger.ts` `fetchCashBalance(sessionId)` (keep `session.ts` thin) |
+| Feature / role gates | Existing | `web/src/stores/tenant.ts` |
+
+#### Store sketch: `useLedgerStore`
+
+```typescript
+// web/src/stores/ledger.ts
+import { ref } from 'vue';
+import { defineStore } from 'pinia';
+import { supabase } from '@/boot/supabase';
+import { useTenantStore } from './tenant';
+
+export interface LedgerEntry {
+  id: string;
+  tenant_id: string;
+  session_id: string | null;
+  type: 'inflow' | 'outflow';
+  category: string;
+  amount: number;
+  payment_method: 'cash' | 'bank_transfer' | 'mobile_wallet';
+  operator_user_id: string | null;
+  operator_staff_id: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface FinancialSummary {
+  total_inflow: number;
+  total_outflow: number;
+  net_profit_loss: number;
+  outstanding_receivables: number;
+  outstanding_payables: number;
+  cash_sales_pos: number;
+  market_expenses: number;
+  payroll_expenses: number;
+}
+
+export const useLedgerStore = defineStore('ledger', () => {
+  const entries = ref<LedgerEntry[]>([]);
+  const summary = ref<FinancialSummary | null>(null);
+  const cashBalance = ref<number | null>(null);
+  const loading = ref(false);
+  const lastError = ref<string | null>(null);
+
+  async function fetchEntries(filters: {
+    type?: string;
+    category?: string;
+    paymentMethod?: string;
+    sessionId?: string;
+    start?: string;
+    end?: string;
+    from?: number;
+    to?: number;
+  } = {}) {
+    const tenant = useTenantStore().activeTenant;
+    if (!tenant) return;
+    loading.value = true;
+    lastError.value = null;
+    try {
+      let q = supabase
+        .from('transaction_ledger')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false });
+      if (filters.type) q = q.eq('type', filters.type);
+      if (filters.category) q = q.eq('category', filters.category);
+      if (filters.paymentMethod) q = q.eq('payment_method', filters.paymentMethod);
+      if (filters.sessionId) q = q.eq('session_id', filters.sessionId);
+      if (filters.start) q = q.gte('created_at', filters.start);
+      if (filters.end) q = q.lte('created_at', filters.end);
+      if (filters.from != null && filters.to != null) q = q.range(filters.from, filters.to);
+      const { data, error } = await q;
+      if (error) throw error;
+      entries.value = (data ?? []) as LedgerEntry[];
+    } catch (e) {
+      lastError.value = e instanceof Error ? e.message : 'Failed to load ledger';
+      throw e;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function logManualEntry(params: {
+    sessionId?: string | null;
+    type: 'inflow' | 'outflow';
+    category: string;
+    amount: number;
+    paymentMethod: string;
+    notes?: string;
+  }) {
+    const tenant = useTenantStore().activeTenant;
+    if (!tenant) throw new Error('No active tenant');
+    loading.value = true;
+    try {
+      const { data, error } = await supabase.rpc('log_manual_ledger_entry', {
+        p_tenant_id: tenant.id,
+        p_session_id: params.sessionId ?? null,
+        p_type: params.type,
+        p_category: params.category,
+        p_amount: params.amount,
+        p_payment_method: params.paymentMethod,
+        p_notes: params.notes ?? null,
+      });
+      if (error) throw error;
+      await fetchEntries();
+      return data as string;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function fetchSummary(start: string, end: string) {
+    const tenant = useTenantStore().activeTenant;
+    if (!tenant) return;
+    const { data, error } = await supabase.rpc('get_tenant_financial_summary', {
+      p_tenant_id: tenant.id,
+      p_start_date: start,
+      p_end_date: end,
+    });
+    if (error) throw error;
+    summary.value = (Array.isArray(data) ? data[0] : data) as FinancialSummary;
+  }
+
+  async function fetchCashBalance(sessionId: string) {
+    const tenant = useTenantStore().activeTenant;
+    if (!tenant) return;
+    const { data, error } = await supabase.rpc('get_cash_register_running_balance', {
+      p_tenant_id: tenant.id,
+      p_session_id: sessionId,
+    });
+    if (error) throw error;
+    cashBalance.value = data as number;
+  }
+
+  function clearLedger() {
+    entries.value = [];
+    summary.value = null;
+    cashBalance.value = null;
+    lastError.value = null;
+  }
+
+  return {
+    entries,
+    summary,
+    cashBalance,
+    loading,
+    lastError,
+    fetchEntries,
+    logManualEntry,
+    fetchSummary,
+    fetchCashBalance,
+    clearLedger,
+  };
+});
+```
+
+Currency helper (shared util): `formatMoney(amount, locale = 'bn', currency = 'BDT')` using `Intl.NumberFormat`.
+
+Cache policy: refetch list after manual insert; refetch summary when date range changes; refetch cash balance when active session changes or after money-mutating kiosk actions.
+
+### B. Routing
+
+Extend workspace children in `web/src/router/routes.ts`:
+
+```typescript
+{
+  path: 'ledger',
+  name: 'workspace-ledger',
+  component: () => import('@/pages/workspace/WorkspaceLedger.vue'),
+  meta: {
+    requiredFeature: 'financial-ledger',
+    requiredModulePermission: {
+      module: 'financial_ledger',
+      permission: 'ledger_read',
+    },
+  },
+},
+{
+  path: 'finance',
+  name: 'workspace-finance',
+  component: () => import('@/pages/workspace/WorkspaceFinanceDashboard.vue'),
+  meta: {
+    requiredFeature: 'financial-ledger',
+    requiredModulePermission: {
+      module: 'financial_ledger',
+      permission: 'dashboard_read',
+    },
+  },
+},
+```
+
+**Guard:** Existing `requiredModulePermission` + string scopes: allow navigate if `ledger_read` is `all` or `self` (deny `none`). Boolean `dashboard_read` must be true.
+
+**Nav:** Add Ledger / Finance items in `WorkspaceLayout.vue` when `isFeatureEnabled('financial-ledger')` and permission allows.
+
+**Kiosk:** No dedicated ledger route. `StaffWorkspace` shows session transaction strip + cash balance when feature on and staff has `session_ledger_read` / `cash_balance_read`. During Phase 4 implementation, strip unused module tiles from the terminal so only session + cash + session ledger remain for testing (see roadmap).
+
+### C. Lazy Loading
+
+* Pages: route-level dynamic import.
+* Dialogs: `defineAsyncComponent` for `ManualLedgerEntryDialog`.
+* Keep `ledger.ts` in workspace chunk; do not prefetch from auth/kiosk entry.
+* Kiosk imports only `fetchCashBalance` / session-scoped `fetchEntries({ sessionId })`.
+
+---
+
+## 4. UI & ACCESSIBILITY
+
+### A. Component Specification
+
+#### 1. `LedgerFiltersBar.vue`
+- **Props:** `modelValue` (filters object), `loading`
+- **Emits:** `update:modelValue`, `@apply`
+- **Fields:** date range, type, category, payment method, session (optional)
+
+#### 2. `LedgerTable.vue`
+- **Props:** `rows: LedgerEntry[]`, `loading`
+- **Columns:** created_at, type, category, amount (formatted), payment_method, operator, session, notes
+- **Mobile:** card list instead of table
+
+#### 3. `ManualLedgerEntryDialog.vue`
+- **Props:** `modelValue: boolean`
+- **Emits:** `update:modelValue`, `@created(id)`
+- **Fields:** type, category (Overhead / Manual Inflow / Manual Outflow), amount, payment_method, session (optional), notes
+- **Actions:** Cancel, Save (disabled while loading; gated by `ledger_write_manual`)
+
+#### 4. `LedgerSummaryCards.vue`
+- **Props:** `summary: FinancialSummary | null`, `loading`
+- **UI:** Cards/metrics for inflow, outflow, net, receivables, payables, POS, market, payroll
+
+#### 5. `DailyBreakdownTable.vue`
+- **Props:** `rows`, `loading`
+- **Columns:** date, totals, net, per-category amounts
+- **Mobile:** horizontal scroll or stacked day cards
+
+#### 6. `SessionCashBalance.vue`
+- **Props:** `balance: number | null`, `loading`
+- **UI:** Chip / banner text “Expected cash: ৳…” for kiosk and optional workspace banner
+
+#### 7. Pages
+- `WorkspaceLedger.vue` — filters + table + Manual Entry CTA
+- `WorkspaceFinanceDashboard.vue` — date range + summary cards + daily breakdown
+- Wire `SessionCashBalance` into kiosk `StaffWorkspace` / session banner area
+
+### B. Responsive Design
+
+| Breakpoint | Behavior |
+| :--- | :--- |
+| Desktop (`gt-md`) | Full tables; dialogs max-width ~480–560px |
+| Tablet (`sm`–`md`) | Table horizontal scroll; summary cards 2-column |
+| Mobile (`lt-sm`) | Card lists; dialogs full-width; sticky filter sheet optional |
+
+Touch targets ≥ 48px for primary CTAs on counter tablet.
+
+### C. Style & Visual States
+
+* Match workspace Quasar tokens: flat bordered sections, `q-col-gutter-md`, `text-grey-8` secondary labels.
+* **States:**
+  * Inflow amount: `text-positive`; outflow: `text-negative`
+  * Hover: list row `bg-grey-1`
+  * Loading: `q-inner-loading` / skeleton on cards
+  * Disabled: no `ledger_write_manual` → hide Manual Entry CTA
+* Currency: shared `formatMoney` helper (BDT / `bn` default).
+
+### D. Accessibility (a11y)
+
+* Dialogs: Quasar focus trap; Esc closes when not saving.
+* Summary metrics: `aria-live="polite"` on net P/L when range changes.
+* Tables: proper `<th>` / `scope`; card lists use headings per entry.
+* Forms: visible labels; `aria-invalid` + helper text on validation.
+* Keyboard: Tab order logical; Enter submits manual entry when focus in form.
+
+### E. Data Fetching & Error Handling (Frontend)
+
+| Case | UI |
+| :--- | :--- |
+| Empty ledger | Empty state + Manual Entry CTA if write allowed |
+| Empty daily breakdown | “No transactions in this range” |
+| Network drop | `showApiError` + retry; dialogs keep local form |
+| Validation | Client: amount > 0, category/type match; server errors via `showApiError` |
+| No permission | Hide routes/nav; redirect with existing feature/permission guard message |
+| Feature off | `requiredFeature` redirect |
+| Kiosk no session | Hide cash balance / show “No open session” |
+
+Use `web/src/composables/useFeedback.ts` only — no ad-hoc `$q.notify` for errors.
+
+---
+
+## 5. IMPLEMENTATION ROADMAP & CHECKLISTS
+
+### Phase 1: Backend & Data
+- [ ] Ensure shifts/sessions migration (incl. `enforce_closed_session_lock` function) is applied first.
+- [ ] Create migration `*_transaction_ledger.sql` for table, indexes, category check.
+- [ ] Implement `post_ledger_entry`, `log_manual_ledger_entry`, summary / daily / cash-balance RPCs.
+- [ ] Enable RLS + `get_ledger_read_scope` policies; deny UPDATE/DELETE.
+- [ ] Add `block_ledger_modifications` + attach `check_transaction_session_lock` trigger.
+- [ ] Seed/update `tenant_roles` and `staff_roles` JSONB for `financial_ledger`.
+- [ ] Grant EXECUTE on public RPCs to `authenticated`; revoke public execute on `post_ledger_entry`.
+- [ ] Point sessions `calculate_expected_cash` at ledger cash aggregates (already tolerant if missing).
+- [ ] Regenerate TypeScript DB types; verify migrate / `db reset`.
+
+### Phase 2: UI & Frontend Infrastructure
+- [ ] Add Pinia `useLedgerStore` + `formatMoney` util.
+- [ ] Extend `hasModulePermission` / scope helpers if not already from sessions work.
+- [ ] Add routes `/:tenantSlug/ledger` and `/:tenantSlug/finance` with feature + permission meta.
+- [ ] Add nav entries in `WorkspaceLayout.vue`.
+- [ ] Scaffold `web/src/components/ledger/` (filters, table, dialog, summary, breakdown, cash balance).
+
+### Phase 3: Workspace Assembly & Integration
+- [ ] Build `WorkspaceLedger.vue` and `WorkspaceFinanceDashboard.vue`.
+- [ ] Wire Manual Entry dialog + feedback toasts/dialogs.
+- [ ] Confirm feature toggle off → routes redirect with existing guard message.
+
+### Phase 4: Kiosk Terminal Lean Surface (test-first)
+When wiring ledger into the terminal, **strip `StaffWorkspace` down to only what this module needs** so QA can exercise session cash + session ledger without noise from unbuilt modules.
+
+**Keep (visible):**
+- [ ] Staff header (name / role) + Clock Out.
+- [ ] Operational session banner (Open / Close) when `shift-sessions` is on.
+- [ ] `SessionCashBalance` chip (expected drawer cash) for Manager/Cashier with `cash_balance_read`.
+- [ ] Active-session ledger strip (read-only list via `fetchEntries({ sessionId })`) when `session_ledger_read`.
+
+**Strip / hide until their modules ship (do not delete permanently — feature- or flag-gate):**
+- [ ] Placeholder action cards / CTAs for meal POS, customer debt, bazar, payroll, attendance, and any other non-ledger ops.
+- [ ] Shift-duration / decorative chrome that does not affect open-session or cash testing (optional hide behind `dev` or `financial-ledger` lean mode).
+- [ ] Any dead “coming soon” tiles that block focus during manual test.
+
+**Test harness rules:**
+- [ ] Prefer a single lean layout path: e.g. `v-if="isFinancialLedgerEnabled"` shows cash + session ledger; other module tiles require their own `enabled_features` flags (default off in local test tenants).
+- [ ] Document the lean checklist in a short comment at the top of `StaffWorkspace.vue` so later modules re-enable their tiles deliberately.
+- [ ] Manual test path: pair device → PIN → open session → seed/post a cash inflow → confirm running balance + list row → close session.
+
+### Phase 5: Optimization & Polish
+- [ ] Optional kiosk overload of cash-balance RPC with `device_token` + `staff_id`.
+- [ ] Realtime subscribe on `transaction_ledger` for open-session cash chip.
+- [ ] Re-enable stripped kiosk tiles as meal / procurement / payroll modules land (remove lean gates per feature).
+- [ ] Export CSV of ledger / daily breakdown (Owner only).
+- [ ] a11y pass, empty/loading/offline states, mobile table→cards polish.
+- [ ] Wire first automated callers (`post_ledger_entry`) when meal / procurement / payroll modules land.
+
+---
+
+## Appendix: Upstream / Downstream Dependencies
+
+| Module doc | Coupling |
+| :--- | :--- |
+| [operational_shifts_sessions.md](./operational_shifts_sessions.md) | `session_id` FK; opening cash; `enforce_closed_session_lock`; expected cash aggregates |
+| [meal_customer_management.md](./meal_customer_management.md) | Auto-post `POS`, `Debt Collection` via `post_ledger_entry` |
+| [procurement_supplier_management.md](./procurement_supplier_management.md) | Auto-post `Raw Materials`, `Supplier Payout` |
+| [staff_attendance_payroll.md](./staff_attendance_payroll.md) | Auto-post `Payroll`, `Staff Advance` |
+| [device_pairing_and_pin_auth.md](./device_pairing_and_pin_auth.md) | Kiosk identity for `operator_staff_id` and session ledger UI |
+| [multi_tenant_architecture.md](./multi_tenant_architecture.md) | Feature flag `financial-ledger`; workspace `tenant_roles` vs kiosk `staff_roles` |

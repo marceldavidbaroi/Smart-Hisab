@@ -35,3 +35,8 @@ This file outlines the core rules and constraints that the AI agent must adhere 
 * For mobile/Android viewports, target touch safety:
   - Interactive hitboxes must have a minimum height/width of `48px`.
   - Prevent horizontal scrollbars on the page wrapper; ensure overflowing elements (like tables or long lists) are gracefully scroll-contained or replaced by mobile cards.
+
+### 7. Central Feedback (errors & toasts)
+* **Strict Constraint**: Use `web/src/composables/useFeedback.ts` for all user-facing API errors and success/info/warning toasts. Do not add per-feature `$q.notify`, custom snackbars, or ad-hoc error dialogs.
+* API failures → `showApiError` / `showError` (centered Dialog, OK only). Soft feedback → `showSuccess` / `showInfo` / `showWarning` (top toast).
+* Confirm/destructive Yes-Cancel dialogs and inline field validation remain exceptions.

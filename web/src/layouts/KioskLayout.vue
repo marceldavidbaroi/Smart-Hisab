@@ -9,11 +9,26 @@
             {{ tenantName || 'Smart Hisab' }}
           </div>
           <div class="text-caption text-grey-7 leading-none">
-            Terminal: {{ deviceName || 'Kiosk' }}
+            {{ $t('layouts.kiosk.terminal') }}: {{ deviceName || 'Kiosk' }}
           </div>
         </div>
 
         <q-space />
+
+        <!-- Language Switcher Toggle -->
+        <q-btn-toggle
+          v-model="locale"
+          toggle-color="primary"
+          color="indigo-1"
+          text-color="primary"
+          toggle-text-color="white"
+          flat
+          dense
+          unelevated
+          class="q-mr-sm text-xs text-weight-bold"
+          style="font-size: 11px; height: 32px; border-radius: 8px; padding: 2px; border: 1.5px solid var(--q-primary);"
+          :options="toggleOptions"
+        />
 
         <!-- Status Indicators -->
         <div class="row items-center q-gutter-x-md">
@@ -24,7 +39,7 @@
             style="min-height: 24px"
           >
             <q-icon :name="isOnline ? 'wifi' : 'wifi_off'" size="14px" class="q-mr-xs" />
-            <span class="gt-xs">{{ isOnline ? 'Online' : 'Offline' }}</span>
+            <span class="gt-xs">{{ isOnline ? $t('layouts.kiosk.online') : $t('layouts.kiosk.offline') }}</span>
           </q-badge>
 
           <!-- Active Staff Member -->
@@ -50,7 +65,7 @@
               class="cursor-pointer"
               @click="handleLogout"
             >
-              <q-tooltip class="bg-red text-white">Clock Out</q-tooltip>
+              <q-tooltip class="bg-red text-white">{{ $t('layouts.kiosk.clockOut') }}</q-tooltip>
             </q-btn>
           </div>
         </div>
@@ -63,7 +78,7 @@
       class="bg-orange-9 text-white text-center q-py-xs text-caption text-weight-bold full-width z-max"
       style="position: absolute; top: 56px; left: 0"
     >
-      Network connection lost. Offline operations enabled (Read Only).
+      {{ $t('layouts.kiosk.offlineBanner') }}
     </div>
 
     <!-- Main Container -->
@@ -81,9 +96,11 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useKioskStore } from '../stores/kiosk';
+import { useLocale } from '../composables/useLocale';
 
 const router = useRouter();
 const kioskStore = useKioskStore();
+const { locale, toggleOptions } = useLocale();
 
 const isOnline = computed(() => kioskStore.isOnline);
 
@@ -105,7 +122,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
 .leading-none {
   line-height: 1.25;
 }

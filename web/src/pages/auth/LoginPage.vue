@@ -1,16 +1,14 @@
 <template>
   <div class="login-container">
     <div class="text-h5 text-bold text-slate-800 q-mb-md">
-      <template v-if="route.name === 'admin-login'">Platform Administration</template>
-      <template v-else-if="tenantName">Welcome to {{ tenantName }}</template>
-      <template v-else>Welcome Back</template>
+      <template v-if="route.name === 'admin-login'">{{ $t('auth.login.platformAdmin') }}</template>
+      <template v-else-if="tenantName">{{ $t('auth.login.welcomeTo', { tenant: tenantName }) }}</template>
+      <template v-else>{{ $t('auth.login.welcomeBack') }}</template>
     </div>
     <p class="text-slate-500 q-mb-lg text-sm">
-      <template v-if="route.name === 'admin-login'"
-        >Enter credentials to access the Superadmin Panel.</template
-      >
-      <template v-else-if="tenantName">Enter your credentials to access the workspace.</template>
-      <template v-else>Enter your credentials to access your workspaces.</template>
+      <template v-if="route.name === 'admin-login'">{{ $t('auth.login.adminSubtitle') }}</template>
+      <template v-else-if="tenantName">{{ $t('auth.login.workspaceSubtitle') }}</template>
+      <template v-else>{{ $t('auth.login.workspacesSubtitle') }}</template>
     </p>
 
     <!-- Error Banner -->
@@ -24,7 +22,7 @@
     <q-form @submit.prevent="handleLogin" class="q-gutter-y-md">
       <div>
         <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >Email Address</label
+          >{{ $t('auth.login.emailLabel') }}</label
         >
         <q-input
           v-model="email"
@@ -33,14 +31,14 @@
           placeholder="name@company.com"
           color="primary"
           class="custom-input"
-          :rules="[(val) => !!val || 'Email is required']"
+          :rules="[(val) => !!val || $t('auth.login.emailRequired')]"
           hide-bottom-space
         />
       </div>
 
       <div>
         <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >Password</label
+          >{{ $t('auth.login.passwordLabel') }}</label
         >
         <q-input
           v-model="password"
@@ -49,7 +47,7 @@
           placeholder="••••••••"
           color="primary"
           class="custom-input"
-          :rules="[(val) => !!val || 'Password is required']"
+          :rules="[(val) => !!val || $t('auth.login.passwordRequired')]"
           hide-bottom-space
         />
       </div>
@@ -58,7 +56,7 @@
         type="submit"
         color="primary"
         class="full-width q-py-sm rounded-btn btn-gradient q-mt-lg text-weight-bold"
-        label="Sign In"
+        :label="$t('auth.login.signIn')"
         :loading="loading"
       />
     </q-form>
@@ -67,7 +65,7 @@
     <div class="row items-center q-my-lg">
       <q-separator class="col" />
       <span class="text-slate-400 q-px-sm text-xs text-uppercase text-weight-bold"
-        >Or continue with</span
+        >{{ $t('auth.login.orContinueWith') }}</span
       >
       <q-separator class="col" />
     </div>
@@ -86,7 +84,7 @@
           size="18px"
           class="q-mr-sm"
         />
-        <span>Sign in with Google</span>
+        <span>{{ $t('auth.login.signInGoogle') }}</span>
       </div>
     </q-btn>
 
@@ -100,14 +98,14 @@
     >
       <div class="row items-center no-wrap">
         <q-icon name="devices" size="18px" class="q-mr-sm" />
-        <span>Pair Counter Device</span>
+        <span>{{ $t('auth.login.pairDevice') }}</span>
       </div>
     </q-btn>
 
     <div class="q-mt-xl text-center text-sm text-slate-500">
-      Don't have an account?
+      {{ $t('auth.login.noAccount') }}
       <router-link to="/auth/signup" class="text-primary text-weight-bold hover-underline">
-        Sign Up
+        {{ $t('auth.login.signUp') }}
       </router-link>
     </div>
   </div>
@@ -119,10 +117,12 @@ import { useRouter, useRoute } from 'vue-router';
 import { signInWithEmail, signInWithGoogle } from '../../services/multiTenant';
 import { useTenantStore } from '../../stores/tenant';
 import { supabase } from '../../boot/supabase';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const route = useRoute();
 const tenantStore = useTenantStore();
+const { t } = useI18n();
 
 const email = ref('');
 const password = ref('');
@@ -194,7 +194,7 @@ const handleLogin = async () => {
         return;
       } else {
         // Strict admin segregation: non-admins are rejected from /admin/auth/login
-        errorMsg.value = 'Access Denied: Superadmin privileges required.';
+        errorMsg.value = t('auth.login.deniedSuperadmin');
         await tenantStore.logout();
         return;
       }
@@ -211,7 +211,7 @@ const handleLogin = async () => {
         return;
       } else {
         // Logged in but doesn't have access to this specific tenant
-        errorMsg.value = `You do not have access to the workspace: ${tenantName.value || tenantSlug}`;
+        errorMsg.value = t('auth.login.deniedWorkspace', { tenant: tenantName.value || tenantSlug });
         return;
       }
     }
@@ -229,7 +229,7 @@ const handleLogin = async () => {
     }
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'An unexpected error occurred';
+    errorMsg.value = error.message || t('feedback.somethingWentWrong');
   } finally {
     loading.value = false;
   }
@@ -263,7 +263,7 @@ const handleGoogleLogin = async () => {
     }
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'An unexpected error occurred';
+    errorMsg.value = error.message || t('feedback.somethingWentWrong');
   } finally {
     loading.value = false;
   }

@@ -2,9 +2,9 @@
   <q-page class="q-pa-lg">
     <div class="row items-center justify-between q-mb-md">
       <div>
-        <h1 class="text-h4 text-bold q-my-none text-slate-850">Workspace Settings</h1>
+        <h1 class="text-h4 text-bold q-my-none text-slate-850">{{ $t('workspace.settings.title') }}</h1>
         <p class="text-slate-500 text-subtitle2 q-mt-xs q-mb-none">
-          Configure branding, preferences, and details for your organization.
+          {{ $t('workspace.settings.subtitle') }}
         </p>
       </div>
     </div>
@@ -19,8 +19,9 @@
       narrow-indicator
       dense
     >
-      <q-tab name="general" label="General Settings" icon="settings" class="q-py-sm" />
-      <q-tab name="kiosk" label="Kiosk Terminals" icon="devices" class="q-py-sm" />
+      <q-tab name="general" :label="$t('workspace.settings.tabs.general')" icon="settings" class="q-py-sm" />
+      <q-tab name="preferences" :label="$t('workspace.settings.tabs.preferences')" icon="tune" class="q-py-sm" />
+      <q-tab name="kiosk" :label="$t('workspace.settings.tabs.kiosk')" icon="devices" class="q-py-sm" />
     </q-tabs>
 
     <!-- Error Banner -->
@@ -47,28 +48,28 @@
           <div class="col-12 col-md-8">
             <q-card class="glass-card">
               <q-card-section class="q-py-md border-bottom">
-                <div class="text-h6 text-bold text-slate-800">Branding & Appearance</div>
+                <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.branding.title') }}</div>
               </q-card-section>
 
               <q-card-section class="q-pt-md">
                 <q-form @submit.prevent="saveSettings" class="q-gutter-y-md">
                   <div>
                     <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >Workspace Name (Read-Only)</label
+                      >{{ $t('workspace.settings.branding.nameLabel') }}</label
                     >
                     <q-input v-model="workspaceName" filled disable class="custom-input" />
                   </div>
 
                   <div>
                     <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >Workspace Slug (Read-Only)</label
+                      >{{ $t('workspace.settings.branding.slugLabel') }}</label
                     >
                     <q-input v-model="workspaceSlug" filled disable class="custom-input" />
                   </div>
 
                   <div>
                     <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >Branding Logo URL</label
+                      >{{ $t('workspace.settings.branding.logoUrl') }}</label
                     >
                     <q-input
                       v-model="logoUrl"
@@ -83,7 +84,7 @@
 
                   <div>
                     <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >Theme Theme Color Hex</label
+                      >{{ $t('workspace.settings.branding.themeColor') }}</label
                     >
                     <q-input
                       v-model="themeColor"
@@ -93,7 +94,7 @@
                       class="custom-input"
                       :disable="!canEdit"
                       :rules="[
-                        (val) => !val || /^#[0-9A-F]{6}$/i.test(val) || 'Must be a valid hex color',
+                        (val) => !val || /^#[0-9A-F]{6}$/i.test(val) || $t('workspace.settings.branding.themeColorInvalid'),
                       ]"
                       hide-bottom-space
                     >
@@ -111,7 +112,7 @@
                     <q-btn
                       type="submit"
                       color="primary"
-                      label="Save Changes"
+                      :label="$t('workspace.settings.branding.saveBtn')"
                       class="q-px-lg rounded-btn btn-gradient text-weight-bold"
                       :loading="saving"
                     />
@@ -126,22 +127,18 @@
             <q-card class="glass-card full-height">
               <q-card-section class="q-py-md border-bottom row items-center">
                 <q-icon name="shield" size="24px" class="text-amber-800 q-mr-sm" />
-                <div class="text-h6 text-bold text-slate-800">Access Scopes</div>
+                <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.accessScopes.title') }}</div>
               </q-card-section>
 
               <q-card-section class="q-pt-md">
-                <div class="text-subtitle2 q-mb-sm text-amber-9">Editing Privileges</div>
+                <div class="text-subtitle2 q-mb-sm text-amber-9">{{ $t('workspace.settings.accessScopes.privilegesTitle') }}</div>
                 <p class="text-sm text-slate-500 q-mb-lg">
-                  Branding settings are only configurable by users with the
-                  <span class="text-slate-800 text-weight-bold">Owner</span> or
-                  <span class="text-slate-800 text-weight-bold">Admin</span> role. Normal members
-                  can only view settings.
+                  {{ $t('workspace.settings.accessScopes.privilegesDesc') }}
                 </p>
 
-                <div class="text-subtitle2 q-mb-sm text-indigo-8">Subscription Plan</div>
+                <div class="text-subtitle2 q-mb-sm text-indigo-8">{{ $t('workspace.settings.accessScopes.planTitle') }}</div>
                 <p class="text-sm text-slate-500">
-                  Feature flags and subscription tiers are platform-level policies that can only be
-                  altered by a platform superadmin in the superadmin portal.
+                  {{ $t('workspace.settings.accessScopes.planDesc') }}
                 </p>
               </q-card-section>
             </q-card>
@@ -152,27 +149,141 @@
             <q-card class="glass-card border-danger">
               <q-card-section class="q-py-md border-bottom bg-red-50 text-red-900 row items-center">
                 <q-icon name="warning" size="24px" class="q-mr-sm text-red-9" />
-                <div class="text-h6 text-bold text-red-9">Danger Zone</div>
+                <div class="text-h6 text-bold text-red-9">{{ $t('workspace.settings.dangerZone.title') }}</div>
               </q-card-section>
 
               <q-card-section class="q-pa-md bg-white">
                 <div class="row items-center justify-between no-wrap q-col-gutter-md">
                   <div class="col-12 col-sm-8">
-                    <div class="text-subtitle2 text-bold text-slate-900">Delete Workspace</div>
+                    <div class="text-subtitle2 text-bold text-slate-900">{{ $t('workspace.settings.dangerZone.deleteTitle') }}</div>
                     <p class="text-sm text-slate-500 q-mb-none q-mt-xs">
-                      Permanently delete this workspace and all associated data, including members,
-                      settings, devices, shifts, and ledgers. This action is irreversible.
+                      {{ $t('workspace.settings.dangerZone.deleteDesc') }}
                     </p>
                   </div>
                   <div class="col-12 col-sm-4 text-right">
                     <q-btn
                       color="negative"
                       unelevated
-                      label="Delete Workspace"
+                      :label="$t('workspace.settings.dangerZone.deleteBtn')"
                       class="rounded-btn text-weight-bold cursor-pointer"
                       @click="showDeleteConfirm = true"
                     />
                   </div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+      </q-tab-panel>
+
+      <!-- Workspace Preferences (localization) -->
+      <q-tab-panel name="preferences" class="q-pa-none">
+        <div class="row q-col-gutter-lg">
+          <div class="col-12 col-md-8">
+            <q-card class="glass-card">
+              <q-card-section class="q-py-md border-bottom">
+                <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.localization.title') }}</div>
+                <div class="text-caption text-grey-7 q-mt-xs">
+                  {{ $t('workspace.settings.localization.subtitle') }}
+                </div>
+              </q-card-section>
+
+              <q-card-section class="q-pt-md">
+                <q-form @submit.prevent="savePreferences" class="q-gutter-y-md">
+                  <div>
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                      >{{ $t('workspace.settings.localization.currency') }}</label
+                    >
+                    <q-select
+                      v-model="prefCurrency"
+                      :options="currencyOptions"
+                      emit-value
+                      map-options
+                      filled
+                      dense
+                      class="custom-input"
+                      :disable="!isOwner"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                      >{{ $t('workspace.settings.localization.timezone') }}</label
+                    >
+                    <q-select
+                      v-model="prefTimezone"
+                      :options="timezoneOptions"
+                      emit-value
+                      map-options
+                      filled
+                      dense
+                      class="custom-input"
+                      :disable="!isOwner"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                      >{{ $t('workspace.settings.localization.region') }}</label
+                    >
+                    <q-select
+                      v-model="prefRegion"
+                      :options="regionOptions"
+                      emit-value
+                      map-options
+                      filled
+                      dense
+                      class="custom-input"
+                      :disable="!isOwner"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
+                      >{{ $t('workspace.settings.localization.dateFormat') }}</label
+                    >
+                    <q-select
+                      v-model="prefDateFormat"
+                      :options="dateFormatOptions"
+                      emit-value
+                      map-options
+                      filled
+                      dense
+                      class="custom-input"
+                      :disable="!isOwner"
+                    />
+                  </div>
+
+                  <div class="q-mt-lg" v-if="isOwner">
+                    <q-btn
+                      type="submit"
+                      color="primary"
+                      :label="$t('workspace.settings.localization.saveBtn')"
+                      class="q-px-lg rounded-btn btn-gradient text-weight-bold"
+                      :loading="savingPreferences"
+                    />
+                  </div>
+                  <p v-else class="text-caption text-grey-7 q-mb-none">
+                    {{ $t('workspace.settings.localization.ownerOnly') }}
+                  </p>
+                </q-form>
+              </q-card-section>
+            </q-card>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <q-card class="glass-card full-height">
+              <q-card-section class="q-py-md border-bottom row items-center">
+                <q-icon name="info" size="24px" class="text-primary q-mr-sm" />
+                <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.localization.appliesTitle') }}</div>
+              </q-card-section>
+              <q-card-section class="q-pt-md">
+                <p class="text-sm text-slate-500 q-mb-md">
+                  {{ $t('workspace.settings.localization.appliesDesc') }}
+                </p>
+                <div class="text-caption text-grey-8">
+                  {{ $t('workspace.settings.localization.preview') }}:
+                  <span class="text-weight-medium text-slate-800">{{ preferencePreview }}</span>
                 </div>
               </q-card-section>
             </q-card>
@@ -187,7 +298,7 @@
           <div class="col-12 col-md-8">
             <q-card class="glass-card">
               <q-card-section class="q-py-md border-bottom text-slate-800">
-                <div class="text-h6 text-bold">Paired Terminal Devices</div>
+                <div class="text-h6 text-bold">{{ $t('workspace.settings.kioskDevices.title') }}</div>
               </q-card-section>
 
               <q-card-section class="q-pa-none">
@@ -206,7 +317,7 @@
                     <q-td :props="props">
                       <q-badge
                         color="positive"
-                        label="Active"
+                        :label="$t('workspace.settings.kioskDevices.statusActive')"
                         class="q-py-xs q-px-sm text-weight-bold"
                       />
                     </q-td>
@@ -227,7 +338,7 @@
                         dense
                         color="red-5"
                         icon="link_off"
-                        label="Disconnect"
+                        :label="$t('workspace.settings.kioskDevices.disconnectBtn')"
                         class="q-px-sm rounded-btn text-weight-bold cursor-pointer"
                         size="sm"
                         unelevated
@@ -239,10 +350,10 @@
                     <div class="full-width column flex-center text-slate-500 q-pa-xl text-center">
                       <q-icon name="devices_other" size="48px" class="q-mb-sm text-slate-400" />
                       <div class="text-subtitle1 text-weight-medium">
-                        No Terminal Devices Paired
+                        {{ $t('workspace.settings.kioskDevices.noDevicesTitle') }}
                       </div>
                       <p class="text-sm text-slate-400 q-mt-xs q-mb-none">
-                        Generate a pairing code on the right to pair a kiosk terminal device.
+                        {{ $t('workspace.settings.kioskDevices.noDevicesDesc') }}
                       </p>
                     </div>
                   </template>
@@ -255,7 +366,7 @@
           <div class="col-12 col-md-4">
             <q-card class="glass-card text-slate-800">
               <q-card-section class="q-py-md border-bottom">
-                <div class="text-h6 text-bold">Generate Pairing Code</div>
+                <div class="text-h6 text-bold">{{ $t('workspace.settings.generatePairing.title') }}</div>
               </q-card-section>
 
               <q-card-section class="q-pt-md">
@@ -265,7 +376,7 @@
                 >
                   <q-icon name="vpn_key" size="36px" color="primary" class="q-mb-sm" />
                   <div class="text-caption text-indigo-7 text-weight-bold">
-                    ACTIVE PAIRING CODE FOR:
+                    {{ $t('workspace.settings.generatePairing.activeTitle') }}
                   </div>
                   <div class="text-subtitle1 text-slate-900 text-weight-bold q-mb-md">
                     {{ activePairingDeviceName }}
@@ -278,7 +389,7 @@
                   </div>
 
                   <div class="text-caption text-slate-500 q-mb-md">
-                    Expires:
+                    {{ $t('workspace.settings.generatePairing.expires') }}:
                     {{
                       activePairingExpires
                         ? new Date(activePairingExpires).toLocaleTimeString()
@@ -289,7 +400,7 @@
                   <q-btn
                     color="red-5"
                     unelevated
-                    label="Revoke Code"
+                    :label="$t('workspace.settings.generatePairing.revokeBtn')"
                     icon="cancel"
                     class="full-width rounded-btn text-weight-bold cursor-pointer"
                     @click="handleRevokePairingCode"
@@ -298,21 +409,20 @@
 
                 <q-form v-else @submit.prevent="handleGeneratePairingCode" class="q-gutter-y-md">
                   <p class="text-sm text-slate-500 q-mb-none">
-                    Generate a temporary 6-digit code to pair a kiosk counter device (valid for 30
-                    minutes).
+                    {{ $t('workspace.settings.generatePairing.desc') }}
                   </p>
 
                   <div>
                     <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-                      >Device Name / Label</label
+                      >{{ $t('workspace.settings.generatePairing.nameLabel') }}</label
                     >
                     <q-input
                       v-model="deviceNameInput"
                       filled
-                      placeholder="e.g. Counter Tablet 1"
+                      :placeholder="$t('workspace.settings.generatePairing.nameLabel')"
                       color="primary"
                       class="custom-input"
-                      :rules="[(val) => !!val || 'Device name is required']"
+                      :rules="[(val) => !!val || $t('workspace.settings.generatePairing.nameRequired')]"
                       hide-bottom-space
                     />
                   </div>
@@ -320,7 +430,7 @@
                   <q-btn
                     type="submit"
                     color="primary"
-                    label="Generate Code"
+                    :label="$t('workspace.settings.generatePairing.generateBtn')"
                     icon="key"
                     class="full-width rounded-btn btn-gradient text-weight-bold cursor-pointer"
                     :loading="generatingCode"
@@ -340,7 +450,7 @@
         class="q-pa-md bg-white text-slate-900"
       >
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-bold text-red-9">Delete Workspace</div>
+          <div class="text-h6 text-bold text-red-9">{{ $t('workspace.settings.deleteDialog.title') }}</div>
           <q-space />
           <q-btn
             icon="close"
@@ -355,20 +465,14 @@
 
         <q-card-section class="q-pt-md">
           <p class="text-sm text-slate-600 q-mb-md">
-            This will permanently delete
-            <span class="text-weight-bold text-slate-900">{{ workspaceName }}</span
-            >. Please type the workspace slug
-            <span class="text-weight-bold text-red-9 select-all font-mono">{{
-              workspaceSlug
-            }}</span>
-            to confirm.
+            {{ $t('workspace.settings.deleteDialog.desc', { name: workspaceName, slug: workspaceSlug }) }}
           </p>
 
           <q-input
             v-model="deleteConfirmSlug"
             type="text"
             filled
-            placeholder="Type slug to confirm"
+            :placeholder="$t('workspace.settings.deleteDialog.placeholder')"
             color="negative"
             class="custom-input q-mb-md"
             hide-bottom-space
@@ -378,14 +482,14 @@
           <div class="row justify-end q-gutter-sm">
             <q-btn
               flat
-              label="Cancel"
+              :label="$t('workspace.settings.deleteDialog.cancelBtn')"
               v-close-popup
               :disable="deleting"
               class="cursor-pointer text-slate-500"
             />
             <q-btn
               color="negative"
-              label="Permanently Delete"
+              :label="$t('workspace.settings.deleteDialog.deleteBtn')"
               :loading="deleting"
               :disabled="deleteConfirmSlug !== workspaceSlug"
               class="q-px-md cursor-pointer text-weight-bold rounded-btn"
@@ -406,27 +510,23 @@
           <q-avatar size="48px" color="red-1" text-color="red-5" class="q-mb-md">
             <q-icon name="link_off" size="28px" />
           </q-avatar>
-          <div class="text-h6 text-bold text-slate-800">Disconnect Terminal?</div>
+          <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.settings.disconnectDialog.title') }}</div>
           <p class="text-sm text-slate-500 q-mt-sm">
-            Are you sure you want to disconnect
-            <span class="text-weight-bold text-slate-900">{{
-              deviceToDisconnect?.device_name
-            }}</span
-            >? It will immediately block access and logout the terminal.
+            {{ $t('workspace.settings.disconnectDialog.desc', { name: deviceToDisconnect?.device_name || '' }) }}
           </p>
         </q-card-section>
 
         <q-card-actions align="right" class="q-gutter-sm">
           <q-btn
             flat
-            label="Cancel"
+            :label="$t('workspace.settings.disconnectDialog.cancelBtn')"
             color="slate-500"
             v-close-popup
             class="cursor-pointer animate-fade"
           />
           <q-btn
             color="red"
-            label="Disconnect"
+            :label="$t('workspace.settings.disconnectDialog.confirmBtn')"
             class="q-px-md text-weight-bold rounded-btn cursor-pointer"
             v-close-popup
             @click="deviceToDisconnect && handleDisconnectDevice(deviceToDisconnect.id)"
@@ -440,15 +540,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
 import { useTenantStore } from '../../stores/tenant';
 import { updateTenantSettings, deleteTenant } from '../../services/multiTenant';
 import { generatePairingCode } from '../../services/staff';
 import { supabase } from '../../boot/supabase';
+import { showSuccess, showInfo, showApiError } from '../../composables/useFeedback';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const tenantStore = useTenantStore();
-const $q = useQuasar();
+const { t } = useI18n();
 
 const activeTab = ref('general');
 
@@ -456,6 +557,52 @@ const workspaceName = ref('');
 const workspaceSlug = ref('');
 const logoUrl = ref('');
 const themeColor = ref('');
+
+const prefCurrency = ref('BDT');
+const prefTimezone = ref('Asia/Dhaka');
+const prefRegion = ref('BD');
+const prefDateFormat = ref('DD/MM/YYYY');
+const savingPreferences = ref(false);
+
+const currencyOptions = [
+  { label: 'Bangladeshi Taka (BDT)', value: 'BDT' },
+  { label: 'US Dollar (USD)', value: 'USD' },
+  { label: 'Euro (EUR)', value: 'EUR' },
+  { label: 'Indian Rupee (INR)', value: 'INR' },
+  { label: 'British Pound (GBP)', value: 'GBP' },
+];
+
+const timezoneOptions = [
+  { label: 'Asia/Dhaka (Bangladesh)', value: 'Asia/Dhaka' },
+  { label: 'Asia/Kolkata (India)', value: 'Asia/Kolkata' },
+  { label: 'Asia/Dubai', value: 'Asia/Dubai' },
+  { label: 'UTC', value: 'UTC' },
+  { label: 'Europe/London', value: 'Europe/London' },
+  { label: 'America/New_York', value: 'America/New_York' },
+];
+
+const regionOptions = [
+  { label: 'Bangladesh (BD)', value: 'BD' },
+  { label: 'India (IN)', value: 'IN' },
+  { label: 'United Arab Emirates (AE)', value: 'AE' },
+  { label: 'United Kingdom (GB)', value: 'GB' },
+  { label: 'United States (US)', value: 'US' },
+];
+
+const dateFormatOptions = [
+  { label: 'DD/MM/YYYY (31/12/2026)', value: 'DD/MM/YYYY' },
+  { label: 'MM/DD/YYYY (12/31/2026)', value: 'MM/DD/YYYY' },
+  { label: 'YYYY-MM-DD (2026-12-31)', value: 'YYYY-MM-DD' },
+];
+
+const preferencePreview = computed(() => {
+  const sample = new Date(2026, 11, 31);
+  let dateStr = '2026-12-31';
+  if (prefDateFormat.value === 'DD/MM/YYYY') dateStr = '31/12/2026';
+  else if (prefDateFormat.value === 'MM/DD/YYYY') dateStr = '12/31/2026';
+  void sample;
+  return `${prefCurrency.value} · ${prefTimezone.value} · ${prefRegion.value} · ${dateStr}`;
+});
 
 const saving = ref(false);
 const errorMsg = ref('');
@@ -492,25 +639,25 @@ const generatingCode = ref(false);
 const confirmDisconnect = ref(false);
 const deviceToDisconnect = ref<PairedDevice | null>(null);
 
-const deviceColumns: DeviceColumn[] = [
+const deviceColumns = computed<DeviceColumn[]>(() => [
   {
     name: 'device_name',
-    label: 'Device Name',
+    label: t('workspace.settings.kioskDevices.cols.name'),
     field: 'device_name',
     align: 'left',
     sortable: true,
   },
-  { name: 'status', label: 'Status', field: 'status', align: 'left' },
-  { name: 'paired_at', label: 'Paired At', field: 'paired_at', align: 'left', sortable: true },
+  { name: 'status', label: t('workspace.settings.kioskDevices.cols.status'), field: 'status', align: 'left' },
+  { name: 'paired_at', label: t('workspace.settings.kioskDevices.cols.pairedAt'), field: 'paired_at', align: 'left', sortable: true },
   {
     name: 'last_active_at',
-    label: 'Last Active',
+    label: t('workspace.settings.kioskDevices.cols.lastActive'),
     field: 'last_active_at',
     align: 'left',
     sortable: true,
   },
-  { name: 'actions', label: 'Actions', field: 'actions', align: 'right' },
-];
+  { name: 'actions', label: t('workspace.settings.kioskDevices.cols.actions'), field: 'actions', align: 'right' },
+]);
 
 const isOwner = computed(() => {
   return tenantStore.activeRole === 'Owner' || tenantStore.isSuperadmin;
@@ -530,6 +677,50 @@ const loadTenantSettingsData = () => {
   workspaceSlug.value = tenantStore.activeTenant.slug;
   logoUrl.value = tenantStore.activeSettings?.logo_url || '';
   themeColor.value = tenantStore.activeSettings?.theme_color || '';
+
+  const prefs = (tenantStore.activeSettings?.preferences || {}) as {
+    localization?: {
+      currency?: string;
+      timezone?: string;
+      region?: string;
+      date_format?: string;
+    };
+  };
+  const loc = prefs.localization || {};
+  prefCurrency.value = loc.currency || 'BDT';
+  prefTimezone.value = loc.timezone || 'Asia/Dhaka';
+  prefRegion.value = loc.region || 'BD';
+  prefDateFormat.value = loc.date_format || 'DD/MM/YYYY';
+};
+
+const savePreferences = async () => {
+  if (!tenantStore.activeTenant || !isOwner.value) return;
+  savingPreferences.value = true;
+  try {
+    const existing =
+      (tenantStore.activeSettings?.preferences as Record<string, unknown> | null) || {};
+    const existingLoc = (existing.localization as Record<string, unknown> | undefined) || {};
+
+    const updated = await updateTenantSettings(tenantStore.activeTenant.id, {
+      preferences: {
+        ...existing,
+        localization: {
+          ...existingLoc,
+          currency: prefCurrency.value,
+          timezone: prefTimezone.value,
+          region: prefRegion.value,
+          date_format: prefDateFormat.value,
+        },
+      },
+    });
+
+    tenantStore.activeSettings = updated;
+    showSuccess(t('workspace.settings.messages.prefUpdated'));
+  } catch (err) {
+    await showApiError(err, t('workspace.settings.messages.prefFailed'));
+  } finally {
+    savingPreferences.value = false;
+  }
 };
 
 const saveSettings = async () => {
@@ -545,10 +736,10 @@ const saveSettings = async () => {
 
     // Refresh settings in store
     tenantStore.activeSettings = updated;
-    successMsg.value = 'Workspace settings updated successfully!';
+    successMsg.value = t('workspace.settings.messages.settingsUpdated');
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'Failed to update settings.';
+    errorMsg.value = error.message || t('workspace.settings.messages.settingsFailed');
   } finally {
     saving.value = false;
   }
@@ -584,7 +775,7 @@ const handleDeleteWorkspace = async () => {
     await router.push('/auth/no-tenant');
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'Failed to delete workspace.';
+    errorMsg.value = error.message || t('workspace.settings.messages.deleteFailed');
   } finally {
     deleting.value = false;
   }
@@ -650,18 +841,9 @@ const handleGeneratePairingCode = async () => {
     expires.setMinutes(expires.getMinutes() + 30);
     activePairingExpires.value = expires.toISOString();
 
-    $q.notify({
-      type: 'positive',
-      message: 'Pairing code generated successfully!',
-      position: 'top',
-    });
+    showSuccess(t('workspace.settings.messages.pairingSuccess'));
   } catch (err) {
-    const error = err as Error;
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Failed to generate pairing code.',
-      position: 'top',
-    });
+    await showApiError(err, t('workspace.settings.messages.pairingFailed'));
   } finally {
     generatingCode.value = false;
   }
@@ -682,18 +864,9 @@ const handleRevokePairingCode = async () => {
     activePairingDeviceName.value = '';
     activePairingExpires.value = null;
 
-    $q.notify({
-      type: 'info',
-      message: 'Pairing code revoked.',
-      position: 'top',
-    });
+    showInfo(t('workspace.settings.messages.revokeSuccess'));
   } catch (err) {
-    const error = err as Error;
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Failed to revoke pairing code.',
-      position: 'top',
-    });
+    await showApiError(err, t('workspace.settings.messages.revokeFailed'));
   }
 };
 
@@ -708,20 +881,11 @@ const handleDisconnectDevice = async (deviceId: string) => {
 
     if (error) throw error;
 
-    $q.notify({
-      type: 'positive',
-      message: 'Terminal device disconnected successfully.',
-      position: 'top',
-    });
+    showSuccess(t('workspace.settings.messages.disconnectSuccess'));
 
     await loadPairedDevices();
   } catch (err) {
-    const error = err as Error;
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Failed to disconnect device.',
-      position: 'top',
-    });
+    await showApiError(err, t('workspace.settings.messages.disconnectFailed'));
   }
 };
 

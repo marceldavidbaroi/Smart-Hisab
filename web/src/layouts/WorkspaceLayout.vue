@@ -17,11 +17,31 @@
           <div class="text-weight-bold text-dark text-sm">
             {{ tenantStore.activeTenant?.name }}
           </div>
-          <div class="text-caption text-grey-7 q-ml-sm row items-center no-wrap" style="font-size: 11px;">
-            <span class="gt-xs text-grey-5">powered by</span>
+          <div
+            class="text-caption text-grey-7 q-ml-sm row items-center no-wrap"
+            style="font-size: 11px"
+          >
+            <span class="gt-xs text-grey-5">{{ $t('layouts.workspace.poweredBy') }}</span>
             <span class="text-weight-bold text-primary q-ml-xs">Smart Hisab</span>
           </div>
         </div>
+
+        <q-space />
+
+        <!-- Language Switcher Toggle -->
+        <q-btn-toggle
+          v-model="locale"
+          toggle-color="primary"
+          color="indigo-1"
+          text-color="primary"
+          toggle-text-color="white"
+          flat
+          dense
+          unelevated
+          class="q-mr-sm text-xs text-weight-bold"
+          style="font-size: 11px; height: 32px; border-radius: 8px; padding: 2px; border: 1.5px solid var(--q-primary);"
+          :options="toggleOptions"
+        />
       </q-toolbar>
     </q-header>
 
@@ -40,8 +60,8 @@
       <div class="drawer-content flex flex-col justify-between full-width">
         <div class="full-width">
           <!-- Workspace Title / Header / Tenant Selector -->
-          <div 
-            class="brand-section border-bottom flex items-center q-px-sm full-width" 
+          <div
+            class="brand-section border-bottom flex items-center q-px-sm full-width"
             :class="miniState ? 'justify-center' : 'justify-start'"
           >
             <!-- Tenant Selector Dropdown (Shown ONLY if user has multiple tenants) -->
@@ -57,7 +77,12 @@
             >
               <template #label>
                 <div class="row items-center no-wrap text-left full-width">
-                  <q-icon name="workspaces" size="20px" class="text-primary" :class="{ 'q-mr-sm': !miniState }" />
+                  <q-icon
+                    name="workspaces"
+                    size="20px"
+                    class="text-primary"
+                    :class="{ 'q-mr-sm': !miniState }"
+                  />
                   <div v-if="!miniState" class="col text-ellipsis overflow-hidden">
                     <div class="text-weight-bold text-dark text-xs leading-none">
                       {{ tenantStore.activeTenant?.name || 'Workspace' }}
@@ -66,14 +91,19 @@
                       {{ tenantStore.activeRole || 'Member' }}
                     </div>
                   </div>
-                  <q-icon v-if="!miniState" name="arrow_drop_down" size="16px" class="text-grey-7 q-ml-xs" />
+                  <q-icon
+                    v-if="!miniState"
+                    name="arrow_drop_down"
+                    size="16px"
+                    class="text-grey-7 q-ml-xs"
+                  />
                 </div>
               </template>
 
               <!-- Dropdown List of Tenants -->
               <q-list class="q-py-xs bg-white text-dark border-all">
                 <q-item-label header class="text-grey-7 text-xs font-semibold q-pb-xs">
-                  Switch Workspace
+                  {{ $t('layouts.workspace.switchWorkspace') }}
                 </q-item-label>
 
                 <q-item
@@ -95,11 +125,14 @@
                     <q-item-label class="text-weight-bold text-xs">
                       {{ membership.tenants?.name }}
                     </q-item-label>
-                    <q-item-label caption class="text-grey-6" style="font-size: 10px;">
+                    <q-item-label caption class="text-grey-6" style="font-size: 10px">
                       {{ membership.tenant_roles?.name || 'Member' }}
                     </q-item-label>
                   </q-item-section>
-                  <q-item-section side v-if="membership.tenants?.id === tenantStore.activeTenant?.id">
+                  <q-item-section
+                    side
+                    v-if="membership.tenants?.id === tenantStore.activeTenant?.id"
+                  >
                     <q-icon name="check" color="primary" size="16px" />
                   </q-item-section>
                 </q-item>
@@ -108,7 +141,12 @@
 
             <!-- Otherwise, show a static tenant brand header (Single Tenant case) -->
             <div v-else class="row items-center no-wrap q-pl-xs">
-              <q-icon name="workspaces" size="20px" class="text-primary" :class="{ 'q-mr-sm': !miniState }" />
+              <q-icon
+                name="workspaces"
+                size="20px"
+                class="text-primary"
+                :class="{ 'q-mr-sm': !miniState }"
+              />
               <div v-if="!miniState" class="q-ml-xs">
                 <div class="text-weight-bold text-dark text-xs leading-tight">
                   {{ tenantStore.activeTenant?.name || 'Workspace' }}
@@ -122,7 +160,11 @@
 
           <!-- User Profile Info (Top of Drawer) -->
           <div class="border-bottom q-py-xs bg-white full-width">
-            <q-item clickable class="q-px-sm full-width" :to="`/${tenantStore.activeTenant?.slug}/settings`">
+            <q-item
+              clickable
+              class="q-px-sm full-width"
+              :to="`/${tenantStore.activeTenant?.slug}/settings`"
+            >
               <q-item-section avatar>
                 <q-avatar size="28px" class="user-avatar text-white">
                   <img
@@ -131,15 +173,26 @@
                   />
                   <span v-else>{{ userInitials }}</span>
                 </q-avatar>
-                <q-tooltip v-if="miniState" anchor="center right" self="center left" :offset="[10, 10]">
-                  {{ tenantStore.userProfile?.full_name || 'User Profile' }} ({{ tenantStore.user?.email }})
+                <q-tooltip
+                  v-if="miniState"
+                  anchor="center right"
+                  self="center left"
+                  :offset="[10, 10]"
+                >
+                  {{ tenantStore.userProfile?.full_name || 'User Profile' }} ({{
+                    tenantStore.user?.email
+                  }})
                 </q-tooltip>
               </q-item-section>
               <q-item-section v-if="!miniState">
                 <q-item-label class="text-weight-bold text-xs text-dark leading-tight">
                   {{ tenantStore.userProfile?.full_name || 'User Profile' }}
                 </q-item-label>
-                <q-item-label caption class="text-caption text-grey-7 leading-none q-mt-xs" style="font-size: 10px;">
+                <q-item-label
+                  caption
+                  class="text-caption text-grey-7 leading-none q-mt-xs"
+                  style="font-size: 10px"
+                >
                   {{ tenantStore.user?.email }}
                 </q-item-label>
               </q-item-section>
@@ -161,7 +214,12 @@
                 <q-icon :name="item.icon" size="22px" />
               </q-item-section>
               <q-item-section v-if="!miniState">{{ item.label }}</q-item-section>
-              <q-tooltip v-if="miniState" anchor="center right" self="center left" :offset="[10, 10]">
+              <q-tooltip
+                v-if="miniState"
+                anchor="center right"
+                self="center left"
+                :offset="[10, 10]"
+              >
                 {{ item.label }}
               </q-tooltip>
             </q-item>
@@ -170,19 +228,20 @@
 
         <!-- Sign Out at Drawer Bottom -->
         <div class="border-top q-py-xs bg-white full-width">
-          <q-item 
-            clickable 
-            class="q-px-sm text-negative full-width"
-            @click="handleSignOut"
-          >
+          <q-item clickable class="q-px-sm text-negative full-width" @click="handleSignOut">
             <q-item-section avatar>
               <q-icon name="logout" size="20px" color="negative" />
-              <q-tooltip v-if="miniState" anchor="center right" self="center left" :offset="[10, 10]">
-                Sign Out
+              <q-tooltip
+                v-if="miniState"
+                anchor="center right"
+                self="center left"
+                :offset="[10, 10]"
+              >
+                {{ $t('layouts.workspace.signOut') }}
               </q-tooltip>
             </q-item-section>
             <q-item-section v-if="!miniState">
-              <q-item-label class="text-xs text-weight-bold">Sign Out</q-item-label>
+              <q-item-label class="text-xs text-weight-bold">{{ $t('layouts.workspace.signOut') }}</q-item-label>
             </q-item-section>
           </q-item>
         </div>
@@ -191,6 +250,7 @@
 
     <!-- Page Container -->
     <q-page-container class="bg-grey-2 text-dark min-h-screen">
+      <ActiveSessionBanner />
       <router-view v-slot="{ Component }">
         <transition name="fade-slide" mode="out-in">
           <component :is="Component" />
@@ -205,7 +265,7 @@
         class="q-pa-md bg-white text-dark"
       >
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-bold text-dark">Create New Workspace</div>
+          <div class="text-h6 text-bold text-dark">{{ $t('layouts.workspace.createNewWorkspace') }}</div>
           <q-space />
           <q-btn
             icon="close"
@@ -231,9 +291,7 @@
 
           <q-form @submit.prevent="handleCreateWorkspace" class="q-gutter-y-md">
             <div>
-              <label class="text-grey-7 font-semibold q-mb-xs block text-xs"
-                >Workspace Name</label
-              >
+              <label class="text-grey-7 font-semibold q-mb-xs block text-xs">{{ $t('layouts.workspace.workspaceName') }}</label>
               <q-input
                 v-model="newWorkspaceName"
                 type="text"
@@ -241,7 +299,7 @@
                 placeholder="Acme Corp"
                 color="primary"
                 class="custom-input"
-                :rules="[(val) => !!val || 'Workspace name is required']"
+                :rules="[(val) => !!val || $t('layouts.workspace.workspaceNameRequired')]"
                 hide-bottom-space
                 @update:model-value="autoGenerateSlug"
               />
@@ -249,7 +307,7 @@
 
             <div>
               <label class="text-grey-7 font-semibold q-mb-xs block text-xs"
-                >Workspace Slug (URL)</label
+                >{{ $t('layouts.workspace.workspaceSlug') }}</label
               >
               <q-input
                 v-model="newWorkspaceSlug"
@@ -259,10 +317,10 @@
                 color="primary"
                 class="custom-input"
                 :rules="[
-                  (val) => !!val || 'Workspace slug is required',
+                  (val) => !!val || $t('layouts.workspace.workspaceSlugRequired'),
                   (val) =>
                     /^[a-z0-9-]+$/.test(val) ||
-                    'Slug must only contain lowercase letters, numbers, and dashes',
+                    $t('layouts.workspace.workspaceSlugInvalid'),
                 ]"
                 hide-bottom-space
                 prefix="app.domain.com/"
@@ -272,7 +330,7 @@
             <div class="row justify-end q-mt-lg q-gutter-sm">
               <q-btn
                 flat
-                label="Cancel"
+                :label="$t('common.cancel')"
                 v-close-popup
                 :disable="createLoading"
                 class="cursor-pointer text-grey-7"
@@ -280,7 +338,7 @@
               <q-btn
                 type="submit"
                 color="primary"
-                label="Create Workspace"
+                :label="$t('layouts.workspace.createWorkspace')"
                 :loading="createLoading"
                 class="q-px-md cursor-pointer btn-gradient text-weight-bold"
               />
@@ -293,18 +351,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useTenantStore } from '../stores/tenant';
+import { useSessionStore } from '../stores/session';
 import { createTenant } from '../services/multiTenant';
+import ActiveSessionBanner from '../components/sessions/ActiveSessionBanner.vue';
+import { useLocale } from '../composables/useLocale';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const $q = useQuasar();
 const tenantStore = useTenantStore();
+const sessionStore = useSessionStore();
+const { locale, toggleOptions } = useLocale();
+const { t } = useI18n();
+
 const leftDrawerOpen = ref(false);
 const isPinned = ref(false);
 const miniState = ref(true);
+
+const loadActiveSession = async () => {
+  if (tenantStore.isFeatureEnabled('shift-sessions')) {
+    try {
+      await sessionStore.fetchActiveSession();
+    } catch (err) {
+      console.error('Failed to load active session:', err);
+    }
+  } else {
+    sessionStore.clearSession();
+  }
+};
+
+onMounted(() => {
+  void loadActiveSession();
+});
+
+watch(
+  () => tenantStore.activeTenant?.id,
+  () => {
+    void loadActiveSession();
+  },
+);
 
 const showCreateWorkspaceDialog = ref(false);
 const newWorkspaceName = ref('');
@@ -345,26 +434,67 @@ interface NavItem {
   toName: string;
   requiredFeature?: string;
   requiredPermission?: string;
+  requiredModulePermission?: { module: string; permission: string };
 }
 
 const navItems = computed<NavItem[]>(() => {
   const items: NavItem[] = [
     {
-      label: 'Dashboard',
+      label: t('nav.dashboard'),
       icon: 'dashboard',
       toName: 'workspace-dashboard',
     },
     {
-      label: 'Members',
+      label: t('nav.members'),
       icon: 'people',
       toName: 'workspace-members',
       requiredPermission: 'members',
     },
     {
-      label: 'Settings',
+      label: t('nav.settings'),
       icon: 'settings',
       toName: 'workspace-settings',
       requiredPermission: 'settings',
+    },
+    {
+      label: t('nav.shiftsConfig'),
+      icon: 'schedule',
+      toName: 'workspace-shifts',
+      requiredFeature: 'shift-sessions',
+      requiredModulePermission: {
+        module: 'operational_shifts',
+        permission: 'shifts_config_read',
+      },
+    },
+    {
+      label: t('nav.sessions'),
+      icon: 'history',
+      toName: 'workspace-sessions',
+      requiredFeature: 'shift-sessions',
+      requiredModulePermission: {
+        module: 'operational_shifts',
+        permission: 'sessions_read',
+      },
+    },
+    {
+      label: t('nav.ledger'),
+      icon: 'account_balance_wallet',
+      toName: 'workspace-ledger',
+      requiredFeature: 'financial-ledger',
+      requiredModulePermission: {
+        module: 'financial_ledger',
+        permission: 'ledger_read',
+      },
+    },
+    {
+      label: t('nav.finance'),
+      icon: 'assessment',
+      toName: 'workspace-finance',
+      requiredFeature: 'financial-ledger',
+      requiredModulePermission: {
+        module: 'financial_ledger',
+        permission: 'dashboard_read',
+      },
     },
   ];
 
@@ -373,6 +503,15 @@ const navItems = computed<NavItem[]>(() => {
       return false;
     }
     if (item.requiredPermission && !tenantStore.hasPermission(item.requiredPermission, 'read')) {
+      return false;
+    }
+    if (
+      item.requiredModulePermission &&
+      !tenantStore.hasModulePermission(
+        item.requiredModulePermission.module,
+        item.requiredModulePermission.permission,
+      )
+    ) {
       return false;
     }
     return true;
@@ -410,8 +549,6 @@ const getInitials = (name: string) => {
     .substring(0, 2)
     .toUpperCase();
 };
-
-
 
 const userInitials = computed(() => {
   const profileName = tenantStore.userProfile?.full_name || tenantStore.user?.email || '';
@@ -476,7 +613,7 @@ const handleSignOut = async () => {
   width: 100%;
   border-radius: 8px;
   padding: 4px;
-  
+
   &:hover {
     background: rgba(0, 0, 0, 0.03);
   }

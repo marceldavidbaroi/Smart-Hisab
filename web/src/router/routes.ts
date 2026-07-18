@@ -111,6 +111,54 @@ const routes: RouteRecordRaw[] = [
         name: 'counter-dashboard',
         component: () => import('@/pages/workspace/CounterDashboard.vue'),
       },
+      {
+        path: 'shifts',
+        name: 'workspace-shifts',
+        component: () => import('@/pages/workspace/WorkspaceShifts.vue'),
+        meta: {
+          requiredFeature: 'shift-sessions',
+          requiredModulePermission: {
+            module: 'operational_shifts',
+            permission: 'shifts_config_read',
+          },
+        },
+      },
+      {
+        path: 'sessions',
+        name: 'workspace-sessions',
+        component: () => import('@/pages/workspace/WorkspaceSessions.vue'),
+        meta: {
+          requiredFeature: 'shift-sessions',
+          requiredModulePermission: {
+            module: 'operational_shifts',
+            permission: 'sessions_read',
+          },
+        },
+      },
+      {
+        path: 'ledger',
+        name: 'workspace-ledger',
+        component: () => import('@/pages/workspace/WorkspaceLedger.vue'),
+        meta: {
+          requiredFeature: 'financial-ledger',
+          requiredModulePermission: {
+            module: 'financial_ledger',
+            permission: 'ledger_read',
+          },
+        },
+      },
+      {
+        path: 'finance',
+        name: 'workspace-finance',
+        component: () => import('@/pages/workspace/WorkspaceFinanceDashboard.vue'),
+        meta: {
+          requiredFeature: 'financial-ledger',
+          requiredModulePermission: {
+            module: 'financial_ledger',
+            permission: 'dashboard_read',
+          },
+        },
+      },
     ],
   },
 

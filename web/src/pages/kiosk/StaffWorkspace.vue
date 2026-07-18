@@ -1,10 +1,18 @@
+<!--
+  Lean Mode Checklist (Phase 4):
+  - [x] Staff header & Clock Out visible
+  - [x] Operational session banner visible
+  - [x] SessionCashBalance chip visible (Manager/Cashier + cash_balance_read)
+  - [x] Active-session ledger read-only list visible (session_ledger_read)
+  - [x] Hide unbuilt action cards (Record Meal, POS Sale, Cash Advance) when feature flags are disabled
+-->
 <template>
   <q-page class="bg-grey-2 text-dark q-pa-md">
     <div class="workspace-container q-mx-auto">
       <!-- Welcome & Shift Header -->
       <div class="row items-center justify-between q-mb-lg q-col-gutter-sm">
         <div>
-          <h1 class="text-h4 text-weight-bold q-my-none text-dark">Kiosk Workspace</h1>
+          <h1 class="text-h4 text-weight-bold q-my-none text-dark">{{ $t('kioskUI.workspace.title') }}</h1>
           <p class="text-subtitle2 text-grey-7 q-my-none">
             {{ currentStaffName }} —
             <span class="capitalize text-primary font-semibold">{{ currentStaffRole }}</span>
@@ -14,14 +22,14 @@
           <q-card class="flat bordered bg-white q-px-md q-py-sm row items-center text-dark">
             <q-icon name="timer" size="20px" color="primary" class="q-mr-sm" />
             <div class="column">
-              <span class="text-caption text-grey-7 leading-none">Shift Duration</span>
+              <span class="text-caption text-grey-7 leading-none">{{ $t('kioskUI.workspace.shiftDuration') }}</span>
               <span class="text-subtitle2 text-weight-bold font-mono">{{ shiftTimeStr }}</span>
             </div>
           </q-card>
           <q-btn
             color="red-5"
             icon="logout"
-            label="Clock Out"
+            :label="$t('kioskUI.workspace.clockOutBtn')"
             class="rounded-btn q-px-md text-weight-bold cursor-pointer"
             style="min-height: 44px"
             @click="confirmClockOut = true"
@@ -30,14 +38,97 @@
         </div>
       </div>
 
+      <!-- Operational Session Control Banner -->
+      <div v-if="isShiftSessionsEnabled" class="q-mb-lg">
+        <q-card flat bordered class="bg-white text-dark q-pa-md border-all">
+          <div class="row items-center justify-between no-wrap">
+            <div class="row items-center q-gutter-x-md">
+              <q-avatar
+                size="48px"
+                :color="sessionStore.hasActiveSession ? 'green-1' : 'red-1'"
+                :text-color="sessionStore.hasActiveSession ? 'positive' : 'negative'"
+              >
+                <q-icon
+                  :name="sessionStore.hasActiveSession ? 'check_circle' : 'error_outline'"
+                  size="28px"
+                />
+              </q-avatar>
+              <div>
+                <div class="text-subtitle1 text-weight-bold">
+                  {{
+                    sessionStore.hasActiveSession
+                      ? $t('kioskUI.workspace.statusOpen')
+                      : $t('kioskUI.workspace.statusClosed')
+                  }}
+                </div>
+                <div
+                  v-if="sessionStore.hasActiveSession && sessionStore.activeSession"
+                  class="text-caption text-grey-7"
+                >
+                  {{ $t('kioskUI.workspace.shiftLabel') }}
+                  <strong class="text-slate-800">{{
+                    sessionStore.activeSession.shifts?.name || $t('sessions.banner.loadingShift')
+                  }}</strong>
+                  | {{ $t('kioskUI.workspace.businessDateLabel') }}
+                  <strong class="text-slate-800">{{
+                    sessionStore.activeSession.business_date
+                  }}</strong>
+                  | {{ $t('kioskUI.workspace.openedByLabel') }} <strong class="text-slate-800">{{ currentStaffName }}</strong> |
+                  {{ $t('kioskUI.workspace.openingCashLabel') }}
+                  <strong class="text-slate-800"
+                    >{{ sessionStore.activeSession.opening_cash }} BDT</strong
+                  >
+                </div>
+                <div v-else class="text-caption text-red-5 font-medium">
+                  {{ $t('kioskUI.workspace.sessionBlockedWarning') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="row q-gutter-x-sm items-center">
+              <SessionCashBalance
+                v-if="
+                  isFinancialLedgerEnabled && canReadCashBalance && sessionStore.hasActiveSession
+                "
+                :balance="ledgerStore.cashBalance"
+                class="q-mr-sm"
+              />
+              <q-btn
+                v-if="!sessionStore.hasActiveSession && canOpenSession"
+                color="primary"
+                icon="vpn_key"
+                :label="$t('sessions.open.openBtn')"
+                unelevated
+                dense
+                class="q-px-md text-weight-bold rounded-btn"
+                style="min-height: 40px"
+                @click="showOpenDialog = true"
+              />
+              <q-btn
+                v-if="sessionStore.hasActiveSession && canCloseSession"
+                color="red-5"
+                icon="lock"
+                :label="$t('sessions.close.closeBtn')"
+                unelevated
+                dense
+                class="q-px-md text-weight-bold rounded-btn"
+                style="min-height: 40px"
+                @click="showCloseDialog = true"
+              />
+            </div>
+          </div>
+        </q-card>
+      </div>
+
       <!-- Quick Action Cards Grid -->
       <div class="row q-col-gutter-md q-mb-lg">
         <!-- Action 1: POS Sale -->
-        <div class="col-12 col-sm-4">
+        <div v-if="isMealManagementEnabled" class="col-12 col-sm-4">
           <q-card
             flat
             bordered
             class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
             role="button"
             tabindex="0"
             v-ripple
@@ -46,19 +137,20 @@
             <q-avatar size="56px" color="green-1" text-color="green-8" class="q-mb-md">
               <q-icon name="shopping_cart" size="28px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">POS Cash Sale</div>
+            <div class="text-subtitle1 text-weight-bold">{{ $t('kioskUI.workspace.actions.posSale.title') }}</div>
             <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
-              Record a direct cash purchase or walk-in transaction.
+              {{ $t('kioskUI.workspace.actions.posSale.desc') }}
             </p>
           </q-card>
         </div>
 
         <!-- Action 2: Record Meal -->
-        <div class="col-12 col-sm-4">
+        <div v-if="isMealManagementEnabled" class="col-12 col-sm-4">
           <q-card
             flat
             bordered
             class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
             role="button"
             tabindex="0"
             v-ripple
@@ -67,19 +159,20 @@
             <q-avatar size="56px" color="orange-1" text-color="orange-8" class="q-mb-md">
               <q-icon name="restaurant" size="28px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">Record Meal</div>
+            <div class="text-subtitle1 text-weight-bold">{{ $t('kioskUI.workspace.actions.recordMeal.title') }}</div>
             <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
-              Deduct or log meals for staff and contract employees.
+              {{ $t('kioskUI.workspace.actions.recordMeal.desc') }}
             </p>
           </q-card>
         </div>
 
         <!-- Action 3: Cash Advance -->
-        <div class="col-12 col-sm-4">
+        <div v-if="isStaffPayrollEnabled" class="col-12 col-sm-4">
           <q-card
             flat
             bordered
             class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            :class="{ 'opacity-50 pointer-events-none': isActionBlocked || !canLogAdvance }"
             role="button"
             tabindex="0"
             v-ripple
@@ -88,24 +181,24 @@
             <q-avatar size="56px" color="blue-1" text-color="blue-8" class="q-mb-md">
               <q-icon name="payments" size="28px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">Cash Advance</div>
+            <div class="text-subtitle1 text-weight-bold">{{ $t('kioskUI.workspace.actions.cashAdvance.title') }}</div>
             <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
-              Distribute/request cash payroll advances for staff.
+              {{ $t('kioskUI.workspace.actions.cashAdvance.desc') }}
             </p>
           </q-card>
         </div>
       </div>
 
       <!-- Shift History Logs Table -->
-      <q-card class="flat bordered bg-white text-dark q-pa-md">
-        <div class="text-h6 text-weight-bold q-mb-md">Logged Transactions (This Shift)</div>
+      <q-card class="flat bordered bg-white text-dark q-pa-md border-all">
+        <div class="text-h6 text-weight-bold q-mb-md">{{ $t('workspace.ledger.cardTitle') }}</div>
         <q-table
-          :rows="shiftLogs"
-          :columns="logColumns"
+          :rows="isFinancialLedgerEnabled && canReadSessionLedger ? ledgerStore.entries : shiftLogs"
+          :columns="isFinancialLedgerEnabled && canReadSessionLedger ? ledgerColumns : logColumns"
           row-key="id"
           flat
           class="bg-white text-dark"
-          no-data-label="No transactions logged during this session."
+          :no-data-label="$t('ledger.table.noTransactions')"
           dense
         >
           <!-- Custom Type Badges -->
@@ -123,7 +216,19 @@
           <!-- Custom Time Format -->
           <template #body-cell-time="props">
             <q-td :props="props">
-              {{ formatTime(props.row.time) }}
+              {{ formatTime(props.row.created_at || props.row.time) }}
+            </q-td>
+          </template>
+
+          <!-- Custom Value / Amount Format -->
+          <template #body-cell-value="props">
+            <q-td :props="props">
+              <span v-if="isFinancialLedgerEnabled && canReadSessionLedger">
+                {{ formatMoney(props.row.amount) }}
+              </span>
+              <span v-else>
+                {{ props.value }}
+              </span>
             </q-td>
           </template>
         </q-table>
@@ -135,19 +240,18 @@
       <q-card class="bg-white text-dark border-all rounded-borders q-pa-md">
         <q-card-section class="row items-center">
           <q-avatar icon="logout" color="red-1" text-color="red-9" class="q-mr-md" />
-          <span class="text-h6 text-weight-bold">Clock Out / Logout?</span>
+          <span class="text-h6 text-weight-bold">{{ $t('kioskUI.workspace.clockOutDialog.title') }}</span>
         </q-card-section>
 
         <q-card-section class="q-py-md text-grey-7">
-          This will terminate your current active shift session on this terminal. Any uncommitted
-          logs will be lost.
+          {{ $t('kioskUI.workspace.clockOutDialog.body') }}
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" v-close-popup color="grey-7" />
+          <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" />
           <q-btn
             flat
-            label="Clock Out"
+            :label="$t('kioskUI.workspace.clockOutDialog.confirmBtn')"
             color="red-5"
             @click="handleClockOut"
             v-close-popup
@@ -161,7 +265,7 @@
     <q-dialog v-model="showPosDialog" persistent>
       <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">Record POS Cash Sale</div>
+          <div class="text-h6 text-weight-bold">{{ $t('kioskUI.workspace.actions.posSale.title') }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
@@ -170,7 +274,7 @@
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
               <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >Sale Value (BDT)</label
+                >{{ $t('ledger.manual.amount') }}</label
               >
               <q-input
                 v-model.number="posAmount"
@@ -178,13 +282,13 @@
                 filled
                 color="primary"
                 class="custom-input text-h6 font-mono"
-                :rules="[(val) => (!!val && val > 0) || 'Amount must be greater than zero']"
+                :rules="[(val) => (val !== null && val > 0) || $t('ledger.manual.amountMin')]"
                 hide-bottom-space
               />
             </div>
             <div>
               <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >Optional Description</label
+                >{{ $t('sessions.close.notesLabel') }}</label
               >
               <q-input
                 v-model="posDescription"
@@ -197,10 +301,10 @@
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup color="grey-7" />
+            <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" />
             <q-btn
               type="submit"
-              label="Record Sale"
+              :label="$t('ledger.manual.saveBtn')"
               color="positive"
               class="q-px-md text-weight-bold cursor-pointer"
               style="min-height: 40px"
@@ -214,7 +318,7 @@
     <q-dialog v-model="showMealDialog" persistent>
       <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">Record Staff / Worker Meal</div>
+          <div class="text-h6 text-weight-bold">{{ $t('kioskUI.workspace.actions.recordMeal.title') }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
@@ -255,16 +359,16 @@
                 filled
                 color="primary"
                 class="custom-input font-mono"
-                :rules="[(val) => (!!val && val > 0) || 'Quantity must be 1 or more']"
+                :rules="[(val) => (val !== null && val > 0) || 'Quantity must be 1 or more']"
                 hide-bottom-space
               />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup color="grey-7" />
+            <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" />
             <q-btn
               type="submit"
-              label="Record Meal"
+              :label="$t('kioskUI.workspace.actions.recordMeal.title')"
               color="warning"
               class="q-px-md text-weight-bold cursor-pointer"
               style="min-height: 40px"
@@ -278,7 +382,7 @@
     <q-dialog v-model="showAdvanceDialog" persistent>
       <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">Request Cash Payroll Advance</div>
+          <div class="text-h6 text-weight-bold">{{ $t('kioskUI.workspace.actions.cashAdvance.title') }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
@@ -287,7 +391,7 @@
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
               <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >Advance Amount (BDT)</label
+                >{{ $t('ledger.manual.amount') }}</label
               >
               <q-input
                 v-model.number="advanceAmount"
@@ -295,13 +399,13 @@
                 filled
                 color="primary"
                 class="custom-input text-h6 font-mono"
-                :rules="[(val) => (!!val && val > 0) || 'Amount must be greater than zero']"
+                :rules="[(val) => (val !== null && val > 0) || $t('ledger.manual.amountMin')]"
                 hide-bottom-space
               />
             </div>
             <div>
               <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >Reason / Note</label
+                >{{ $t('sessions.close.notesLabel') }}</label
               >
               <q-input
                 v-model="advanceReason"
@@ -310,16 +414,16 @@
                 color="primary"
                 class="custom-input"
                 rows="2"
-                :rules="[(val) => !!val || 'Reason is required']"
+                :rules="[(val) => !!val || $t('sessions.close.notesLabel') + ' is required']"
                 hide-bottom-space
               />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="Cancel" v-close-popup color="grey-7" />
+            <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" />
             <q-btn
               type="submit"
-              label="Request Advance"
+              :label="$t('kioskUI.workspace.actions.cashAdvance.title')"
               color="info"
               class="q-px-md text-weight-bold cursor-pointer"
               style="min-height: 40px"
@@ -328,21 +432,117 @@
         </q-form>
       </q-card>
     </q-dialog>
+
+    <!-- Operational Sessions Dialogs -->
+    <SessionOpenDialog v-model="showOpenDialog" @opened="handleSessionOpened" />
+    <SessionCloseDialog
+      v-if="sessionStore.activeSession"
+      v-model="showCloseDialog"
+      :session-id="sessionStore.activeSession.id"
+      @closed="handleSessionClosed"
+    />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import type { QTableColumn } from 'quasar';
 import { useKioskStore } from '../../stores/kiosk';
-import { useQuasar } from 'quasar';
+import { useSessionStore } from '../../stores/session';
+import { useLedgerStore } from '../../stores/ledger';
+import { supabase } from '../../boot/supabase';
+import { showSuccess, showWarning, showError } from '../../composables/useFeedback';
+import SessionOpenDialog from '../../components/sessions/SessionOpenDialog.vue';
+import SessionCloseDialog from '../../components/sessions/SessionCloseDialog.vue';
+import SessionCashBalance from '../../components/ledger/SessionCashBalance.vue';
+import { formatMoney } from '../../utils/format';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const kioskStore = useKioskStore();
-const $q = useQuasar();
+const sessionStore = useSessionStore();
+const { t } = useI18n();
 
 const currentStaffName = computed(() => kioskStore.currentStaff?.fullName || 'Staff');
 const currentStaffRole = computed(() => kioskStore.currentStaff?.role || 'Operator');
+
+// Shift sessions feature gate and permissions checks
+const isShiftSessionsEnabled = ref(false);
+const isFinancialLedgerEnabled = ref(false);
+const isMealManagementEnabled = ref(false);
+const isStaffPayrollEnabled = ref(false);
+
+const showOpenDialog = ref(false);
+const showCloseDialog = ref(false);
+
+const ledgerStore = useLedgerStore();
+
+const canOpenSession = computed(() =>
+  kioskStore.hasStaffPermission('operational_shifts', 'sessions_open'),
+);
+const canCloseSession = computed(() =>
+  kioskStore.hasStaffPermission('operational_shifts', 'sessions_close'),
+);
+const canLogAdvance = computed(() => kioskStore.hasStaffPermission('kiosk', 'log_advance'));
+
+const canReadCashBalance = computed(() =>
+  kioskStore.hasStaffPermission('financial_ledger', 'cash_balance_read'),
+);
+const canReadSessionLedger = computed(() =>
+  kioskStore.hasStaffPermission('financial_ledger', 'session_ledger_read'),
+);
+
+const isActionBlocked = computed(() => {
+  return isShiftSessionsEnabled.value && !sessionStore.hasActiveSession;
+});
+
+watch(
+  () => sessionStore.activeSession,
+  async (session) => {
+    if (session && isFinancialLedgerEnabled.value) {
+      if (canReadCashBalance.value) {
+        await ledgerStore.fetchCashBalance(session.id);
+      }
+      if (canReadSessionLedger.value) {
+        await ledgerStore.fetchEntries({ sessionId: session.id });
+      }
+    } else {
+      ledgerStore.clearLedger();
+    }
+  },
+  { immediate: true },
+);
+
+async function checkFeatureGate() {
+  const tenantId = kioskStore.tenantId;
+  if (!tenantId) return;
+  try {
+    const { data, error } = await supabase
+      .from('tenant_settings')
+      .select('enabled_features')
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+
+    if (!error && data) {
+      const features = data.enabled_features as Record<string, boolean> | null;
+      isShiftSessionsEnabled.value = !!features?.['shift-sessions'];
+      isFinancialLedgerEnabled.value = !!features?.['financial-ledger'];
+      isMealManagementEnabled.value = !!features?.['meal-management'];
+      isStaffPayrollEnabled.value = !!features?.['staff-payroll'];
+    }
+  } catch (err) {
+    console.error('Failed to load tenant settings in kiosk workspace:', err);
+  }
+}
+
+const handleSessionOpened = async () => {
+  await sessionStore.fetchActiveSession();
+};
+
+const handleSessionClosed = () => {
+  sessionStore.clearSession();
+};
 
 // Shift duration timer
 const shiftSeconds = ref(0);
@@ -370,12 +570,19 @@ interface ShiftLog {
 
 const shiftLogs = ref<ShiftLog[]>([]);
 
-const logColumns = [
-  { name: 'time', align: 'left' as const, label: 'Logged Time', field: 'time', sortable: true },
-  { name: 'type', align: 'left' as const, label: 'Action Type', field: 'type', sortable: true },
-  { name: 'details', align: 'left' as const, label: 'Operational Details', field: 'details' },
-  { name: 'value', align: 'right' as const, label: 'Value / Amount', field: 'value' },
-];
+const logColumns = computed(() => [
+  { name: 'time', align: 'left' as const, label: t('ledger.table.cols.dateTime'), field: 'time', sortable: true },
+  { name: 'type', align: 'left' as const, label: t('ledger.table.cols.type'), field: 'type', sortable: true },
+  { name: 'details', align: 'left' as const, label: t('ledger.table.cols.notes'), field: 'details' },
+  { name: 'value', align: 'right' as const, label: t('ledger.table.cols.amount'), field: 'value' },
+]);
+
+const ledgerColumns = computed<QTableColumn[]>(() => [
+  { name: 'time', align: 'left', label: t('ledger.table.cols.dateTime'), field: 'created_at', sortable: true },
+  { name: 'type', align: 'left', label: t('ledger.table.cols.type'), field: 'type', sortable: true },
+  { name: 'category', align: 'left', label: t('ledger.table.cols.category'), field: 'category', sortable: true },
+  { name: 'value', align: 'right', label: t('ledger.table.cols.amount'), field: 'amount' },
+]);
 
 // Dialog visibilities
 const confirmClockOut = ref(false);
@@ -394,7 +601,11 @@ const mealQty = ref(1);
 const advanceAmount = ref<number | null>(null);
 const advanceReason = ref('');
 
-onMounted(() => {
+onMounted(async () => {
+  await checkFeatureGate();
+  if (isShiftSessionsEnabled.value) {
+    await sessionStore.fetchActiveSession();
+  }
   timerId = window.setInterval(() => {
     shiftSeconds.value += 1;
   }, 1000);
@@ -406,29 +617,41 @@ onUnmounted(() => {
 
 const handleClockOut = () => {
   kioskStore.logoutStaff();
-  $q.notify({
-    type: 'positive',
-    message: 'Staff session closed.',
-    position: 'top',
-  });
+  showSuccess(t('kioskUI.workspace.clockOutBtn') + ' completed');
   void router.push({ name: 'kiosk-login' });
 };
 
 // Open dialogs
 const openPosDialog = () => {
+  if (isActionBlocked.value) {
+    showWarning(t('kioskUI.workspace.sessionBlockedWarning'));
+    return;
+  }
   posAmount.value = null;
   posDescription.value = '';
   showPosDialog.value = true;
 };
 
 const openMealDialog = () => {
+  if (isActionBlocked.value) {
+    showWarning(t('kioskUI.workspace.sessionBlockedWarning'));
+    return;
+  }
   mealCategory.value = 'Contract Employee';
   mealType.value = 'Full Lunch Set';
   mealQty.value = 1;
   showMealDialog.value = true;
 };
 
-const openAdvanceDialog = () => {
+const openAdvanceDialog = async () => {
+  if (isActionBlocked.value) {
+    showWarning(t('kioskUI.workspace.sessionBlockedWarning'));
+    return;
+  }
+  if (!canLogAdvance.value) {
+    await showError(t('errors.forbiddenText'));
+    return;
+  }
   advanceAmount.value = null;
   advanceReason.value = '';
   showAdvanceDialog.value = true;
@@ -447,11 +670,7 @@ const submitPosSale = () => {
   });
 
   showPosDialog.value = false;
-  $q.notify({
-    type: 'positive',
-    message: 'POS Cash Sale recorded.',
-    position: 'top',
-  });
+  showSuccess(t('kioskUI.workspace.actions.posSale.title') + ' recorded.');
 };
 
 const submitMeal = () => {
@@ -466,11 +685,7 @@ const submitMeal = () => {
   });
 
   showMealDialog.value = false;
-  $q.notify({
-    type: 'positive',
-    message: 'Meal operation recorded.',
-    position: 'top',
-  });
+  showSuccess(t('kioskUI.workspace.actions.recordMeal.title') + ' recorded.');
 };
 
 const submitAdvance = () => {
@@ -485,15 +700,11 @@ const submitAdvance = () => {
   });
 
   showAdvanceDialog.value = false;
-  $q.notify({
-    type: 'positive',
-    message: 'Cash advance requested successfully.',
-    position: 'top',
-  });
+  showSuccess(t('kioskUI.workspace.actions.cashAdvance.title') + ' requested.');
 };
 
 const getTypeColor = (type: string) => {
-  if (type === 'sale') return 'positive';
+  if (type === 'sale' || type === 'inflow') return 'positive';
   if (type === 'meal') return 'warning';
   return 'info';
 };
@@ -569,5 +780,13 @@ const formatTime = (date: Date) => {
 
 .leading-none {
   line-height: 1.2;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.opacity-50 {
+  opacity: 0.5;
 }
 </style>

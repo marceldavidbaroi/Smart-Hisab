@@ -4,10 +4,10 @@
     <div class="row items-center justify-between q-mb-lg q-mb-sm-xl">
       <div>
         <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">
-          Billing & Feature Policies
+          {{ $t('admin.billing.title') }}
         </h1>
         <p class="text-grey-7 text-subtitle2 q-mt-xs q-mb-none">
-          Override subscription tiers and toggle enabled modules on a per-tenant basis.
+          {{ $t('admin.billing.subtitle') }}
         </p>
       </div>
     </div>
@@ -36,14 +36,14 @@
       <div class="col-12 col-md-6">
         <q-card flat bordered class="bg-white">
           <q-card-section class="q-py-sm q-px-md border-bottom">
-            <div class="text-subtitle1 text-weight-bold text-grey-9">Subscription Control</div>
+            <div class="text-subtitle1 text-weight-bold text-grey-9">{{ $t('admin.billing.controlCard') }}</div>
           </q-card-section>
 
           <q-card-section class="q-pt-md">
             <q-form @submit.prevent="updateBillingPolicy" class="q-gutter-y-md">
               <div>
                 <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                  >Select Tenant Workspace</label
+                  >{{ $t('admin.billing.selectTenant') }}</label
                 >
                 <q-select
                   v-model="selectedTenantId"
@@ -60,7 +60,7 @@
               <div v-if="selectedTenantId" class="q-gutter-y-md">
                 <div>
                   <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                    >Subscription Plan Tier</label
+                    >{{ $t('admin.billing.planTier') }}</label
                   >
                   <q-select
                     v-model="billingTier"
@@ -73,7 +73,7 @@
 
                 <div>
                   <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                    >Payment Account Status</label
+                    >{{ $t('admin.billing.paymentStatus') }}</label
                   >
                   <q-select
                     v-model="billingStatus"
@@ -89,7 +89,7 @@
                   unelevated
                   color="amber"
                   text-color="black"
-                  label="Update Subscription policy"
+                  :label="$t('admin.billing.updateBtn')"
                   class="text-weight-bold cursor-pointer action-btn q-mt-sm"
                   :loading="submittingBilling"
                 />
@@ -103,14 +103,13 @@
       <div class="col-12 col-md-6">
         <q-card flat bordered class="bg-white">
           <q-card-section class="q-py-sm q-px-md border-bottom">
-            <div class="text-subtitle1 text-weight-bold text-grey-9">Module Feature Toggles</div>
+            <div class="text-subtitle1 text-weight-bold text-grey-9">{{ $t('admin.billing.featuresCard') }}</div>
           </q-card-section>
 
           <q-card-section class="q-pt-md">
             <div v-if="selectedTenantId" class="q-gutter-y-md">
               <p class="text-caption text-grey-6 q-mb-xs">
-                Updating these checks immediately updates `tenant_settings.enabled_features` column
-                for this tenant.
+                {{ $t('admin.billing.featuresDesc') }}
               </p>
 
               <div class="q-gutter-y-xs">
@@ -155,14 +154,14 @@
                 unelevated
                 color="amber"
                 text-color="black"
-                label="Save Feature Policies"
+                :label="$t('admin.billing.saveBtn')"
                 class="text-weight-bold cursor-pointer action-btn q-mt-sm"
                 @click="updateFeaturesPolicy"
                 :loading="submittingFeatures"
               />
             </div>
             <div v-else class="text-center q-py-xl text-grey-6 text-weight-medium">
-              Select a tenant workspace on the left to edit its modules.
+              {{ $t('admin.billing.noTenantSelected') }}
             </div>
           </q-card-section>
         </q-card>
@@ -175,6 +174,9 @@
 import { ref, onMounted } from 'vue';
 import { supabase } from '../../boot/supabase';
 import { adminUpdateBilling, adminToggleTenantFeatures } from '../../services/multiTenant';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface SimpleTenant {
   id: string;
@@ -258,7 +260,7 @@ const onTenantSelected = async (tenantId: string) => {
     }
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'Failed to fetch settings for workspace.';
+    errorMsg.value = error.message || t('admin.billing.messages.loadFailed');
   }
 };
 
@@ -269,10 +271,10 @@ const updateBillingPolicy = async () => {
   successMsg.value = '';
   try {
     await adminUpdateBilling(selectedTenantId.value, billingTier.value, billingStatus.value);
-    successMsg.value = 'Subscription override policy updated successfully!';
+    successMsg.value = t('admin.billing.messages.billingSuccess');
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'Failed to override billing policy.';
+    errorMsg.value = error.message || t('admin.billing.messages.overrideFailed');
   } finally {
     submittingBilling.value = false;
   }
@@ -292,10 +294,10 @@ const updateFeaturesPolicy = async () => {
       'staff-payroll': featureStaffPayroll.value,
     };
     await adminToggleTenantFeatures(selectedTenantId.value, activeFeatures);
-    successMsg.value = 'Module feature policy flags updated successfully!';
+    successMsg.value = t('admin.billing.messages.featuresSuccess');
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'Failed to toggle features policy.';
+    errorMsg.value = error.message || t('admin.billing.messages.toggleFailed');
   } finally {
     submittingFeatures.value = false;
   }

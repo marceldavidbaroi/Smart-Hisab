@@ -1,7 +1,7 @@
 <template>
   <div class="signup-container">
-    <div class="text-h5 text-bold text-slate-800 q-mb-md">Create Account</div>
-    <p class="text-slate-500 q-mb-lg text-sm">Register to set up and manage workspaces.</p>
+    <div class="text-h5 text-bold text-slate-800 q-mb-md">{{ $t('auth.signup.createAccount') }}</div>
+    <p class="text-slate-500 q-mb-lg text-sm">{{ $t('auth.signup.subtitle') }}</p>
 
     <!-- Error Banner -->
     <q-banner v-if="errorMsg" class="bg-red-9 text-white rounded-borders q-mb-lg text-sm">
@@ -14,17 +14,14 @@
     <!-- Success Message -->
     <div v-if="successMsg" class="text-center q-py-lg">
       <q-icon name="mark_email_read" size="72px" class="text-primary q-mb-md" />
-      <div class="text-h6 text-slate-800 text-bold q-mb-sm">Verify Your Email</div>
-      <p class="text-slate-500 text-sm q-mb-lg">
-        We have sent a verification link to
-        <span class="text-slate-800 text-weight-bold">{{ email }}</span
-        >. Please check your inbox and spam folder.
+      <div class="text-h6 text-slate-800 text-bold q-mb-sm">{{ $t('auth.signup.verifyEmailTitle') }}</div>
+      <p class="text-slate-500 text-sm q-mb-lg" v-html="$t('auth.signup.verifyEmailText', { email: `<span class='text-slate-800 text-weight-bold'>${email}</span>` })">
       </p>
       <q-btn
         color="primary"
         outline
         class="full-width q-py-sm rounded-btn"
-        label="Back to Login"
+        :label="$t('auth.signup.backToLogin')"
         to="/auth/login"
       />
     </div>
@@ -32,7 +29,7 @@
     <q-form v-else @submit.prevent="handleSignup" class="q-gutter-y-md">
       <div>
         <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >Full Name</label
+          >{{ $t('auth.signup.fullNameLabel') }}</label
         >
         <q-input
           v-model="fullName"
@@ -41,14 +38,14 @@
           placeholder="Jane Doe"
           color="primary"
           class="custom-input"
-          :rules="[(val) => !!val || 'Full name is required']"
+          :rules="[(val) => !!val || $t('auth.signup.fullNameRequired')]"
           hide-bottom-space
         />
       </div>
 
       <div>
         <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >Email Address</label
+          >{{ $t('auth.signup.emailLabel') }}</label
         >
         <q-input
           v-model="email"
@@ -57,14 +54,14 @@
           placeholder="name@company.com"
           color="primary"
           class="custom-input"
-          :rules="[(val) => !!val || 'Email is required']"
+          :rules="[(val) => !!val || $t('auth.signup.emailRequired')]"
           hide-bottom-space
         />
       </div>
 
       <div>
         <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >Password</label
+          >{{ $t('auth.signup.passwordLabel') }}</label
         >
         <q-input
           v-model="password"
@@ -74,8 +71,8 @@
           color="primary"
           class="custom-input"
           :rules="[
-            (val) => !!val || 'Password is required',
-            (val) => val.length >= 6 || 'Password must be at least 6 characters',
+            (val) => !!val || $t('auth.signup.passwordRequired'),
+            (val) => val.length >= 6 || $t('auth.signup.passwordMinLength'),
           ]"
           hide-bottom-space
         />
@@ -85,7 +82,7 @@
         type="submit"
         color="primary"
         class="full-width q-py-sm rounded-btn btn-gradient q-mt-lg text-weight-bold"
-        label="Register"
+        :label="$t('auth.signup.register')"
         :loading="loading"
       />
     </q-form>
@@ -95,7 +92,7 @@
       <div class="row items-center q-my-lg">
         <q-separator class="col" />
         <span class="text-slate-400 q-px-sm text-xs text-uppercase text-weight-bold"
-          >Or continue with</span
+          >{{ $t('auth.login.orContinueWith') }}</span
         >
         <q-separator class="col" />
       </div>
@@ -114,15 +111,15 @@
             size="18px"
             class="q-mr-sm"
           />
-          <span>Sign up with Google</span>
+          <span>{{ $t('auth.signup.signUpGoogle') }}</span>
         </div>
       </q-btn>
     </div>
 
     <div v-if="!successMsg" class="q-mt-xl text-center text-sm text-slate-500">
-      Already have an account?
+      {{ $t('auth.signup.alreadyHaveAccount') }}
       <router-link to="/auth/login" class="text-primary text-weight-bold hover-underline">
-        Sign In
+        {{ $t('auth.signup.signIn') }}
       </router-link>
     </div>
   </div>
@@ -132,8 +129,10 @@
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { signUpWithEmail, signInWithGoogle } from '../../services/multiTenant';
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
+const { t } = useI18n();
 
 const fullName = ref('');
 const email = ref('');
@@ -154,7 +153,7 @@ const handleSignup = async () => {
     successMsg.value = true;
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'An unexpected error occurred';
+    errorMsg.value = error.message || t('feedback.somethingWentWrong');
   } finally {
     loading.value = false;
   }
@@ -172,7 +171,7 @@ const handleGoogleSignup = async () => {
     }
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'An unexpected error occurred';
+    errorMsg.value = error.message || t('feedback.somethingWentWrong');
   } finally {
     loading.value = false;
   }

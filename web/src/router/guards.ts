@@ -166,6 +166,28 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
           return { name: 'workspace-dashboard', params: { tenantSlug } };
         }
 
+        const requiredModulePermission = to.meta.requiredModulePermission as
+          | {
+              module: string;
+              permission: string;
+            }
+          | undefined;
+        if (
+          requiredModulePermission &&
+          !tenantStore.hasModulePermission(
+            requiredModulePermission.module,
+            requiredModulePermission.permission,
+          )
+        ) {
+          Notify.create({
+            type: 'negative',
+            message: `You do not have permission to access this page.`,
+            position: 'top',
+            timeout: 3000,
+          });
+          return { name: 'workspace-dashboard', params: { tenantSlug } };
+        }
+
         return true;
       } catch (err) {
         const error = err as Error;

@@ -5,24 +5,23 @@
         <q-icon name="gpp_bad" size="96px" class="text-red-7" />
       </div>
       <h1 class="text-h3 text-bold q-mb-xs text-slate-850">403</h1>
-      <h2 class="text-h5 text-slate-500 q-mb-lg">Access Forbidden</h2>
+      <h2 class="text-h5 text-slate-500 q-mb-lg">{{ $t('errors.forbiddenTitle') }}</h2>
       <p class="text-body1 text-slate-500 max-w-md q-mx-auto q-mb-xl">
-        You do not have permission to access this resource or view this workspace. If you believe
-        this is an error, contact your tenant administrator or support.
+        {{ $t('errors.forbiddenText') }}
       </p>
 
       <div class="row justify-center q-gutter-md">
         <q-btn
           unelevated
           color="primary"
-          label="Back to Safety"
+          :label="$t('errors.backSafety')"
           class="q-px-lg rounded-btn"
           @click="goBack"
         />
         <q-btn
           outline
           color="primary"
-          label="Sign In as Different User"
+          :label="$t('errors.signInDifferent')"
           class="q-px-lg rounded-btn"
           @click="signOutAndLogin"
         />

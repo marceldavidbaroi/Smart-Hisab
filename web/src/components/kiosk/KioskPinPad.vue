@@ -40,7 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 interface Props {
   maxDigits?: number;
@@ -57,6 +58,7 @@ const emit = defineEmits<{
   (e: 'change', length: number): void;
 }>();
 
+const { t } = useI18n();
 const pin = ref('');
 
 interface KeyConfig {
@@ -69,36 +71,36 @@ interface KeyConfig {
   keyshortcut?: string;
 }
 
-const keys: KeyConfig[] = [
-  { value: '1', display: '1', label: 'Number 1', type: 'number', keyshortcut: '1' },
-  { value: '2', display: '2', label: 'Number 2', type: 'number', keyshortcut: '2' },
-  { value: '3', display: '3', label: 'Number 3', type: 'number', keyshortcut: '3' },
-  { value: '4', display: '4', label: 'Number 4', type: 'number', keyshortcut: '4' },
-  { value: '5', display: '5', label: 'Number 5', type: 'number', keyshortcut: '5' },
-  { value: '6', display: '6', label: 'Number 6', type: 'number', keyshortcut: '6' },
-  { value: '7', display: '7', label: 'Number 7', type: 'number', keyshortcut: '7' },
-  { value: '8', display: '8', label: 'Number 8', type: 'number', keyshortcut: '8' },
-  { value: '9', display: '9', label: 'Number 9', type: 'number', keyshortcut: '9' },
+const keys = computed<KeyConfig[]>(() => [
+  { value: '1', display: '1', label: t('kioskUI.pinpad.num', { num: 1 }), type: 'number', keyshortcut: '1' },
+  { value: '2', display: '2', label: t('kioskUI.pinpad.num', { num: 2 }), type: 'number', keyshortcut: '2' },
+  { value: '3', display: '3', label: t('kioskUI.pinpad.num', { num: 3 }), type: 'number', keyshortcut: '3' },
+  { value: '4', display: '4', label: t('kioskUI.pinpad.num', { num: 4 }), type: 'number', keyshortcut: '4' },
+  { value: '5', display: '5', label: t('kioskUI.pinpad.num', { num: 5 }), type: 'number', keyshortcut: '5' },
+  { value: '6', display: '6', label: t('kioskUI.pinpad.num', { num: 6 }), type: 'number', keyshortcut: '6' },
+  { value: '7', display: '7', label: t('kioskUI.pinpad.num', { num: 7 }), type: 'number', keyshortcut: '7' },
+  { value: '8', display: '8', label: t('kioskUI.pinpad.num', { num: 8 }), type: 'number', keyshortcut: '8' },
+  { value: '9', display: '9', label: t('kioskUI.pinpad.num', { num: 9 }), type: 'number', keyshortcut: '9' },
   {
     value: 'clear',
     display: 'C',
-    label: 'Clear',
+    label: t('kioskUI.pinpad.clear'),
     type: 'action',
     icon: 'backspace',
     color: 'red-5',
     keyshortcut: 'Backspace',
   },
-  { value: '0', display: '0', label: 'Number 0', type: 'number', keyshortcut: '0' },
+  { value: '0', display: '0', label: t('kioskUI.pinpad.num', { num: 0 }), type: 'number', keyshortcut: '0' },
   {
     value: 'submit',
     display: 'OK',
-    label: 'Submit',
+    label: t('kioskUI.pinpad.submit'),
     type: 'action',
     icon: 'check',
     color: 'primary',
     keyshortcut: 'Enter',
   },
-];
+]);
 
 const handleKeyPress = (val: string) => {
   if (props.disabled) return;

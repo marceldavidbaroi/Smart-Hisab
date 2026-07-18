@@ -2,19 +2,17 @@
   <div class="pending-access-container text-center q-py-lg">
     <q-icon name="hourglass_empty" size="72px" class="text-warning q-mb-md animate-slow-spin" />
 
-    <div class="text-h5 text-bold text-slate-800 q-mb-md">Workspace Access Pending</div>
+    <div class="text-h5 text-bold text-slate-800 q-mb-md">{{ $t('auth.pending.title') }}</div>
 
     <p class="text-slate-500 text-sm q-mb-xl">
-      Your account was registered successfully, but this platform is currently invitation-only.
-      Please contact an administrator to be assigned to a workspace, or check your inbox for pending
-      invitations.
+      {{ $t('auth.pending.subtitle') }}
     </p>
 
     <q-btn
       color="primary"
       outline
       class="full-width q-py-sm rounded-btn q-mb-md"
-      label="Check Status / Refresh"
+      :label="$t('auth.pending.checkStatus')"
       :loading="loading"
       @click="handleRefresh"
     />
@@ -23,7 +21,7 @@
       flat
       color="grey-7"
       icon="logout"
-      label="Sign Out"
+      :label="$t('auth.pending.signOut')"
       class="full-width rounded-btn text-weight-bold"
       @click="handleSignOut"
     />
@@ -35,9 +33,11 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTenantStore } from '../../stores/tenant';
 import { Notify } from 'quasar';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const tenantStore = useTenantStore();
+const { t } = useI18n();
 const loading = ref(false);
 
 const handleRefresh = async () => {
@@ -51,7 +51,7 @@ const handleRefresh = async () => {
       if (firstSlug) {
         Notify.create({
           type: 'positive',
-          message: 'Workspace access detected! Redirecting...',
+          message: t('auth.pending.accessDetected'),
           position: 'top',
         });
         await router.push(`/${firstSlug}/dashboard`);
@@ -61,7 +61,7 @@ const handleRefresh = async () => {
 
     Notify.create({
       type: 'info',
-      message: 'Still awaiting workspace assignment.',
+      message: t('auth.pending.stillAwaiting'),
       position: 'top',
       timeout: 2000,
     });
@@ -69,7 +69,7 @@ const handleRefresh = async () => {
     const error = err as Error;
     Notify.create({
       type: 'negative',
-      message: error.message || 'Failed to refresh state',
+      message: error.message || t('auth.pending.failedRefresh'),
       position: 'top',
     });
   } finally {

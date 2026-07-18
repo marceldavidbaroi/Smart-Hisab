@@ -1,8 +1,8 @@
 <template>
   <div class="no-tenant-container">
-    <div class="text-h5 text-bold text-slate-800 q-mb-md text-center">Create Your Workspace</div>
+    <div class="text-h5 text-bold text-slate-800 q-mb-md text-center">{{ $t('auth.noTenant.title') }}</div>
     <p class="text-slate-500 q-mb-lg text-sm text-center">
-      You are not a member of any workspace yet. Create one to get started.
+      {{ $t('auth.noTenant.subtitle') }}
     </p>
 
     <!-- Error Banner -->
@@ -16,7 +16,7 @@
     <q-form @submit.prevent="handleCreateTenant" class="q-gutter-y-md">
       <div>
         <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >Workspace Name</label
+          >{{ $t('auth.noTenant.workspaceName') }}</label
         >
         <q-input
           v-model="name"
@@ -25,7 +25,7 @@
           placeholder="Acme Corp"
           color="primary"
           class="custom-input"
-          :rules="[(val) => !!val || 'Workspace name is required']"
+          :rules="[(val) => !!val || $t('auth.noTenant.workspaceNameRequired')]"
           hide-bottom-space
           @update:model-value="autoGenerateSlug"
         />
@@ -33,7 +33,7 @@
 
       <div>
         <label class="input-label text-slate-600 font-semibold q-mb-xs block text-xs"
-          >Workspace Slug (URL)</label
+          >{{ $t('auth.noTenant.workspaceSlug') }}</label
         >
         <q-input
           v-model="slug"
@@ -43,10 +43,10 @@
           color="primary"
           class="custom-input"
           :rules="[
-            (val) => !!val || 'Workspace slug is required',
+            (val) => !!val || $t('auth.noTenant.workspaceSlugRequired'),
             (val) =>
               /^[a-z0-9-]+$/.test(val) ||
-              'Slug must only contain lowercase letters, numbers, and dashes',
+              $t('auth.noTenant.workspaceSlugInvalid'),
           ]"
           hide-bottom-space
           prefix="app.domain.com/"
@@ -57,7 +57,7 @@
         type="submit"
         color="primary"
         class="full-width q-py-sm rounded-btn btn-gradient q-mt-lg text-weight-bold"
-        label="Create Workspace"
+        :label="$t('auth.noTenant.createWorkspace')"
         :loading="loading"
       />
     </q-form>
@@ -68,13 +68,13 @@
         outline
         class="full-width q-py-sm rounded-btn text-weight-bold"
         icon="admin_panel_settings"
-        label="Go to Superadmin Portal"
+        :label="$t('auth.noTenant.goSuperadmin')"
         to="/admin/dashboard"
       />
     </div>
 
     <div class="q-mt-xl text-center">
-      <q-btn flat color="grey-7" icon="logout" label="Sign Out" @click="handleSignOut" size="sm" />
+      <q-btn flat color="grey-7" icon="logout" :label="$t('auth.noTenant.signOut')" @click="handleSignOut" size="sm" />
     </div>
   </div>
 </template>
@@ -84,9 +84,11 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { createTenant } from '../../services/multiTenant';
 import { useTenantStore } from '../../stores/tenant';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const tenantStore = useTenantStore();
+const { t } = useI18n();
 
 onMounted(async () => {
   const allowSelfService = import.meta.env.ALLOW_SELF_SERVICE_TENANTS !== 'false';
@@ -125,7 +127,7 @@ const handleCreateTenant = async () => {
     await router.push(`/${slug.value}/dashboard`);
   } catch (err) {
     const error = err as Error;
-    errorMsg.value = error.message || 'Failed to create workspace. Slug might be taken.';
+    errorMsg.value = error.message || t('feedback.somethingWentWrong');
   } finally {
     loading.value = false;
   }

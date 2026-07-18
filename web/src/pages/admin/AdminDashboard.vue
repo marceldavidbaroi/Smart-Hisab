@@ -4,10 +4,10 @@
     <div class="row items-center justify-between q-mb-lg q-mb-sm-xl">
       <div>
         <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">
-          Platform Admin Dashboard
+          {{ $t('admin.dashboard.title') }}
         </h1>
         <p class="text-grey-7 text-subtitle2 q-mt-xs q-mb-none">
-          Global analytics and metrics for the Smart Hisab platform.
+          {{ $t('admin.dashboard.subtitle') }}
         </p>
       </div>
       <div>
@@ -40,7 +40,7 @@
           <q-card-section>
             <q-icon name="business" size="48px" color="amber" class="q-mb-xs" />
             <div class="text-grey-7 text-xs text-weight-bold uppercase tracking-wider">
-              Total Tenants
+              {{ $t('admin.dashboard.metricTenants') }}
             </div>
             <div class="text-h3 text-grey-9 text-weight-bold q-mt-sm">{{ tenantCount }}</div>
           </q-card-section>
@@ -53,7 +53,7 @@
           <q-card-section>
             <q-icon name="people" size="48px" color="primary" class="q-mb-xs" />
             <div class="text-grey-7 text-xs text-weight-bold uppercase tracking-wider">
-              Platform Users
+              {{ $t('admin.dashboard.metricUsers') }}
             </div>
             <div class="text-h3 text-grey-9 text-weight-bold q-mt-sm">{{ userCount }}</div>
           </q-card-section>
@@ -66,7 +66,7 @@
           <q-card-section>
             <q-icon name="credit_card" size="48px" color="secondary" class="q-mb-xs" />
             <div class="text-grey-7 text-xs text-weight-bold uppercase tracking-wider">
-              Paid Subscriptions
+              {{ $t('admin.dashboard.metricBilling') }}
             </div>
             <div class="text-h3 text-grey-9 text-weight-bold q-mt-sm">{{ activePaidCount }}</div>
           </q-card-section>
@@ -81,7 +81,7 @@
           <q-card-section class="row items-center border-bottom q-py-sm q-px-md">
             <q-icon name="bolt" size="24px" color="amber" class="q-mr-sm" />
             <div class="text-subtitle1 text-weight-bold text-grey-9">
-              Quick Administrative Tools
+              {{ $t('admin.dashboard.quickTools') }}
             </div>
           </q-card-section>
 
@@ -95,7 +95,7 @@
                   class="full-width text-weight-bold cursor-pointer action-btn"
                   style="border-radius: 8px"
                   icon="add_business"
-                  label="Provision New Tenant"
+                  :label="$t('admin.dashboard.provisionBtn')"
                   to="/admin/tenants"
                 />
               </div>
@@ -106,7 +106,7 @@
                   class="full-width text-weight-bold cursor-pointer action-btn"
                   style="border-radius: 8px"
                   icon="tune"
-                  label="Manage Subscriptions"
+                  :label="$t('admin.dashboard.manageSubsBtn')"
                   to="/admin/billing"
                 />
               </div>
@@ -121,6 +121,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { supabase } from '../../boot/supabase';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const tenantCount = ref(0);
 const userCount = ref(0);
@@ -159,7 +162,7 @@ const loadPlatformStats = async () => {
   } catch (err) {
     const error = err as Error;
     errorMsg.value =
-      error.message || 'Failed to fetch global metrics. Ensure you are signed in as a Superadmin.';
+      error.message || t('admin.dashboard.metricsError');
   } finally {
     loading.value = false;
   }

@@ -6,9 +6,9 @@
     >
       <q-card-section class="text-center q-pt-xl">
         <q-icon name="devices" size="48px" color="primary" class="q-mb-md" />
-        <div class="text-h5 text-weight-bold text-slate-800">Pair Counter Device</div>
+        <div class="text-h5 text-weight-bold text-slate-800">{{ $t('auth.pair.title') }}</div>
         <p class="text-slate-500 text-sm q-mt-sm">
-          Enter the 6-digit pairing code from the Owner Dashboard to link this terminal.
+          {{ $t('auth.pair.subtitle') }}
         </p>
       </q-card-section>
 
@@ -19,13 +19,13 @@
             filled
             mask="### ###"
             unmasked-value
-            label="Pairing Code"
+            :label="$t('auth.pair.pairingCode')"
             placeholder="000 000"
             color="primary"
             class="custom-input q-mb-md text-center text-h6"
             :rules="[
-              (val) => !!val || 'Pairing code is required',
-              (val) => val.length === 6 || 'Must be exactly 6 digits',
+              (val) => !!val || $t('auth.pair.pairingCodeRequired'),
+              (val) => val.length === 6 || $t('auth.pair.pairingCodeInvalid'),
             ]"
             hide-bottom-space
             autofocus
@@ -34,7 +34,7 @@
           <q-input
             v-model="deviceName"
             filled
-            label="Device Name"
+            :label="$t('auth.pair.deviceName')"
             placeholder="e.g. Counter Tablet 1"
             color="primary"
             class="custom-input"
@@ -55,7 +55,7 @@
             type="submit"
             color="primary"
             class="full-width q-py-sm rounded-btn btn-gradient q-mt-lg text-weight-bold"
-            label="Pair Device"
+            :label="$t('auth.pair.pairDevice')"
             :loading="loading"
           />
         </q-form>
@@ -69,7 +69,7 @@
           class="hover-underline text-weight-medium"
           to="/auth/login"
         >
-          Return to Login
+          {{ $t('auth.pair.returnLogin') }}
         </q-btn>
       </q-card-section>
     </q-card>
@@ -80,9 +80,11 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useKioskStore } from '../../stores/kiosk';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const kioskStore = useKioskStore();
+const { t } = useI18n();
 
 const pairingCode = ref('');
 const deviceName = ref('Counter Tablet');
@@ -100,11 +102,11 @@ const handlePairing = async () => {
     if (success) {
       await router.push({ name: 'counter-login' });
     } else {
-      errorMsg.value = 'Failed to verify pairing code.';
+      errorMsg.value = t('auth.pair.failedPairing');
     }
   } catch (err) {
     const errorObj = err as Error;
-    errorMsg.value = errorObj.message || 'An unexpected error occurred';
+    errorMsg.value = errorObj.message || t('feedback.somethingWentWrong');
   } finally {
     loading.value = false;
   }

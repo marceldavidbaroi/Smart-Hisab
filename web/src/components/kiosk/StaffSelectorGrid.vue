@@ -12,7 +12,7 @@
         role="button"
         tabindex="0"
         :aria-selected="selectedStaffId === staff.id ? 'true' : 'false'"
-        :aria-label="`Staff profile: ${staff.fullName}, Role: ${staff.role}`"
+        :aria-label="$t('kioskUI.selector.ariaLabel', { name: staff.fullName, role: staff.role })"
         v-ripple
         @click="emit('select', staff)"
         @keydown.enter="emit('select', staff)"
@@ -50,10 +50,10 @@
     <div v-if="staffList.length === 0" class="col-12 text-center q-py-xl">
       <q-icon name="group_off" size="56px" color="grey-6" class="q-mb-md" />
       <div class="text-subtitle1 text-weight-medium text-grey-8">
-        No staff members configured for counter access.
+        {{ $t('kioskUI.selector.noStaff') }}
       </div>
       <div class="text-caption text-grey-7 q-mt-xs">
-        Please check dashboard settings and ensure terminal access is allowed.
+        {{ $t('kioskUI.selector.noStaffSubtitle') }}
       </div>
     </div>
   </div>

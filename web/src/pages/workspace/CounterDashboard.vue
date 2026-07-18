@@ -14,12 +14,12 @@
         >
           {{ staffName ? staffName.charAt(0).toUpperCase() : 'S' }}
         </q-avatar>
-        <div class="text-h5 text-weight-bold text-slate-800">{{ staffName || 'Staff Member' }}</div>
+        <div class="text-h5 text-weight-bold text-slate-800">{{ staffName || $t('workspace.counter.staffMemberFallback') }}</div>
         <q-badge
           color="secondary"
           class="q-mt-sm q-py-xs q-px-md text-weight-medium text-subtitle2"
         >
-          {{ staffRole || 'Counter Staff' }}
+          {{ staffRole || $t('workspace.counter.staffRoleFallback') }}
         </q-badge>
       </q-card-section>
 
@@ -27,13 +27,13 @@
       <q-card-section class="q-px-lg">
         <div class="bg-grey-1 rounded-borders q-pa-md bordered">
           <div class="row justify-between items-center q-mb-sm text-sm text-slate-600">
-            <span class="text-weight-medium">Terminal Status:</span>
+            <span class="text-weight-medium">{{ $t('workspace.counter.terminalStatus') }}</span>
             <span class="text-positive text-weight-bold row items-center">
-              <q-icon name="fiber_manual_record" class="q-mr-xs" /> Clocked In
+              <q-icon name="fiber_manual_record" class="q-mr-xs" /> {{ $t('workspace.counter.clockedIn') }}
             </span>
           </div>
           <div class="row justify-between items-center text-sm text-slate-600">
-            <span class="text-weight-medium">Clock In Time:</span>
+            <span class="text-weight-medium">{{ $t('workspace.counter.clockInTime') }}</span>
             <span class="text-slate-800 font-mono">{{ clockInTime }}</span>
           </div>
         </div>
@@ -45,10 +45,9 @@
           <template #avatar>
             <q-icon name="rocket" color="primary" size="sm" />
           </template>
-          <div class="text-weight-bold text-subtitle2">Kiosk Mode Active</div>
+          <div class="text-weight-bold text-subtitle2">{{ $t('workspace.counter.kioskActiveTitle') }}</div>
           <div class="text-xs q-mt-xs">
-            POS transactions, attendance logs, and cash drawer management will be fully operational
-            in Phase 4.
+            {{ $t('workspace.counter.kioskActiveMsg') }}
           </div>
         </q-banner>
       </q-card-section>
@@ -60,7 +59,7 @@
           unelevated
           class="full-width q-py-md rounded-btn text-weight-bold text-subtitle1 cursor-pointer"
           icon="logout"
-          label="Clock Out"
+          :label="$t('auth.counter.clockOut')"
           style="min-height: 48px"
           @click="handleClockOut"
         />

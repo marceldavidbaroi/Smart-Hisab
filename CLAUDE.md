@@ -220,3 +220,4 @@ If a response exceeds 800 tokens, pause and ask: _"Is all of this necessary?"_
 - State management pattern: Pinia (modular stores)
 - API layer pattern: Supabase Client SDK / RPCs
 - File naming convention: camelCase for code, kebab-case for assets
+- User feedback: always use `web/src/composables/useFeedback.ts` (`showApiError` / `showError` dialog for failures; `showSuccess` / `showInfo` / `showWarning` top toasts). Do not use ad-hoc `$q.notify` / custom error dialogs in new features. See `.cursor/rules/feedback-notifications.mdc`.

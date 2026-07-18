@@ -9,7 +9,7 @@
           {{ tenantName ? tenantName.charAt(0).toUpperCase() : 'C' }}
         </q-avatar>
         <div class="text-h5 text-weight-bold text-slate-800">{{ tenantName || 'Canteen' }}</div>
-        <p class="text-slate-500 text-sm q-mt-sm">Enter your 4-digit PIN to clock in.</p>
+        <p class="text-slate-500 text-sm q-mt-sm">{{ $t('auth.counter.enterPin') }}</p>
       </q-card-section>
 
       <q-card-section class="q-px-xl">
@@ -19,7 +19,7 @@
             <template #avatar>
               <q-icon name="info" color="amber-9" />
             </template>
-            Please set your private 4-digit PIN.
+            {{ $t('auth.counter.setPinBanner') }}
           </q-banner>
 
           <q-input
@@ -28,12 +28,12 @@
             filled
             mask="####"
             unmasked-value
-            label="New PIN"
+            :label="$t('auth.counter.newPinLabel')"
             color="primary"
             class="custom-input q-mb-md text-center text-h6"
             :rules="[
-              (val) => !!val || 'PIN is required',
-              (val) => val.length === 4 || 'Must be exactly 4 digits',
+              (val) => !!val || $t('auth.counter.pinRequired'),
+              (val) => val.length === 4 || $t('auth.counter.pinInvalid'),
             ]"
             hide-bottom-space
             autofocus
@@ -45,12 +45,12 @@
             filled
             mask="####"
             unmasked-value
-            label="Confirm New PIN"
+            :label="$t('auth.counter.confirmPinLabel')"
             color="primary"
             class="custom-input q-mb-md text-center text-h6"
             :rules="[
-              (val) => !!val || 'Confirmation is required',
-              (val) => val === newPin || 'PINs do not match',
+              (val) => !!val || $t('auth.counter.confirmRequired'),
+              (val) => val === newPin || $t('auth.counter.pinMismatch'),
             ]"
             hide-bottom-space
           />
@@ -69,7 +69,7 @@
             type="submit"
             color="primary"
             class="full-width q-py-sm rounded-btn btn-gradient q-mt-md text-weight-bold"
-            label="Save & Clock In"
+            :label="$t('auth.counter.saveClockIn')"
             :loading="loading"
           />
         </q-form>
@@ -86,8 +86,8 @@
             color="primary"
             class="custom-input q-mb-md text-center text-h4 font-bold"
             :rules="[
-              (val) => !!val || 'PIN is required',
-              (val) => val.length === 4 || 'Must be exactly 4 digits',
+              (val) => !!val || $t('auth.counter.pinRequired'),
+              (val) => val.length === 4 || $t('auth.counter.pinInvalid'),
             ]"
             hide-bottom-space
             autofocus
@@ -118,7 +118,7 @@
             type="submit"
             color="primary"
             class="full-width q-py-md rounded-btn btn-gradient q-mt-lg text-weight-bold text-h6"
-            label="Clock In"
+            :label="$t('auth.counter.clockIn')"
             :loading="loading"
           />
         </q-form>
@@ -126,7 +126,7 @@
 
       <q-card-section class="text-center q-pt-md q-pb-lg">
         <q-btn flat color="red-5" no-caps class="text-weight-medium" @click="unpairDevice">
-          Unpair Terminal
+          {{ $t('auth.counter.unpairTerminal') }}
         </q-btn>
       </q-card-section>
     </q-card>
@@ -137,8 +137,10 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '../../boot/supabase';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const tenantId = ref('');
 const tenantName = ref('');
@@ -198,19 +200,19 @@ const handleLogin = async () => {
         localStorage.setItem('staff_session_name', data.full_name);
         localStorage.setItem('staff_session_role', data.role);
 
-        successMsg.value = `Welcome, ${data.full_name} (${data.role})`;
+        successMsg.value = t('auth.counter.welcomeStaff', { name: data.full_name, role: data.role });
 
         setTimeout(() => {
           void router.push(`/${tenantSlug.value}/counter/dashboard`);
         }, 1000);
       }
     } else {
-      errorMsg.value = data?.message || 'Invalid PIN code.';
+      errorMsg.value = data?.message || t('auth.counter.invalidPin');
       pin.value = '';
     }
   } catch (err) {
     const errorObj = err as Error;
-    errorMsg.value = errorObj.message || 'An unexpected error occurred';
+    errorMsg.value = errorObj.message || t('feedback.somethingWentWrong');
     pin.value = '';
   } finally {
     loading.value = false;
@@ -241,13 +243,13 @@ const handlePinSetup = async () => {
       newPin.value = '';
       confirmPin.value = '';
       tempPin.value = '';
-      successMsg.value = 'PIN set successfully. Please clock in with your new PIN.';
+      successMsg.value = t('auth.counter.setPinSuccess');
     } else {
-      errorMsg.value = 'Failed to set new PIN.';
+      errorMsg.value = t('auth.counter.failedSetPin');
     }
   } catch (err) {
     const errorObj = err as Error;
-    errorMsg.value = errorObj.message || 'An unexpected error occurred';
+    errorMsg.value = errorObj.message || t('feedback.somethingWentWrong');
   } finally {
     loading.value = false;
   }

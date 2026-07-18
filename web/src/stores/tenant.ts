@@ -81,6 +81,48 @@ export const useTenantStore = defineStore('tenant', () => {
     return true;
   }
 
+  function hasModulePermission(moduleName: string, permissionName: string): boolean {
+    if (userProfile.value?.is_superadmin) return true;
+    if (!activeTenant.value) return false;
+
+    const membership = myTenants.value.find((m) => m.tenants?.id === activeTenant.value?.id);
+    if (!membership) return false;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const permissions = membership.tenant_roles?.permissions as Record<string, any> | null;
+    if (!permissions) return false;
+
+    if (permissions.all === true) return true;
+
+    const mod = permissions.modules?.[moduleName];
+    if (!mod) return false;
+
+    const val = mod[permissionName];
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'string') return val !== 'none';
+    return false;
+  }
+
+  function getSessionReadScope(): 'all' | 'self' | 'none' {
+    if (userProfile.value?.is_superadmin) return 'all';
+    if (!activeTenant.value) return 'none';
+
+    const membership = myTenants.value.find((m) => m.tenants?.id === activeTenant.value?.id);
+    if (!membership) return 'none';
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const permissions = membership.tenant_roles?.permissions as Record<string, any> | null;
+    if (!permissions) return 'none';
+
+    if (permissions.all === true) return 'all';
+
+    const val = permissions.modules?.['operational_shifts']?.['sessions_read'];
+    if (val === 'all' || val === 'self' || val === 'none') {
+      return val;
+    }
+    return 'none';
+  }
+
   async function loadUserProfileAndTenants() {
     if (!user.value) return;
 
@@ -115,31 +157,41 @@ export const useTenantStore = defineStore('tenant', () => {
 
   async function syncFromUser(sessionUser: User | null) {
     if (sessionUser) {
+      const userChanged = !user.value || user.value.id !== sessionUser.id;
       user.value = sessionUser;
-      await loadUserProfileAndTenants();
+      if (userChanged || !userProfile.value) {
+        await loadUserProfileAndTenants();
+      }
     } else {
       clearStore();
     }
     initialized.value = true;
   }
 
+  let initPromise: Promise<void> | null = null;
+
   async function initializeStore() {
-    // Always re-sync session. An early return here broke email/OAuth login:
-    // the route guard marks initialized=true while logged out, then LoginPage's
-    // post-login initializeStore() was a no-op → empty store → blank/wrong redirect.
-    loading.value = true;
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      await syncFromUser(session?.user ?? null);
-    } catch (err) {
-      const error = err as Error;
-      console.error('Failed to initialize tenant store:', error.message);
-      initialized.value = true;
-    } finally {
-      loading.value = false;
-    }
+    if (initialized.value) return;
+    if (initPromise) return initPromise;
+
+    initPromise = (async () => {
+      loading.value = true;
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        await syncFromUser(session?.user ?? null);
+      } catch (err) {
+        const error = err as Error;
+        console.error('Failed to initialize tenant store:', error.message);
+        initialized.value = true;
+      } finally {
+        loading.value = false;
+        initPromise = null;
+      }
+    })();
+
+    return initPromise;
   }
 
   async function setActiveTenantBySlug(slug: string) {
@@ -243,6 +295,8 @@ export const useTenantStore = defineStore('tenant', () => {
     hasTenantAccess,
     isFeatureEnabled,
     hasPermission,
+    hasModulePermission,
+    getSessionReadScope,
     initializeStore,
     syncFromUser,
     loadUserProfileAndTenants,

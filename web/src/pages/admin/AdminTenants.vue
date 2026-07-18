@@ -4,10 +4,10 @@
     <div class="row items-center justify-between q-mb-lg q-mb-sm-xl">
       <div>
         <h1 class="text-h5 text-sm-h4 text-weight-bold q-my-none text-amber-10">
-          Tenants Management
+          {{ $t('admin.tenants.title') }}
         </h1>
         <p class="text-grey-7 text-subtitle2 q-mt-xs q-mb-none">
-          View all tenants on the platform and provision new ones.
+          {{ $t('admin.tenants.subtitle') }}
         </p>
       </div>
       <div>
@@ -16,7 +16,7 @@
           color="amber"
           text-color="black"
           icon="add"
-          label="Provision Tenant"
+          :label="$t('admin.tenants.provisionBtn')"
           class="text-weight-bold cursor-pointer action-btn"
           style="border-radius: 8px"
           @click="showCreateDialog = true"
@@ -46,7 +46,7 @@
     <!-- Tenants Table -->
     <q-card flat bordered class="bg-white">
       <q-card-section class="row items-center justify-between border-bottom q-py-sm q-px-md">
-        <div class="text-subtitle1 text-weight-bold text-grey-9">Platform Tenants</div>
+        <div class="text-subtitle1 text-weight-bold text-grey-9">{{ $t('admin.tenants.cardTitle') }}</div>
         <q-btn
           flat
           round
@@ -68,7 +68,7 @@
         binary-state-sort
         class="bg-white text-grey-9"
         :loading="loading"
-        no-data-label="No tenants found on this platform"
+        :no-data-label="$t('admin.tenants.noTenants')"
       >
         <!-- Status Slot -->
         <template #body-cell-status="props">
@@ -95,7 +95,7 @@
               class="cursor-pointer action-btn-sm"
               @click="visitTenantWorkspace(props.row.slug)"
             >
-              <q-tooltip>Go to Workspace</q-tooltip>
+              <q-tooltip>{{ $t('admin.tenants.tooltipWorkspace') }}</q-tooltip>
             </q-btn>
           </q-td>
         </template>
@@ -106,7 +106,7 @@
     <q-dialog v-model="showCreateDialog" persistent>
       <q-card class="bg-white text-grey-9 q-pa-md" style="width: 100%; max-width: 500px">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold text-amber-10">Provision Workspace Tenant</div>
+          <div class="text-h6 text-weight-bold text-amber-10">{{ $t('admin.tenants.dialog.title') }}</div>
           <q-space />
           <q-btn
             icon="close"
@@ -123,7 +123,7 @@
           <q-card-section class="q-py-none q-gutter-y-md">
             <div>
               <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >Organization Name</label
+                >{{ $t('admin.tenants.dialog.orgName') }}</label
               >
               <q-input
                 v-model="name"
@@ -132,7 +132,7 @@
                 dense
                 placeholder="Enterprise Inc."
                 color="amber-10"
-                :rules="[(val) => !!val || 'Name is required']"
+                :rules="[(val) => !!val || $t('admin.tenants.dialog.orgNameReq')]"
                 hide-bottom-space
                 @update:model-value="autoGenerateSlug"
               />
@@ -140,7 +140,7 @@
 
             <div>
               <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >URL Slug</label
+                >{{ $t('admin.tenants.dialog.slug') }}</label
               >
               <q-input
                 v-model="slug"
@@ -150,10 +150,10 @@
                 placeholder="enterprise-inc"
                 color="amber-10"
                 :rules="[
-                  (val) => !!val || 'Slug is required',
+                  (val) => !!val || $t('admin.tenants.dialog.slugReq'),
                   (val) =>
                     /^[a-z0-9-]+$/.test(val) ||
-                    'Slug must only contain lowercase letters, numbers, and dashes',
+                    $t('admin.tenants.dialog.slugInvalid'),
                 ]"
                 hide-bottom-space
               />
@@ -161,7 +161,7 @@
 
             <div>
               <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >Owner Email Address</label
+                >{{ $t('admin.tenants.dialog.ownerEmail') }}</label
               >
               <q-input
                 v-model="ownerEmail"
@@ -170,14 +170,14 @@
                 dense
                 placeholder="owner@enterprise.com"
                 color="amber-10"
-                :rules="[(val) => !!val || 'Owner email is required']"
+                :rules="[(val) => !!val || $t('admin.tenants.dialog.ownerEmailReq')]"
                 hide-bottom-space
               />
             </div>
 
             <div>
               <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >Parent Tenant (Optional)</label
+                >{{ $t('admin.tenants.dialog.parent') }}</label
               >
               <q-select
                 v-model="parentId"
@@ -193,7 +193,7 @@
 
             <div>
               <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >Subscription Tier</label
+                >{{ $t('admin.tenants.dialog.tier') }}</label
               >
               <q-select
                 v-model="subscriptionTier"
@@ -206,7 +206,7 @@
 
             <div class="q-mt-md">
               <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
-                >Feature Modules</label
+                >{{ $t('admin.tenants.dialog.features') }}</label
               >
               <div class="row q-col-gutter-sm q-mt-xs">
                 <div class="col-12">
@@ -254,13 +254,13 @@
           </q-card-section>
 
           <q-card-actions align="right" class="q-px-md q-pt-md">
-            <q-btn flat label="Cancel" v-close-popup color="grey-7" class="cursor-pointer" />
+            <q-btn flat :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')" v-close-popup color="grey-7" class="cursor-pointer" />
             <q-btn
               type="submit"
               unelevated
               color="amber"
               text-color="black"
-              label="Provision Tenant"
+              :label="$t('admin.tenants.provisionBtn')"
               class="text-weight-bold cursor-pointer"
               :loading="submitting"
             />
@@ -277,8 +277,10 @@ import { useRouter } from 'vue-router';
 import { supabase } from '../../boot/supabase';
 import { adminCreateTenant } from '../../services/multiTenant';
 import type { Tenant } from '../../services/multiTenant';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const tenants = ref<Tenant[]>([]);
 const loading = ref(false);
@@ -308,25 +310,25 @@ const parentTenantOptions = computed(() => {
 });
 
 const getParentName = (parentUuid: string | null | undefined) => {
-  if (!parentUuid) return 'None';
+  if (!parentUuid) return t('admin.tenants.dialog.none');
   const parent = tenants.value.find((t) => t.id === parentUuid);
   return parent ? parent.name : 'Unknown';
 };
 
-const columns = [
-  { name: 'name', align: 'left' as const, label: 'Tenant Name', field: 'name', sortable: true },
-  { name: 'slug', align: 'left' as const, label: 'Slug', field: 'slug', sortable: true },
+const columns = computed(() => [
+  { name: 'name', align: 'left' as const, label: t('admin.tenants.cols.name'), field: 'name', sortable: true },
+  { name: 'slug', align: 'left' as const, label: t('admin.tenants.cols.slug'), field: 'slug', sortable: true },
   {
     name: 'parent',
     align: 'left' as const,
-    label: 'Parent Tenant',
+    label: t('admin.tenants.cols.parent'),
     field: (row: Tenant) => getParentName(row.parent_id),
     sortable: true,
   },
-  { name: 'status', align: 'left' as const, label: 'Status', field: 'status', sortable: true },
-  { name: 'id', align: 'left' as const, label: 'Tenant ID', field: 'id', sortable: true },
-  { name: 'actions', align: 'right' as const, label: 'Actions', field: 'actions' },
-];
+  { name: 'status', align: 'left' as const, label: t('admin.tenants.cols.status'), field: 'status', sortable: true },
+  { name: 'id', align: 'left' as const, label: t('admin.tenants.cols.id'), field: 'id', sortable: true },
+  { name: 'actions', align: 'right' as const, label: t('admin.tenants.cols.actions'), field: 'actions' },
+]);
 
 const autoGenerateSlug = (val: string | number | null) => {
   const strVal = String(val || '');
@@ -373,7 +375,7 @@ const handleCreateTenant = async () => {
 
     await adminCreateTenant(createParams);
 
-    successMsg.value = `Successfully provisioned tenant '${name.value}' with owner email '${ownerEmail.value}'!`;
+    successMsg.value = t('admin.tenants.messages.success', { name: name.value, email: ownerEmail.value });
     showCreateDialog.value = false;
 
     // Reset form

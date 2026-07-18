@@ -6,6 +6,7 @@ export interface KioskStaff {
   id: string;
   fullName: string;
   role: string;
+  permissions?: Record<string, unknown> | undefined;
 }
 
 export const useKioskStore = defineStore('kiosk', () => {
@@ -152,6 +153,7 @@ export const useKioskStore = defineStore('kiosk', () => {
         staff_id?: string;
         full_name?: string;
         role?: string;
+        permissions?: Record<string, unknown>;
         message?: string;
         code?: string;
       };
@@ -175,6 +177,7 @@ export const useKioskStore = defineStore('kiosk', () => {
           id: res.staff_id,
           fullName: res.full_name!,
           role: res.role!,
+          permissions: res.permissions,
         };
         return { success: true, setupRequired: true };
       }
@@ -183,6 +186,7 @@ export const useKioskStore = defineStore('kiosk', () => {
         id: res.staff_id,
         fullName: res.full_name!,
         role: res.role!,
+        permissions: res.permissions,
       };
       isSetupRequired.value = false;
 
@@ -235,6 +239,14 @@ export const useKioskStore = defineStore('kiosk', () => {
     localStorage.removeItem('staff_session_role');
   }
 
+  function hasStaffPermission(moduleName: string, permissionName: string): boolean {
+    if (!currentStaff.value?.permissions) return false;
+    const permissions = currentStaff.value.permissions;
+    const mod = (permissions.modules as Record<string, Record<string, unknown>>)?.[moduleName];
+    if (!mod) return false;
+    return !!mod[permissionName];
+  }
+
   function unpairDevice() {
     logoutStaff();
     deviceToken.value = null;
@@ -273,6 +285,7 @@ export const useKioskStore = defineStore('kiosk', () => {
     fetchStaffList,
     pairDevice,
     loginStaff,
+    hasStaffPermission,
     setPrivatePin,
     logoutStaff,
     unpairDevice,

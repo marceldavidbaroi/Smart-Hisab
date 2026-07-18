@@ -47,8 +47,8 @@ To support enterprise administration, billing control, and provisioning, the sys
 *   **Role**: Set on the `tenant_members` mapping table.
 *   **Permissions**:
     *   **Tenant Owner**: Full control *only* within their organization scope. Can invite users, configure internal visual settings, switch subscription plans (within limits allowed by the superadmin), and manage team roles.
-    *   **Tenant Admin/Member**: Access features, edit project/module data, and view settings as permitted by their custom assigned `tenant_roles` permissions.
-    *   **Counter Staff**: PIN-only operators who do not have platform (email) accounts. They operate on paired terminal devices and log POS items, attendance meals, or cash advances.
+    *   **Tenant Admin/Member**: Access features, edit project/module data, and view settings as permitted by their custom assigned `tenant_roles` permissions. These are **workspace** roles only — floor Managers who only use the kiosk belong in `staff_members` / `staff_roles`, not here.
+    *   **Counter Staff (kiosk plane):** PIN-only operators on paired terminals (`staff_members` + `staff_roles`). Includes **Manager** (open/close session), **Cashier**, and generic Staff. Not `tenant_members` unless also invited to the workspace.
 
 ---
 
@@ -63,7 +63,9 @@ erDiagram
     tenants ||--o{ tenant_members : "contains"
     tenants ||--o{ tenant_invitations : "issues"
     tenants ||--o{ tenant_roles : "defines"
+    tenants ||--o{ staff_roles : "defines floor roles"
     tenants ||--o{ staff_members : "hires"
+    staff_roles ||--o{ staff_members : "assigns"
     tenants ||--o{ device_pairings : "authorizes"
     
     auth_users ||--o| user_profiles : "extends"
@@ -102,6 +104,7 @@ erDiagram
       "localization": {
         "timezone": "Asia/Dhaka",
         "currency": "BDT",
+        "region": "BD",
         "language": "bn",
         "date_format": "DD/MM/YYYY"
       },
@@ -111,7 +114,7 @@ erDiagram
       }
     }
     ```
-
+    Owner UI: Workspace Settings → **Preferences** (`currency`, `timezone`, `region`, `date_format`).
 #### 3. `tenant_roles`
 *   `id` (UUID, Primary Key): Unique role identifier.
 *   `tenant_id` (UUID, Nullable, Foreign Key -> `tenants.id`): NULL for system-wide defaults (Owner, Admin, Member); populated for custom tenant roles.
@@ -177,12 +180,19 @@ erDiagram
 *   `id` (UUID, Primary Key): Unique staff employee identifier.
 *   `tenant_id` (UUID, Foreign Key -> `tenants.id`)
 *   `full_name` (Text): Employee name.
-*   `role` (Text): Employee duty (e.g. Cook, Server, Manager).
+*   `staff_role_id` (UUID, Foreign Key -> `staff_roles.id`): Kiosk capability role (Manager, Cashier, Staff, or custom). Replaces free-text duty labels.
+*   `user_id` (UUID, Nullable, Foreign Key -> `auth.users`): Optional link when the same person is also a `tenant_members` workspace user.
 *   `phone` (Text): Mandatory, unique contact number within the tenant.
 *   `is_active` (Boolean): Status flag.
 *   `allow_terminal_login` (Boolean): Activates PIN logins on paired kiosks.
 *   `hashed_pin` (Text, Nullable): Blowfish-hashed 4-digit PIN.
 *   `temp_pin` (Text, Nullable): Masked temporary PIN displayed on Owner dashboards.
+
+#### 8b. `staff_roles` (Kiosk plane — distinct from `tenant_roles`)
+*   `id` (UUID, Primary Key)
+*   `tenant_id` (UUID, Nullable): `null` = system template (Manager, Cashier, Staff).
+*   `name` (Text), `permissions` (JSONB), `is_system_role` (Boolean)
+*   **Do not conflate with workspace roles:** Manager is a **staff** role for paired-device ops (including open/close session). Owner + configurable `tenant_roles` remain for Auth workspace access only. See [operational_shifts_sessions.md](./operational_shifts_sessions.md) §1.B.
 
 #### 9. `device_pairings`
 *   `id` (UUID, Primary Key): Pairing session record index.

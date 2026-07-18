@@ -1,0 +1,50 @@
+---
+description: Use the central feedback helpers for all user-facing errors and toasts. No ad-hoc Notify/Dialog for API feedback.
+globs: web/src/**/*.{vue,ts,js}
+alwaysApply: false
+---
+
+# Central Feedback Notifications
+
+All user-facing success/error feedback in the Quasar app goes through the shared helpers. Do **not** invent per-feature toast or error-dialog systems.
+
+## Required API
+
+Import from [`web/src/composables/useFeedback.ts`](web/src/composables/useFeedback.ts):
+
+| Intent | Call | UI |
+| :--- | :--- | :--- |
+| API / hard failure | `showApiError(err, fallback?)` or `showError(message)` | Centered Dialog, **OK** only |
+| Success | `showSuccess(message)` | Top toast (`Notify`) |
+| Soft warning | `showWarning(message)` | Top toast |
+| Info | `showInfo(message)` | Top toast |
+
+Parse unknown API errors with [`web/src/utils/apiError.ts`](web/src/utils/apiError.ts) via `showApiError` (do not reimplement extraction).
+
+## Banned in new / edited feature code
+
+- `$q.notify(...)` / `Notify.create(...)` for feature feedback
+- `$q.dialog(...)` / `Dialog.create(...)` for **error** messaging
+- Inline `alert()`, custom toast components, or page-local error snackbars for the same purpose
+- Duplicating defaults (position, timeout, OK button) in call sites
+
+## Allowed exceptions
+
+- **Confirm / destructive prompts** (Yes/Cancel, delete confirm) may still use Quasar `Dialog` with cancel — not for API error text.
+- **Inline form field validation** (`q-input` rules / helper text) stays on the field; do not replace with the global dialog.
+- Extending `useFeedback.ts` itself when adding a new global feedback kind.
+
+## Pattern
+
+```ts
+import { showSuccess, showApiError } from 'src/composables/useFeedback';
+
+try {
+  await someRpc();
+  showSuccess('Saved');
+} catch (err) {
+  await showApiError(err, 'Failed to save');
+}
+```
+
+When touching legacy `$q.notify` negative/success calls in a file you already edit, migrate that call site to `useFeedback`.

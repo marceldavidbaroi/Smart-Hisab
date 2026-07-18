@@ -2,15 +2,15 @@
   <q-page class="q-pa-lg">
     <div class="row items-center justify-between q-mb-xl">
       <div>
-        <h1 class="text-h4 text-bold q-my-none text-slate-850">Workspace Dashboard</h1>
+        <h1 class="text-h4 text-bold q-my-none text-slate-850">{{ $t('workspace.dashboard.title') }}</h1>
         <p class="text-slate-500 text-subtitle2 q-mt-xs q-mb-none">
-          Overview and tenant settings for
+          {{ $t('workspace.dashboard.subtitle') }}
           <span class="text-primary text-weight-bold">{{ tenantStore.activeTenant?.name }}</span>
         </p>
       </div>
       <div>
         <q-chip outline color="primary" class="q-px-md font-semibold">
-          Role: {{ tenantStore.activeRole || 'Member' }}
+          {{ $t('workspace.dashboard.role') }}: {{ tenantStore.activeRole || 'Member' }}
         </q-chip>
       </div>
     </div>
@@ -22,19 +22,19 @@
         <q-card class="glass-card full-height">
           <q-card-section class="card-gradient-header row items-center q-pb-md">
             <q-icon name="info" size="24px" class="text-primary q-mr-sm" />
-            <div class="text-h6 text-bold text-slate-800">Workspace Profile</div>
+            <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.dashboard.profileCardTitle') }}</div>
           </q-card-section>
 
           <q-card-section class="q-pt-md">
             <div class="row q-col-gutter-y-md">
-              <div class="col-12 row items-center">
-                <div class="col-4 text-slate-500 text-weight-bold">Workspace Name:</div>
+               <div class="col-12 row items-center">
+                <div class="col-4 text-slate-500 text-weight-bold">{{ $t('workspace.dashboard.workspaceName') }}:</div>
                 <div class="col-8 text-weight-medium text-slate-800">
                   {{ tenantStore.activeTenant?.name }}
                 </div>
               </div>
               <div class="col-12 row items-center">
-                <div class="col-4 text-slate-500 text-weight-bold">Routing Slug:</div>
+                <div class="col-4 text-slate-500 text-weight-bold">{{ $t('workspace.dashboard.routingSlug') }}:</div>
                 <div class="col-8">
                   <q-badge
                     color="indigo-1"
@@ -46,13 +46,13 @@
                 </div>
               </div>
               <div class="col-12 row items-center">
-                <div class="col-4 text-slate-500 text-weight-bold">Tenant ID:</div>
+                <div class="col-4 text-slate-500 text-weight-bold">{{ $t('workspace.dashboard.tenantId') }}:</div>
                 <div class="col-8 text-caption font-mono text-slate-500 ellipsis">
                   {{ tenantStore.activeTenant?.id }}
                 </div>
               </div>
               <div class="col-12 row items-center">
-                <div class="col-4 text-slate-500 text-weight-bold">Status:</div>
+                <div class="col-4 text-slate-500 text-weight-bold">{{ $t('workspace.dashboard.status') }}:</div>
                 <div class="col-8">
                   <q-badge
                     :color="tenantStore.activeTenant?.status === 'active' ? 'green-2' : 'orange-2'"
@@ -77,7 +77,7 @@
         <q-card class="glass-card full-height">
           <q-card-section class="card-gradient-header row items-center q-pb-md">
             <q-icon name="stars" size="24px" class="text-purple-6 q-mr-sm" />
-            <div class="text-h6 text-bold text-slate-800">Enabled Feature Modules</div>
+            <div class="text-h6 text-bold text-slate-800">{{ $t('workspace.dashboard.featuresCardTitle') }}</div>
           </q-card-section>
 
           <q-card-section class="q-pt-md">
@@ -107,25 +107,7 @@
             </div>
             <div v-else class="text-center q-py-lg text-slate-500">
               <q-icon name="extension" size="48px" class="q-mb-sm text-slate-400" />
-              <div>No features configured for this workspace.</div>
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Tenant Settings preferences JSON -->
-      <div class="col-12">
-        <q-card class="glass-card">
-          <q-card-section class="card-gradient-header row items-center q-pb-md">
-            <q-icon name="settings_applications" size="24px" class="text-cyan-6 q-mr-sm" />
-            <div class="text-h6 text-bold text-slate-800">Workspace Preferences</div>
-          </q-card-section>
-
-          <q-card-section class="q-pt-md">
-            <div class="code-block-wrapper">
-              <pre
-                class="bg-slate-950 text-slate-800 q-pa-md rounded-borders font-mono text-xs overflow-auto"
-                >{{ formattedPreferences }}</pre>
+              <div>{{ $t('workspace.dashboard.noFeatures') }}</div>
             </div>
           </q-card-section>
         </q-card>
@@ -163,28 +145,6 @@ const enabledFeatures = computed<any>(() => {
 const hasFeatures = computed(() => {
   return Object.keys(enabledFeatures.value).length > 0;
 });
-
-const formattedPreferences = computed(() => {
-  const preferences = (tenantStore.activeSettings as any)?.preferences;
-  if (!preferences || Object.keys(preferences).length === 0) {
-    return JSON.stringify(
-      {
-        localization: {
-          timezone: 'UTC',
-          currency: 'USD',
-          date_format: 'YYYY-MM-DD',
-        },
-        security: {
-          mfa_required: false,
-          allowed_email_domains: [],
-        },
-      },
-      null,
-      2,
-    );
-  }
-  return JSON.stringify(preferences, null, 2);
-});
 </script>
 
 <style scoped lang="scss">
@@ -216,11 +176,5 @@ const formattedPreferences = computed(() => {
 .feature-disabled {
   background: rgba(0, 0, 0, 0.02);
   opacity: 0.6;
-}
-
-.code-block-wrapper pre {
-  margin: 0;
-  max-height: 300px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 </style>

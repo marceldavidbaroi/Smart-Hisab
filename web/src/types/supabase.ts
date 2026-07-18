@@ -112,6 +112,139 @@ export type Database = {
           },
         ];
       };
+      sessions: {
+        Row: {
+          business_date: string;
+          closed_at: string | null;
+          closed_by_staff_id: string | null;
+          closed_by_user_id: string | null;
+          closing_cash: number | null;
+          created_at: string;
+          expected_cash: number | null;
+          id: string;
+          notes: string | null;
+          opened_at: string;
+          opened_by_staff_id: string;
+          opened_by_user_id: string | null;
+          opening_cash: number;
+          shift_id: string;
+          status: string;
+          tenant_id: string;
+          updated_at: string;
+          variance: number | null;
+        };
+        Insert: {
+          business_date: string;
+          closed_at?: string | null;
+          closed_by_staff_id?: string | null;
+          closed_by_user_id?: string | null;
+          closing_cash?: number | null;
+          created_at?: string;
+          expected_cash?: number | null;
+          id?: string;
+          notes?: string | null;
+          opened_at?: string;
+          opened_by_staff_id: string;
+          opened_by_user_id?: string | null;
+          opening_cash?: number;
+          shift_id: string;
+          status: string;
+          tenant_id: string;
+          updated_at?: string;
+          variance?: number | null;
+        };
+        Update: {
+          business_date?: string;
+          closed_at?: string | null;
+          closed_by_staff_id?: string | null;
+          closed_by_user_id?: string | null;
+          closing_cash?: number | null;
+          created_at?: string;
+          expected_cash?: number | null;
+          id?: string;
+          notes?: string | null;
+          opened_at?: string;
+          opened_by_staff_id?: string;
+          opened_by_user_id?: string | null;
+          opening_cash?: number;
+          shift_id?: string;
+          status?: string;
+          tenant_id?: string;
+          updated_at?: string;
+          variance?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'sessions_closed_by_staff_id_fkey';
+            columns: ['closed_by_staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sessions_opened_by_staff_id_fkey';
+            columns: ['opened_by_staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sessions_shift_id_fkey';
+            columns: ['shift_id'];
+            isOneToOne: false;
+            referencedRelation: 'shifts';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sessions_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      shifts: {
+        Row: {
+          created_at: string;
+          end_time: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          start_time: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          end_time: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          start_time: string;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          end_time?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          start_time?: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'shifts_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       staff_members: {
         Row: {
           allow_terminal_login: boolean;
@@ -121,10 +254,11 @@ export type Database = {
           id: string;
           is_active: boolean;
           phone: string;
-          role: string;
+          staff_role_id: string;
           temp_pin: string | null;
           tenant_id: string;
           updated_at: string;
+          user_id: string | null;
         };
         Insert: {
           allow_terminal_login?: boolean;
@@ -134,10 +268,11 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           phone: string;
-          role: string;
+          staff_role_id: string;
           temp_pin?: string | null;
           tenant_id: string;
           updated_at?: string;
+          user_id?: string | null;
         };
         Update: {
           allow_terminal_login?: boolean;
@@ -147,14 +282,63 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           phone?: string;
-          role?: string;
+          staff_role_id?: string;
           temp_pin?: string | null;
           tenant_id?: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'staff_members_staff_role_id_fkey';
+            columns: ['staff_role_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_roles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_members_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      staff_roles: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          is_system_role: boolean;
+          name: string;
+          permissions: Json;
+          tenant_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          is_system_role?: boolean;
+          name: string;
+          permissions?: Json;
+          tenant_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          is_system_role?: boolean;
+          name?: string;
+          permissions?: Json;
+          tenant_id?: string | null;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'staff_members_tenant_id_fkey';
+            foreignKeyName: 'staff_roles_tenant_id_fkey';
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
@@ -413,6 +597,73 @@ export type Database = {
           },
         ];
       };
+      transaction_ledger: {
+        Row: {
+          amount: number;
+          category: string;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          operator_staff_id: string | null;
+          operator_user_id: string | null;
+          payment_method: string;
+          session_id: string | null;
+          tenant_id: string;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          amount: number;
+          category: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          operator_staff_id?: string | null;
+          operator_user_id?: string | null;
+          payment_method: string;
+          session_id?: string | null;
+          tenant_id: string;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          category?: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          operator_staff_id?: string | null;
+          operator_user_id?: string | null;
+          payment_method?: string;
+          session_id?: string | null;
+          tenant_id?: string;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'transaction_ledger_operator_staff_id_fkey';
+            columns: ['operator_staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'transaction_ledger_session_id_fkey';
+            columns: ['session_id'];
+            isOneToOne: false;
+            referencedRelation: 'sessions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'transaction_ledger_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       user_profiles: {
         Row: {
           avatar_url: string | null;
@@ -473,12 +724,59 @@ export type Database = {
         Args: { p_status: string; p_tenant_id: string; p_tier: string };
         Returns: undefined;
       };
+      calculate_expected_cash: {
+        Args: { p_session_id: string };
+        Returns: number;
+      };
+      close_session: {
+        Args: {
+          p_closing_cash: number;
+          p_device_token: string;
+          p_notes?: string;
+          p_session_id: string;
+          p_staff_id: string;
+        };
+        Returns: {
+          expected_cash: number;
+          status: string;
+          variance: number;
+        }[];
+      };
       create_tenant: {
         Args: { p_name: string; p_slug: string };
         Returns: string;
       };
       generate_pairing_code: {
         Args: { p_device_name: string; p_tenant_id: string };
+        Returns: string;
+      };
+      get_cash_register_running_balance: {
+        Args: { p_session_id: string; p_tenant_id: string };
+        Returns: number;
+      };
+      get_daily_financial_breakdown: {
+        Args: { p_end_date: string; p_start_date: string; p_tenant_id: string };
+        Returns: {
+          bazar_discrepancies: number;
+          bazar_surpluses: number;
+          debt_collections: number;
+          manual_inflows: number;
+          manual_outflows: number;
+          net_profit: number;
+          overhead_expenses: number;
+          payroll_expenses: number;
+          pos_sales: number;
+          raw_materials: number;
+          staff_advances: number;
+          supplier_payouts: number;
+          total_inflow: number;
+          total_outflow: number;
+          transaction_date: string;
+        }[];
+      };
+      get_ledger_read_scope: { Args: { p_tenant_id: string }; Returns: string };
+      get_or_create_staff_role: {
+        Args: { p_role_name: string; p_tenant_id: string };
         Returns: string;
       };
       get_paired_device_staff: {
@@ -490,6 +788,36 @@ export type Database = {
         }[];
       };
       get_selected_tenant_id: { Args: never; Returns: string };
+      get_session_read_scope: { Args: { p_tenant_id: string }; Returns: string };
+      get_tenant_financial_summary: {
+        Args: { p_end_date: string; p_start_date: string; p_tenant_id: string };
+        Returns: {
+          cash_sales_pos: number;
+          market_expenses: number;
+          net_profit_loss: number;
+          outstanding_payables: number;
+          outstanding_receivables: number;
+          payroll_expenses: number;
+          total_inflow: number;
+          total_outflow: number;
+        }[];
+      };
+      has_module_permission: {
+        Args: {
+          p_module_name: string;
+          p_permission_name: string;
+          p_tenant_id: string;
+        };
+        Returns: boolean;
+      };
+      has_staff_permission: {
+        Args: {
+          p_module_name: string;
+          p_permission_name: string;
+          p_staff_id: string;
+        };
+        Returns: boolean;
+      };
       invite_user: {
         Args: { p_email: string; p_role_id: string; p_tenant_id: string };
         Returns: string;
@@ -497,6 +825,42 @@ export type Database = {
       is_superadmin: { Args: never; Returns: boolean };
       is_tenant_member: { Args: { p_tenant_id: string }; Returns: boolean };
       is_tenant_owner: { Args: { p_tenant_id: string }; Returns: boolean };
+      log_manual_ledger_entry: {
+        Args: {
+          p_amount: number;
+          p_category: string;
+          p_notes?: string;
+          p_payment_method: string;
+          p_session_id: string;
+          p_tenant_id: string;
+          p_type: string;
+        };
+        Returns: string;
+      };
+      open_session: {
+        Args: {
+          p_business_date?: string;
+          p_device_token: string;
+          p_opening_cash: number;
+          p_shift_id: string;
+          p_staff_id: string;
+        };
+        Returns: string;
+      };
+      post_ledger_entry: {
+        Args: {
+          p_amount: number;
+          p_category: string;
+          p_notes?: string;
+          p_operator_staff_id?: string;
+          p_operator_user_id?: string;
+          p_payment_method: string;
+          p_session_id: string;
+          p_tenant_id: string;
+          p_type: string;
+        };
+        Returns: string;
+      };
       reset_staff_pin: { Args: { p_staff_id: string }; Returns: string };
       set_staff_pin:
         | {
