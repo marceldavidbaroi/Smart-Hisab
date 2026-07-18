@@ -138,9 +138,11 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '../../boot/supabase';
 import { useI18n } from 'vue-i18n';
+import { useKioskStore } from '../../stores/kiosk';
 
 const router = useRouter();
 const { t } = useI18n();
+const kioskStore = useKioskStore();
 
 const tenantId = ref('');
 const tenantName = ref('');
@@ -258,15 +260,8 @@ const handlePinSetup = async () => {
   }
 };
 
-const unpairDevice = () => {
-  localStorage.removeItem('device_token');
-  localStorage.removeItem('device_tenant_id');
-  localStorage.removeItem('device_tenant_name');
-  localStorage.removeItem('device_tenant_slug');
-  localStorage.removeItem('staff_session_id');
-  localStorage.removeItem('staff_session_name');
-  localStorage.removeItem('staff_session_role');
-
+const unpairDevice = async () => {
+  await kioskStore.unpairDevice();
   void router.push('/auth/login');
 };
 </script>
@@ -281,9 +276,9 @@ const unpairDevice = () => {
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(14, 74, 71, 0.3);
   border: none;
 
   &:hover {
@@ -302,9 +297,9 @@ const unpairDevice = () => {
   }
 
   &.q-field__control--focused {
-    border-color: #6366f1;
+    border-color: #0e4a47;
     background: #ffffff !important;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 2px rgba(14, 74, 71, 0.15);
   }
 }
 

@@ -87,7 +87,7 @@
 
         <!-- Actions Slot -->
         <template #body-cell-actions="props">
-          <q-td :props="props" class="text-right">
+          <q-td :props="props" class="text-right q-gutter-x-xs">
             <q-btn
               flat
               round
@@ -98,6 +98,32 @@
               @click="visitTenantWorkspace(props.row.slug)"
             >
               <q-tooltip>{{ $t('admin.tenants.tooltipWorkspace') }}</q-tooltip>
+            </q-btn>
+
+            <q-btn
+              flat
+              round
+              dense
+              :icon="props.row.status === 'active' ? 'block' : 'check_circle'"
+              :color="props.row.status === 'active' ? 'warning' : 'positive'"
+              class="cursor-pointer action-btn-sm"
+              @click="handleToggleStatus(props.row)"
+            >
+              <q-tooltip>{{
+                props.row.status === 'active' ? 'Suspend Tenant' : 'Activate Tenant'
+              }}</q-tooltip>
+            </q-btn>
+
+            <q-btn
+              flat
+              round
+              dense
+              icon="delete"
+              color="negative"
+              class="cursor-pointer action-btn-sm"
+              @click="handleDeleteTenant(props.row)"
+            >
+              <q-tooltip>Delete Tenant</q-tooltip>
             </q-btn>
           </q-td>
         </template>
@@ -282,15 +308,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 import { supabase } from '../../boot/supabase';
-import { adminCreateTenant } from '../../services/multiTenant';
+import { adminCreateTenant, deleteTenant } from '../../services/multiTenant';
 import type { Tenant } from '../../services/multiTenant';
 import { useI18n } from 'vue-i18n';
+import { showSuccess, showError } from '../../composables/useFeedback';
+import { useTenantStore } from '../../stores/tenant';
 
 const router = useRouter();
+const $q = useQuasar();
 const { t } = useI18n();
+const tenantStore = useTenantStore();
 
-const tenants = ref<Tenant[]>([]);
+const tenants = ref<(Tenant & { owner?: string })[]>([]);
 const loading = ref(false);
 const errorMsg = ref('');
 const successMsg = ref('');
@@ -339,6 +370,13 @@ const columns = computed(() => [
     sortable: true,
   },
   {
+    name: 'owner',
+    align: 'left' as const,
+    label: 'Owner / Creator',
+    field: 'owner',
+    sortable: true,
+  },
+  {
     name: 'parent',
     align: 'left' as const,
     label: t('admin.tenants.cols.parent'),
@@ -379,13 +417,45 @@ const loadTenants = async () => {
   loading.value = true;
   errorMsg.value = '';
   try {
-    const { data, error } = await supabase
+    const { data: tenantsData, error: tenantsError } = await supabase
       .from('tenants')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    tenants.value = (data || []) as Tenant[];
+    if (tenantsError) throw tenantsError;
+
+    // Fetch members who are owners (Owner role UUID)
+    const { data: membersData, error: membersError } = await supabase
+      .from('tenant_members')
+      .select('tenant_id, user_id, user_profiles(full_name)')
+      .eq('role_id', '00000000-0000-0000-0000-000000000001');
+
+    if (membersError) throw membersError;
+
+    // Fetch invitations that are for owners
+    const { data: invitesData, error: invitesError } = await supabase
+      .from('tenant_invitations')
+      .select('tenant_id, email')
+      .eq('role_id', '00000000-0000-0000-0000-000000000001');
+
+    if (invitesError) throw invitesError;
+
+    tenants.value = (tenantsData || []).map((t) => {
+      const activeOwner = membersData?.find((m) => m.tenant_id === t.id);
+      const pendingOwner = invitesData?.find((i) => i.tenant_id === t.id);
+
+      let ownerText = 'No Owner';
+      if (activeOwner && activeOwner.user_profiles) {
+        ownerText = (activeOwner.user_profiles as unknown as { full_name: string }).full_name;
+      } else if (pendingOwner) {
+        ownerText = `${pendingOwner.email} (Pending)`;
+      }
+
+      return {
+        ...t,
+        owner: ownerText,
+      };
+    });
   } catch (err) {
     const error = err as Error;
     errorMsg.value = error.message || 'Failed to load platform tenants.';
@@ -441,7 +511,58 @@ const handleCreateTenant = async () => {
   }
 };
 
+const handleToggleStatus = async (tenantRow: Tenant) => {
+  const newStatus = tenantRow.status === 'active' ? 'suspended' : 'active';
+  errorMsg.value = '';
+  successMsg.value = '';
+  try {
+    const { error } = await supabase
+      .from('tenants')
+      .update({ status: newStatus })
+      .eq('id', tenantRow.id);
+
+    if (error) throw error;
+    showSuccess(`Successfully updated tenant status to ${newStatus}.`);
+    await loadTenants();
+  } catch (err) {
+    const error = err as Error;
+    errorMsg.value = error.message || 'Failed to update tenant status.';
+  }
+};
+
+const handleDeleteTenant = (tenantRow: Tenant) => {
+  $q.dialog({
+    title: 'Confirm Tenant Deletion',
+    message: `Are you sure you want to permanently delete the tenant "${tenantRow.name}"? This will permanently delete all related workspaces, settings, members, ledger, and customer records. This action cannot be undone.`,
+    cancel: true,
+    persistent: true,
+    ok: {
+      color: 'negative',
+      label: 'Delete Permanently',
+      unelevated: true,
+    },
+  }).onOk(() => {
+    void (async () => {
+      errorMsg.value = '';
+      successMsg.value = '';
+      loading.value = true;
+      try {
+        await deleteTenant(tenantRow.id);
+        showSuccess(`Successfully deleted tenant "${tenantRow.name}".`);
+        await loadTenants();
+      } catch (err) {
+        const error = err as Error;
+        void showError(error.message || 'Failed to delete tenant.');
+      } finally {
+        loading.value = false;
+      }
+    })();
+  });
+};
+
 const visitTenantWorkspace = (slugStr: string) => {
+  // Leave platform console mode so / and auth redirects stay in workspace scope
+  tenantStore.setAdminSession(false);
   void router.push(`/${slugStr}/dashboard`);
 };
 

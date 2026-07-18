@@ -401,8 +401,8 @@ const handlePinSetup = async () => {
   }
 };
 
-const handleExitKiosk = () => {
-  kioskStore.unpairDevice();
+const handleExitKiosk = async () => {
+  await kioskStore.unpairDevice();
   void router.push('/auth/login');
 };
 </script>
@@ -434,9 +434,9 @@ const handleExitKiosk = () => {
 
 .btn-gradient {
   border-radius: 12px;
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 12px rgba(14, 74, 71, 0.15);
   border: none;
 
   &:hover {

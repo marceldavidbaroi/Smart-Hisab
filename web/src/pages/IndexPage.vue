@@ -1,11 +1,7 @@
 <template>
   <q-page class="flex flex-center">
     <div class="column items-center">
-      <img
-        alt="Quasar logo"
-        src="~@/assets/quasar-logo-vertical.svg"
-        style="width: 200px; height: 200px"
-      />
+      <img alt="Smart Hisab" src="~@/assets/brand-logo.png" style="width: 220px; height: auto" />
 
       <q-btn class="q-mt-md" color="primary" to="/second" label="Go to Second Page" no-caps />
     </div>

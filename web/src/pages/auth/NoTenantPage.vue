@@ -164,9 +164,9 @@ const handleSignOut = async () => {
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(14, 74, 71, 0.3);
   border: none;
 
   &:hover {
@@ -185,8 +185,8 @@ const handleSignOut = async () => {
   }
 
   &.q-field__control--focused {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+    border-color: #0e4a47;
+    box-shadow: 0 0 0 2px rgba(14, 74, 71, 0.15);
   }
 }
 </style>

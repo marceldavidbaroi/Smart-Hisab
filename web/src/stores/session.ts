@@ -2,6 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { supabase } from '../boot/supabase';
 import { useTenantStore } from './tenant';
+import { useKioskStore } from './kiosk';
 
 export interface OperationalSession {
   id: string;
@@ -23,6 +24,10 @@ export interface OperationalSession {
   shifts?: { name: string; start_time: string; end_time: string } | null;
 }
 
+function resolveTenantId(): string | null {
+  return useTenantStore().activeTenant?.id ?? useKioskStore().tenantId ?? null;
+}
+
 export const useSessionStore = defineStore('session', () => {
   const activeSession = ref<OperationalSession | null>(null);
   const loading = ref(false);
@@ -31,23 +36,32 @@ export const useSessionStore = defineStore('session', () => {
   const hasActiveSession = computed(() => activeSession.value?.status === 'open');
 
   async function fetchActiveSession() {
-    const tenantStore = useTenantStore();
-    const tenant = tenantStore.activeTenant;
-    if (!tenant) {
+    const tenantId = resolveTenantId();
+    if (!tenantId) {
       activeSession.value = null;
       return;
     }
     loading.value = true;
     lastError.value = null;
     try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*, shifts(name, start_time, end_time)')
-        .eq('tenant_id', tenant.id)
-        .eq('status', 'open')
-        .maybeSingle();
-      if (error) throw error;
-      activeSession.value = data;
+      const kiosk = useKioskStore();
+      if (kiosk.deviceToken) {
+        const { data, error } = await supabase.rpc('get_open_session', {
+          p_tenant_id: tenantId,
+          p_device_token: kiosk.deviceToken,
+        });
+        if (error) throw error;
+        activeSession.value = (data as OperationalSession | null) ?? null;
+      } else {
+        const { data, error } = await supabase
+          .from('sessions')
+          .select('*, shifts(name, start_time, end_time)')
+          .eq('tenant_id', tenantId)
+          .eq('status', 'open')
+          .maybeSingle();
+        if (error) throw error;
+        activeSession.value = data;
+      }
     } catch (e) {
       lastError.value = e instanceof Error ? e.message : 'Failed to load session';
       throw e;

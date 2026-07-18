@@ -179,3 +179,19 @@ export async function generatePairingCode(tenantId: string, deviceName: string):
   }
   return data as string;
 }
+
+/**
+ * Disconnect a paired device and issue a fresh 6-digit pairing code (same device name).
+ */
+export async function prepareDeviceRepair(tenantId: string, deviceId: string): Promise<string> {
+  const { data, error } = await supabase.rpc('prepare_device_repair', {
+    p_tenant_id: tenantId,
+    p_device_id: deviceId,
+  });
+
+  if (error) {
+    console.error('Error calling prepare_device_repair:', error.message);
+    throw error;
+  }
+  return data as string;
+}

@@ -75,6 +75,7 @@ export default defineBoot(({ app, router }) => {
 
         const route = router.currentRoute.value;
         // Only nudge navigation when still parked on a pre-auth route.
+        // Keep fullPath so `?redirect=` survives the auth-restore race.
         if (
           route.path === '/' ||
           route.name === 'login' ||
@@ -82,7 +83,7 @@ export default defineBoot(({ app, router }) => {
           route.name === 'tenant-login' ||
           route.name === 'admin-login'
         ) {
-          await router.replace(route.fullPath === '/' ? '/' : { path: route.path });
+          await router.replace(route.fullPath);
         }
       }
     });

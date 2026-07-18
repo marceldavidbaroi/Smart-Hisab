@@ -45,8 +45,8 @@
                 </div>
                 <div class="col-8">
                   <q-badge
-                    color="indigo-1"
-                    text-color="indigo-9"
+                    color="teal-1"
+                    text-color="teal-9"
                     class="text-sm font-mono q-py-xs q-px-sm"
                   >
                     {{ tenantStore.activeTenant?.slug }}

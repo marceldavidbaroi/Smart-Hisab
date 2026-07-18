@@ -244,7 +244,7 @@ export type Database = {
           id: string;
           is_active: boolean;
           outstanding_balance: number;
-          phone: string | null;
+          phone: string;
           tenant_id: string;
           updated_at: string;
         };
@@ -258,7 +258,7 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           outstanding_balance?: number;
-          phone?: string | null;
+          phone: string;
           tenant_id: string;
           updated_at?: string;
         };
@@ -272,7 +272,7 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           outstanding_balance?: number;
-          phone?: string | null;
+          phone?: string;
           tenant_id?: string;
           updated_at?: string;
         };
@@ -977,6 +977,14 @@ export type Database = {
         Args: { p_status: string; p_tenant_id: string; p_tier: string };
         Returns: undefined;
       };
+      assert_kiosk_staff: {
+        Args: {
+          p_device_token: string;
+          p_staff_id: string;
+          p_tenant_id: string;
+        };
+        Returns: undefined;
+      };
       calculate_expected_cash: {
         Args: { p_session_id: string };
         Returns: number;
@@ -999,12 +1007,33 @@ export type Database = {
         Args: { p_name: string; p_slug: string };
         Returns: string;
       };
+      edit_pos_sale: {
+        Args: {
+          p_amount: number;
+          p_device_token: string;
+          p_ledger_id: string;
+          p_notes?: string;
+          p_payment_method: string;
+          p_staff_id: string;
+          p_tenant_id: string;
+        };
+        Returns: string;
+      };
       generate_pairing_code: {
         Args: { p_device_name: string; p_tenant_id: string };
         Returns: string;
       };
       get_cash_register_running_balance: {
         Args: { p_session_id: string; p_tenant_id: string };
+        Returns: number;
+      };
+      get_cash_register_running_balance_kiosk: {
+        Args: {
+          p_device_token: string;
+          p_session_id: string;
+          p_staff_id: string;
+          p_tenant_id: string;
+        };
         Returns: number;
       };
       get_daily_financial_breakdown: {
@@ -1027,7 +1056,15 @@ export type Database = {
           transaction_date: string;
         }[];
       };
+      get_enabled_features: {
+        Args: { p_device_token: string; p_tenant_id: string };
+        Returns: Json;
+      };
       get_ledger_read_scope: { Args: { p_tenant_id: string }; Returns: string };
+      get_open_session: {
+        Args: { p_device_token: string; p_tenant_id: string };
+        Returns: Json;
+      };
       get_or_create_staff_role: {
         Args: { p_role_name: string; p_tenant_id: string };
         Returns: string;
@@ -1039,6 +1076,10 @@ export type Database = {
           id: string;
           role: string;
         }[];
+      };
+      get_pos_edit_window: {
+        Args: { p_device_token?: string; p_tenant_id: string };
+        Returns: Json;
       };
       get_selected_tenant_id: { Args: never; Returns: string };
       get_session_read_scope: { Args: { p_tenant_id: string }; Returns: string };
@@ -1078,6 +1119,71 @@ export type Database = {
       is_superadmin: { Args: never; Returns: boolean };
       is_tenant_member: { Args: { p_tenant_id: string }; Returns: boolean };
       is_tenant_owner: { Args: { p_tenant_id: string }; Returns: boolean };
+      list_active_shifts: {
+        Args: { p_device_token: string; p_tenant_id: string };
+        Returns: {
+          end_time: string;
+          id: string;
+          name: string;
+          start_time: string;
+        }[];
+      };
+      list_customers: {
+        Args: {
+          p_active_only?: boolean;
+          p_device_token: string;
+          p_staff_id: string;
+          p_tenant_id: string;
+        };
+        Returns: {
+          category: string;
+          contract_daily_rate: number | null;
+          contract_shifts: string[] | null;
+          created_at: string;
+          factory_unit: string | null;
+          full_name: string;
+          id: string;
+          is_active: boolean;
+          outstanding_balance: number;
+          phone: string;
+          tenant_id: string;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'customers';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      list_session_ledger_entries: {
+        Args: {
+          p_device_token: string;
+          p_session_id: string;
+          p_staff_id: string;
+          p_tenant_id: string;
+        };
+        Returns: {
+          amount: number;
+          category: string;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          operator_staff_id: string | null;
+          operator_user_id: string | null;
+          payment_method: string;
+          session_id: string | null;
+          tenant_id: string;
+          type: string;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'transaction_ledger';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       log_manual_ledger_entry: {
         Args: {
           p_amount: number;
@@ -1090,6 +1196,18 @@ export type Database = {
         };
         Returns: string;
       };
+      log_pos_sale: {
+        Args: {
+          p_amount: number;
+          p_device_token: string;
+          p_notes?: string;
+          p_payment_method: string;
+          p_session_id: string;
+          p_staff_id: string;
+          p_tenant_id: string;
+        };
+        Returns: string;
+      };
       open_session: {
         Args: {
           p_business_date?: string;
@@ -1098,6 +1216,10 @@ export type Database = {
           p_shift_id: string;
           p_staff_id: string;
         };
+        Returns: string;
+      };
+      pos_edit_window_interval: {
+        Args: { p_tenant_id: string };
         Returns: string;
       };
       post_ledger_entry: {
@@ -1112,6 +1234,10 @@ export type Database = {
           p_tenant_id: string;
           p_type: string;
         };
+        Returns: string;
+      };
+      prepare_device_repair: {
+        Args: { p_device_id: string; p_tenant_id: string };
         Returns: string;
       };
       record_baki_transaction: {
@@ -1168,6 +1294,45 @@ export type Database = {
           action_taken: string;
           new_balance: number;
         }[];
+      };
+      unpair_device: {
+        Args: { p_device_token: string; p_tenant_id?: string };
+        Returns: boolean;
+      };
+      upsert_customer: {
+        Args: {
+          p_category: string;
+          p_contract_daily_rate: number;
+          p_contract_shifts: string[];
+          p_device_token?: string;
+          p_factory_unit: string;
+          p_full_name: string;
+          p_id?: string;
+          p_is_active: boolean;
+          p_phone: string;
+          p_staff_id?: string;
+          p_tenant_id: string;
+        };
+        Returns: {
+          category: string;
+          contract_daily_rate: number | null;
+          contract_shifts: string[] | null;
+          created_at: string;
+          factory_unit: string | null;
+          full_name: string;
+          id: string;
+          is_active: boolean;
+          outstanding_balance: number;
+          phone: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'customers';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       verify_pairing_code: {
         Args: { p_code: string; p_device_name: string };

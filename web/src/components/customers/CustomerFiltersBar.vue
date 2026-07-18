@@ -1,6 +1,6 @@
 <template>
   <q-card flat bordered class="q-pa-sm bg-grey-2 border-all row q-col-gutter-sm items-center">
-    <div class="col-12 col-sm-4">
+    <div class="col-12 col-sm-6">
       <q-input
         v-model="filters.search"
         :label="$t('customers.list.searchPlaceholder')"
@@ -17,21 +17,7 @@
       </q-input>
     </div>
 
-    <div class="col-6 col-sm-3">
-      <q-select
-        v-model="filters.category"
-        :options="categoryOptions"
-        :label="$t('customers.list.filterCategory')"
-        dense
-        outlined
-        emit-value
-        map-options
-        bg-color="white"
-        :disable="loading"
-      />
-    </div>
-
-    <div class="col-6 col-sm-2 flex items-center justify-center">
+    <div class="col-6 col-sm-3 flex items-center justify-center">
       <q-checkbox
         v-model="filters.activeOnly"
         :label="$t('customers.list.filterActive')"
@@ -66,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { CustomerCategory } from '../../stores/customers';
 
@@ -85,19 +71,13 @@ const emit = defineEmits<{
   (e: 'clear'): void;
 }>();
 
-const { t } = useI18n();
+useI18n();
 
 const filters = ref<Filters>({
   search: '',
   category: '',
   activeOnly: true,
 });
-
-const categoryOptions = computed(() => [
-  { label: t('customers.list.categories.all'), value: '' },
-  { label: t('customers.list.categories.contract_worker'), value: 'contract_worker' },
-  { label: t('customers.list.categories.walk_in_baki'), value: 'walk_in_baki' },
-]);
 
 function applyFilters() {
   emit('apply', { ...filters.value });

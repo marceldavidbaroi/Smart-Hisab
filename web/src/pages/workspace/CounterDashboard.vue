@@ -42,9 +42,7 @@
         </div>
 
         <!-- Phase 4 Placeholder Banner -->
-        <q-banner
-          class="bg-indigo-1 text-indigo-9 rounded-borders q-mt-lg q-pa-md no-shadow bordered"
-        >
+        <q-banner class="bg-teal-1 text-teal-9 rounded-borders q-mt-lg q-pa-md no-shadow bordered">
           <template #avatar>
             <q-icon name="rocket" color="primary" size="sm" />
           </template>

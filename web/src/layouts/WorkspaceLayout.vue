@@ -14,40 +14,28 @@
         />
 
         <div class="row items-center no-wrap">
-          <div class="text-weight-bold text-dark text-sm">
-            {{ tenantStore.activeTenant?.name }}
-          </div>
-          <div
-            class="text-caption text-grey-7 q-ml-sm row items-center no-wrap"
-            style="font-size: 11px"
-          >
-            <span class="gt-xs text-grey-5">{{ $t('layouts.workspace.poweredBy') }}</span>
-            <span class="text-weight-bold text-primary q-ml-xs">Smart Hisab</span>
+          <img
+            src="~@/assets/brand-mark.png"
+            alt="Smart Hisab"
+            class="header-brand-mark q-mr-sm shrink-0"
+          />
+          <div class="column">
+            <div class="text-weight-bold text-dark text-sm ellipsis" style="max-width: 40vw">
+              {{ tenantStore.activeTenant?.name }}
+            </div>
+            <div
+              class="text-caption text-grey-7 row items-center no-wrap gt-xs"
+              style="font-size: 11px"
+            >
+              <span class="text-grey-5">{{ $t('layouts.workspace.poweredBy') }}</span>
+              <span class="text-weight-bold text-primary q-ml-xs">Smart Hisab</span>
+            </div>
           </div>
         </div>
 
         <q-space />
 
-        <!-- Language Switcher Toggle -->
-        <q-btn-toggle
-          v-model="locale"
-          toggle-color="primary"
-          color="indigo-1"
-          text-color="primary"
-          toggle-text-color="white"
-          flat
-          dense
-          unelevated
-          class="q-mr-sm text-xs text-weight-bold"
-          style="
-            font-size: 11px;
-            height: 32px;
-            border-radius: 8px;
-            padding: 2px;
-            border: 1.5px solid var(--q-primary);
-          "
-          :options="toggleOptions"
-        />
+        <LocaleSwitcher class="q-mr-sm" />
       </q-toolbar>
     </q-header>
 
@@ -63,178 +51,197 @@
       @mouseover="onMouseOver"
       @mouseleave="onMouseOut"
     >
-      <div class="drawer-content flex flex-col justify-between full-width">
-        <div class="full-width">
-          <!-- Workspace Title / Header / Tenant Selector -->
-          <div
-            class="brand-section border-bottom flex items-center q-px-sm full-width"
-            :class="miniState ? 'justify-center' : 'justify-start'"
+      <div class="column fit no-wrap">
+        <!-- Workspace Title / Header / Tenant Selector -->
+        <div
+          class="brand-section border-bottom flex items-center q-px-sm full-width shrink-0"
+          :class="miniState ? 'justify-center' : 'justify-start'"
+        >
+          <!-- Tenant Selector Dropdown (Shown ONLY if user has multiple tenants) -->
+          <q-btn-dropdown
+            v-if="tenantStore.myTenants && tenantStore.myTenants.length > 1"
+            flat
+            no-caps
+            dense
+            no-caret
+            align="left"
+            class="full-width tenant-sidebar-btn"
+            content-class="tenant-dropdown-menu"
           >
-            <!-- Tenant Selector Dropdown (Shown ONLY if user has multiple tenants) -->
-            <q-btn-dropdown
-              v-if="tenantStore.myTenants && tenantStore.myTenants.length > 1"
-              flat
-              no-caps
-              dense
-              no-caret
-              align="left"
-              class="full-width tenant-sidebar-btn"
-              content-class="tenant-dropdown-menu"
-            >
-              <template #label>
-                <div class="row items-center no-wrap text-left full-width">
-                  <q-icon
-                    name="workspaces"
-                    size="20px"
-                    class="text-primary"
-                    :class="{ 'q-mr-sm': !miniState }"
-                  />
-                  <div v-if="!miniState" class="col text-ellipsis overflow-hidden">
-                    <div class="text-weight-bold text-dark text-xs leading-none">
-                      {{ tenantStore.activeTenant?.name || 'Workspace' }}
-                    </div>
-                    <div class="text-xxs text-grey-7 leading-none q-mt-xs">
-                      {{ tenantStore.activeRole || 'Member' }}
-                    </div>
+            <template #label>
+              <div class="row items-center no-wrap text-left full-width">
+                <q-icon
+                  name="workspaces"
+                  size="20px"
+                  class="text-primary"
+                  :class="{ 'q-mr-sm': !miniState }"
+                />
+                <div v-if="!miniState" class="col text-ellipsis overflow-hidden">
+                  <div class="text-weight-bold text-dark text-xs leading-none">
+                    {{ tenantStore.activeTenant?.name || 'Workspace' }}
                   </div>
-                  <q-icon
-                    v-if="!miniState"
-                    name="arrow_drop_down"
-                    size="16px"
-                    class="text-grey-7 q-ml-xs"
-                  />
+                  <div class="text-xxs text-grey-7 leading-none q-mt-xs">
+                    {{ tenantStore.activeRole || 'Member' }}
+                  </div>
                 </div>
-              </template>
+                <q-icon
+                  v-if="!miniState"
+                  name="arrow_drop_down"
+                  size="16px"
+                  class="text-grey-7 q-ml-xs"
+                />
+              </div>
+            </template>
 
-              <!-- Dropdown List of Tenants -->
-              <q-list class="q-py-xs bg-white text-dark border-all">
-                <q-item-label header class="text-grey-7 text-xs font-semibold q-pb-xs">
-                  {{ $t('layouts.workspace.switchWorkspace') }}
-                </q-item-label>
+            <!-- Dropdown List of Tenants -->
+            <q-list class="q-py-xs bg-white text-dark border-all">
+              <q-item-label header class="text-grey-7 text-xs font-semibold q-pb-xs">
+                {{ $t('layouts.workspace.switchWorkspace') }}
+              </q-item-label>
 
-                <q-item
-                  v-for="membership in tenantStore.myTenants"
-                  :key="membership.id"
-                  clickable
-                  v-close-popup
-                  :active="membership.tenants?.id === tenantStore.activeTenant?.id"
-                  active-class="active-tenant-item"
-                  class="q-py-sm tenant-select-item"
-                  @click="switchWorkspace(membership.tenants?.slug)"
-                >
-                  <q-item-section avatar>
-                    <q-avatar size="28px" class="tenant-avatar-small">
-                      {{ getInitials(membership.tenants?.name || '') }}
-                    </q-avatar>
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label class="text-weight-bold text-xs">
-                      {{ membership.tenants?.name }}
-                    </q-item-label>
-                    <q-item-label caption class="text-grey-6" style="font-size: 10px">
-                      {{ membership.tenant_roles?.name || 'Member' }}
-                    </q-item-label>
-                  </q-item-section>
-                  <q-item-section
-                    side
-                    v-if="membership.tenants?.id === tenantStore.activeTenant?.id"
-                  >
-                    <q-icon name="check" color="primary" size="16px" />
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-btn-dropdown>
+              <q-item
+                v-for="membership in tenantStore.myTenants"
+                :key="membership.id"
+                clickable
+                v-close-popup
+                :active="membership.tenants?.id === tenantStore.activeTenant?.id"
+                active-class="active-tenant-item"
+                class="q-py-sm tenant-select-item"
+                @click="switchWorkspace(membership.tenants?.slug)"
+              >
+                <q-item-section avatar>
+                  <q-avatar size="28px" class="tenant-avatar-small">
+                    {{ getInitials(membership.tenants?.name || '') }}
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-bold text-xs">
+                    {{ membership.tenants?.name }}
+                  </q-item-label>
+                  <q-item-label caption class="text-grey-6" style="font-size: 10px">
+                    {{ membership.tenant_roles?.name || 'Member' }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side v-if="membership.tenants?.id === tenantStore.activeTenant?.id">
+                  <q-icon name="check" color="primary" size="16px" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
 
-            <!-- Otherwise, show a static tenant brand header (Single Tenant case) -->
-            <div v-else class="row items-center no-wrap q-pl-xs">
-              <q-icon
-                name="workspaces"
-                size="20px"
-                class="text-primary"
-                :class="{ 'q-mr-sm': !miniState }"
-              />
-              <div v-if="!miniState" class="q-ml-xs">
-                <div class="text-weight-bold text-dark text-xs leading-tight">
-                  {{ tenantStore.activeTenant?.name || 'Workspace' }}
-                </div>
-                <div class="text-xxs text-grey-7 leading-none">
-                  {{ tenantStore.activeTenant?.slug }}
-                </div>
+          <!-- Otherwise, show a static tenant brand header (Single Tenant case) -->
+          <div v-else class="row items-center no-wrap q-pl-xs">
+            <q-icon
+              name="workspaces"
+              size="20px"
+              class="text-primary"
+              :class="{ 'q-mr-sm': !miniState }"
+            />
+            <div v-if="!miniState" class="q-ml-xs">
+              <div class="text-weight-bold text-dark text-xs leading-tight">
+                {{ tenantStore.activeTenant?.name || 'Workspace' }}
+              </div>
+              <div class="text-xxs text-grey-7 leading-none">
+                {{ tenantStore.activeTenant?.slug }}
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- User Profile Info (Top of Drawer) -->
-          <div class="border-bottom q-py-xs bg-white full-width">
-            <q-item
-              clickable
-              class="q-px-sm full-width"
-              :to="`/${tenantStore.activeTenant?.slug}/settings`"
-            >
-              <q-item-section avatar>
-                <q-avatar size="28px" class="user-avatar text-white">
-                  <img
-                    v-if="tenantStore.userProfile?.avatar_url"
-                    :src="tenantStore.userProfile.avatar_url"
-                  />
-                  <span v-else>{{ userInitials }}</span>
-                </q-avatar>
-                <q-tooltip
-                  v-if="miniState"
-                  anchor="center right"
-                  self="center left"
-                  :offset="[10, 10]"
-                >
-                  {{ tenantStore.userProfile?.full_name || 'User Profile' }} ({{
-                    tenantStore.user?.email
-                  }})
-                </q-tooltip>
-              </q-item-section>
-              <q-item-section v-if="!miniState">
-                <q-item-label class="text-weight-bold text-xs text-dark leading-tight">
-                  {{ tenantStore.userProfile?.full_name || 'User Profile' }}
-                </q-item-label>
-                <q-item-label
-                  caption
-                  class="text-caption text-grey-7 leading-none q-mt-xs"
-                  style="font-size: 10px"
-                >
-                  {{ tenantStore.user?.email }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </div>
-
-          <!-- Navigation Links -->
-          <q-list class="q-px-sm q-py-md full-width">
-            <q-item
-              v-for="item in navItems"
-              :key="item.toName"
-              clickable
-              exact
-              :to="{ name: item.toName, params: { tenantSlug: tenantStore.activeTenant?.slug } }"
-              class="nav-link-item q-mb-sm"
-              active-class="nav-active-item"
-            >
-              <q-item-section avatar>
-                <q-icon :name="item.icon" size="22px" />
-              </q-item-section>
-              <q-item-section v-if="!miniState">{{ item.label }}</q-item-section>
+        <!-- User Profile Info -->
+        <div class="border-bottom q-py-xs bg-white full-width shrink-0">
+          <q-item
+            clickable
+            class="q-px-sm full-width"
+            :to="`/${tenantStore.activeTenant?.slug}/settings`"
+          >
+            <q-item-section avatar>
+              <q-avatar size="28px" class="user-avatar text-white">
+                <img
+                  v-if="tenantStore.userProfile?.avatar_url"
+                  :src="tenantStore.userProfile.avatar_url"
+                />
+                <span v-else>{{ userInitials }}</span>
+              </q-avatar>
               <q-tooltip
                 v-if="miniState"
                 anchor="center right"
                 self="center left"
                 :offset="[10, 10]"
               >
-                {{ item.label }}
+                {{ tenantStore.userProfile?.full_name || 'User Profile' }} ({{
+                  tenantStore.user?.email
+                }})
               </q-tooltip>
-            </q-item>
-          </q-list>
+            </q-item-section>
+            <q-item-section v-if="!miniState">
+              <q-item-label class="text-weight-bold text-xs text-dark leading-tight">
+                {{ tenantStore.userProfile?.full_name || 'User Profile' }}
+              </q-item-label>
+              <q-item-label
+                caption
+                class="text-caption text-grey-7 leading-none q-mt-xs"
+                style="font-size: 10px"
+              >
+                {{ tenantStore.user?.email }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
         </div>
 
-        <!-- Sign Out at Drawer Bottom -->
-        <div class="border-top q-py-xs bg-white full-width">
-          <q-item clickable class="q-px-sm text-negative full-width" @click="handleSignOut">
+        <!-- Scrollable grouped nav -->
+        <q-scroll-area class="col full-width">
+          <q-list class="q-px-sm q-pt-sm q-pb-md full-width">
+            <template v-for="(group, groupIndex) in navGroups" :key="group.id">
+              <q-separator
+                v-if="groupIndex > 0"
+                class="q-my-sm"
+                :class="miniState ? 'q-mx-xs' : 'q-mx-sm'"
+              />
+              <q-item-label
+                v-if="group.label && !miniState"
+                header
+                class="nav-group-label text-grey-6 text-weight-bold"
+              >
+                {{ group.label }}
+              </q-item-label>
+
+              <q-item
+                v-for="item in group.items"
+                :key="item.toName"
+                clickable
+                exact
+                :to="{
+                  name: item.toName,
+                  params: { tenantSlug: tenantStore.activeTenant?.slug },
+                }"
+                class="nav-link-item q-mb-xs"
+                active-class="nav-active-item"
+              >
+                <q-item-section avatar>
+                  <q-icon :name="item.icon" size="22px" />
+                </q-item-section>
+                <q-item-section v-if="!miniState">{{ item.label }}</q-item-section>
+                <q-tooltip
+                  v-if="miniState"
+                  anchor="center right"
+                  self="center left"
+                  :offset="[10, 10]"
+                >
+                  {{ item.label }}
+                </q-tooltip>
+              </q-item>
+            </template>
+          </q-list>
+        </q-scroll-area>
+
+        <!-- Sign Out pinned to drawer bottom -->
+        <div class="border-top q-py-sm bg-white full-width shrink-0">
+          <q-item
+            clickable
+            class="q-px-sm text-negative full-width sign-out-item"
+            @click="handleSignOut"
+          >
             <q-item-section avatar>
               <q-icon name="logout" size="20px" color="negative" />
               <q-tooltip
@@ -368,14 +375,13 @@ import { useTenantStore } from '../stores/tenant';
 import { useSessionStore } from '../stores/session';
 import { createTenant } from '../services/multiTenant';
 import ActiveSessionBanner from '../components/sessions/ActiveSessionBanner.vue';
-import { useLocale } from '../composables/useLocale';
+import LocaleSwitcher from '../components/LocaleSwitcher.vue';
 import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const $q = useQuasar();
 const tenantStore = useTenantStore();
 const sessionStore = useSessionStore();
-const { locale, toggleOptions } = useLocale();
 const { t } = useI18n();
 
 const leftDrawerOpen = ref(false);
@@ -447,95 +453,131 @@ interface NavItem {
   requiredModulePermission?: { module: string; permission: string };
 }
 
-const navItems = computed<NavItem[]>(() => {
-  const items: NavItem[] = [
+interface NavGroup {
+  id: string;
+  label?: string;
+  items: NavItem[];
+}
+
+const isNavItemVisible = (item: NavItem): boolean => {
+  if (item.requiredFeature && !tenantStore.isFeatureEnabled(item.requiredFeature)) {
+    return false;
+  }
+  if (item.requiredPermission && !tenantStore.hasPermission(item.requiredPermission, 'read')) {
+    return false;
+  }
+  if (
+    item.requiredModulePermission &&
+    !tenantStore.hasModulePermission(
+      item.requiredModulePermission.module,
+      item.requiredModulePermission.permission,
+    )
+  ) {
+    return false;
+  }
+  return true;
+};
+
+const navGroups = computed<NavGroup[]>(() => {
+  const groups: NavGroup[] = [
     {
-      label: t('nav.dashboard'),
-      icon: 'dashboard',
-      toName: 'workspace-dashboard',
+      id: 'home',
+      items: [
+        {
+          label: t('nav.dashboard'),
+          icon: 'dashboard',
+          toName: 'workspace-dashboard',
+        },
+      ],
     },
     {
-      label: t('nav.members'),
-      icon: 'people',
-      toName: 'workspace-members',
-      requiredPermission: 'members',
+      id: 'operations',
+      label: t('nav.groups.operations'),
+      items: [
+        {
+          label: t('customers.nav.label'),
+          icon: 'face',
+          toName: 'workspace-customers',
+          requiredFeature: 'meal-management',
+          requiredModulePermission: {
+            module: 'meal_management',
+            permission: 'customer_read',
+          },
+        },
+        {
+          label: t('nav.sessions'),
+          icon: 'point_of_sale',
+          toName: 'workspace-sessions',
+          requiredFeature: 'shift-sessions',
+          requiredModulePermission: {
+            module: 'operational_shifts',
+            permission: 'sessions_read',
+          },
+        },
+      ],
     },
     {
-      label: t('nav.settings'),
-      icon: 'settings',
-      toName: 'workspace-settings',
-      requiredPermission: 'settings',
+      id: 'finance',
+      label: t('nav.groups.finance'),
+      items: [
+        {
+          label: t('nav.ledger'),
+          icon: 'account_balance_wallet',
+          toName: 'workspace-ledger',
+          requiredFeature: 'financial-ledger',
+          requiredModulePermission: {
+            module: 'financial_ledger',
+            permission: 'ledger_read',
+          },
+        },
+        {
+          label: t('nav.finance'),
+          icon: 'assessment',
+          toName: 'workspace-finance',
+          requiredFeature: 'financial-ledger',
+          requiredModulePermission: {
+            module: 'financial_ledger',
+            permission: 'dashboard_read',
+          },
+        },
+      ],
     },
     {
-      label: t('nav.shiftsConfig'),
-      icon: 'schedule',
-      toName: 'workspace-shifts',
-      requiredFeature: 'shift-sessions',
-      requiredModulePermission: {
-        module: 'operational_shifts',
-        permission: 'shifts_config_read',
-      },
-    },
-    {
-      label: t('nav.sessions'),
-      icon: 'history',
-      toName: 'workspace-sessions',
-      requiredFeature: 'shift-sessions',
-      requiredModulePermission: {
-        module: 'operational_shifts',
-        permission: 'sessions_read',
-      },
-    },
-    {
-      label: t('nav.ledger'),
-      icon: 'account_balance_wallet',
-      toName: 'workspace-ledger',
-      requiredFeature: 'financial-ledger',
-      requiredModulePermission: {
-        module: 'financial_ledger',
-        permission: 'ledger_read',
-      },
-    },
-    {
-      label: t('nav.finance'),
-      icon: 'assessment',
-      toName: 'workspace-finance',
-      requiredFeature: 'financial-ledger',
-      requiredModulePermission: {
-        module: 'financial_ledger',
-        permission: 'dashboard_read',
-      },
-    },
-    {
-      label: t('customers.nav.label'),
-      icon: 'face',
-      toName: 'workspace-customers',
-      requiredFeature: 'meal-management',
-      requiredModulePermission: {
-        module: 'meal_management',
-        permission: 'customer_read',
-      },
+      id: 'manage',
+      label: t('nav.groups.manage'),
+      items: [
+        {
+          label: t('nav.members'),
+          icon: 'people',
+          toName: 'workspace-members',
+          requiredPermission: 'members',
+        },
+        {
+          label: t('nav.shiftsConfig'),
+          icon: 'schedule',
+          toName: 'workspace-shifts',
+          requiredFeature: 'shift-sessions',
+          requiredModulePermission: {
+            module: 'operational_shifts',
+            permission: 'shifts_config_read',
+          },
+        },
+        {
+          label: t('nav.settings'),
+          icon: 'settings',
+          toName: 'workspace-settings',
+          requiredPermission: 'settings',
+        },
+      ],
     },
   ];
 
-  return items.filter((item) => {
-    if (item.requiredFeature && !tenantStore.isFeatureEnabled(item.requiredFeature)) {
-      return false;
-    }
-    if (item.requiredPermission && !tenantStore.hasPermission(item.requiredPermission, 'read')) {
-      return false;
-    }
-    if (
-      item.requiredModulePermission &&
-      !tenantStore.hasModulePermission(
-        item.requiredModulePermission.module,
-        item.requiredModulePermission.permission,
-      )
-    ) {
-      return false;
-    }
-    return true;
-  });
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(isNavItemVisible),
+    }))
+    .filter((group) => group.items.length > 0);
 });
 
 const toggleLeftDrawer = () => {
@@ -639,24 +681,43 @@ const handleSignOut = async () => {
   }
 }
 
+.user-avatar {
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%);
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
 .tenant-avatar {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%);
   font-weight: 700;
   border: 1.5px solid rgba(255, 255, 255, 0.2);
 }
 
 .tenant-avatar-small {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%);
   color: white;
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.user-avatar {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
+.header-brand-mark {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.active-tenant-item {
+  background: rgba(14, 74, 71, 0.08) !important;
+  color: #0e4a47 !important;
+}
+
+.nav-active-item {
+  background: rgba(14, 74, 71, 0.08) !important;
+  color: #0e4a47 !important;
+  border-left: 3px solid #0e4a47;
+  font-weight: 600;
 }
 
 .tenant-dropdown-menu {
@@ -675,11 +736,6 @@ const handleSignOut = async () => {
   }
 }
 
-.active-tenant-item {
-  background: rgba(99, 102, 241, 0.08) !important;
-  color: #4f46e5 !important;
-}
-
 .nav-link-item {
   border-radius: 12px;
   color: #475569;
@@ -687,23 +743,25 @@ const handleSignOut = async () => {
 
   &:hover {
     background: #f1f5f9;
-    color: #0f172a;
+    color: #1a2223;
   }
-}
-
-.nav-active-item {
-  background: rgba(99, 102, 241, 0.08) !important;
-  color: #4f46e5 !important;
-  border-left: 3px solid #6366f1;
-  font-weight: 600;
-}
-
-.drawer-content {
-  height: 100%;
 }
 
 .brand-section {
   height: 64px;
+}
+
+.nav-group-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px 6px;
+  line-height: 1.2;
+}
+
+.sign-out-item {
+  min-height: 48px;
+  border-radius: 12px;
 }
 
 /* Transitions */
@@ -723,9 +781,9 @@ const handleSignOut = async () => {
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 12px rgba(14, 74, 71, 0.15);
   border: none;
 
   &:hover {
@@ -737,7 +795,7 @@ const handleSignOut = async () => {
   border-radius: 12px;
   background: #ffffff !important;
   border: 1px solid #cbd5e1;
-  color: #0f172a !important;
+  color: #1a2223 !important;
 
   &:hover {
     border-color: #94a3b8;

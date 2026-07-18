@@ -30,30 +30,74 @@
       />
     </div>
 
-    <!-- Table Card -->
-    <q-card flat bordered class="q-pa-md bg-white border-all">
-      <div class="row items-center justify-between q-mb-md">
-        <div class="text-subtitle1 text-weight-bold text-slate-800">
-          {{ $t('customers.list.title') }}
-        </div>
-        <q-btn
-          flat
-          dense
-          color="primary"
-          icon="refresh"
-          :label="$t('common.reload')"
-          class="text-weight-bold"
-          @click="loadCustomers"
-          :loading="customersStore.loading"
-        />
-      </div>
+    <!-- Grouping Tabs -->
+    <q-tabs
+      v-model="activeTab"
+      dense
+      class="text-grey-7 bg-grey-2 q-mb-md rounded-borders"
+      active-color="primary"
+      indicator-color="primary"
+      align="justify"
+      narrow-indicator
+    >
+      <q-tab name="contract_worker" :label="$t('customers.list.categories.contract_worker')" />
+      <q-tab name="walk_in_baki" :label="$t('customers.list.categories.walk_in_baki')" />
+    </q-tabs>
 
-      <CustomerTable
-        :rows="customersStore.customers"
-        :loading="customersStore.loading"
-        @edit="openEditDialog"
-      />
-    </q-card>
+    <!-- Tab Panels showing Grouped Customers -->
+    <q-tab-panels v-model="activeTab" animated class="bg-transparent">
+      <q-tab-panel name="contract_worker" class="q-pa-none">
+        <q-card flat bordered class="q-pa-md bg-white border-all">
+          <div class="row items-center justify-between q-mb-md">
+            <div class="text-subtitle1 text-weight-bold text-slate-800">
+              {{ $t('customers.list.categories.contract_worker') }}
+            </div>
+            <q-btn
+              flat
+              dense
+              color="primary"
+              icon="refresh"
+              :label="$t('common.reload')"
+              class="text-weight-bold"
+              @click="loadCustomers"
+              :loading="customersStore.loading"
+            />
+          </div>
+
+          <CustomerTable
+            :rows="contractWorkers"
+            :loading="customersStore.loading"
+            @edit="openEditDialog"
+          />
+        </q-card>
+      </q-tab-panel>
+
+      <q-tab-panel name="walk_in_baki" class="q-pa-none">
+        <q-card flat bordered class="q-pa-md bg-white border-all">
+          <div class="row items-center justify-between q-mb-md">
+            <div class="text-subtitle1 text-weight-bold text-slate-800">
+              {{ $t('customers.list.categories.walk_in_baki') }}
+            </div>
+            <q-btn
+              flat
+              dense
+              color="primary"
+              icon="refresh"
+              :label="$t('common.reload')"
+              class="text-weight-bold"
+              @click="loadCustomers"
+              :loading="customersStore.loading"
+            />
+          </div>
+
+          <CustomerTable
+            :rows="walkInBakiCustomers"
+            :loading="customersStore.loading"
+            @edit="openEditDialog"
+          />
+        </q-card>
+      </q-tab-panel>
+    </q-tab-panels>
 
     <!-- Form Dialog -->
     <CustomerFormDialog
@@ -82,6 +126,7 @@ const { t } = useI18n();
 
 const showFormDialog = ref(false);
 const selectedCustomer = ref<Customer | null>(null);
+const activeTab = ref('contract_worker');
 
 const activeFilters = ref<{
   category?: CustomerCategory | undefined;
@@ -93,6 +138,14 @@ const activeFilters = ref<{
 
 const canWrite = computed(() =>
   tenantStore.hasModulePermission('meal_management', 'customer_write'),
+);
+
+const contractWorkers = computed(() =>
+  customersStore.customers.filter((c) => c.category === 'contract_worker'),
+);
+
+const walkInBakiCustomers = computed(() =>
+  customersStore.customers.filter((c) => c.category === 'walk_in_baki'),
 );
 
 async function loadCustomers() {

@@ -47,6 +47,8 @@ export const useTenantStore = defineStore('tenant', () => {
     return userProfile.value?.is_superadmin || false;
   });
 
+  const hasUserProfile = computed(() => !!userProfile.value);
+
   // Actions / Methods
   function hasTenantAccess(slug: string): boolean {
     if (userProfile.value?.is_superadmin) return true;
@@ -127,15 +129,16 @@ export const useTenantStore = defineStore('tenant', () => {
     if (!user.value) return;
 
     try {
-      // Load user profile
+      // Load user profile — leave null when row is missing so guards can block access
       const { data: profile, error: profileErr } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user.value.id)
-        .single();
+        .maybeSingle();
 
       if (profileErr) {
         console.error('Error loading user profile:', profileErr.message);
+        userProfile.value = null;
       } else {
         userProfile.value = profile;
       }
@@ -155,6 +158,14 @@ export const useTenantStore = defineStore('tenant', () => {
     }
   }
 
+  /** Clears identity/membership only — keeps admin-mode preference across auth races. */
+  function clearAuthIdentity() {
+    user.value = null;
+    userProfile.value = null;
+    myTenants.value = [];
+    clearActiveTenant();
+  }
+
   async function syncFromUser(sessionUser: User | null) {
     if (sessionUser) {
       const userChanged = !user.value || user.value.id !== sessionUser.id;
@@ -163,7 +174,8 @@ export const useTenantStore = defineStore('tenant', () => {
         await loadUserProfileAndTenants();
       }
     } else {
-      clearStore();
+      // Transient getSession() nulls must not wipe admin mode — only logout() does.
+      clearAuthIdentity();
     }
     initialized.value = true;
   }
@@ -264,14 +276,8 @@ export const useTenantStore = defineStore('tenant', () => {
   }
 
   function clearStore() {
-    user.value = null;
-    userProfile.value = null;
-    myTenants.value = [];
-    clearActiveTenant();
-    isAdminSession.value = false;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth.is_admin_session');
-    }
+    clearAuthIdentity();
+    setAdminSession(false);
   }
 
   async function logout() {
@@ -290,6 +296,7 @@ export const useTenantStore = defineStore('tenant', () => {
     loading,
     initialized,
     isSuperadmin,
+    hasUserProfile,
     isAdminSession,
     setAdminSession,
     hasTenantAccess,

@@ -4,11 +4,12 @@ This document is the Technical Specification (RFC) for the **Meal & Customer Man
 
 ### Key Objectives
 * **Customer Segmentation:** `contract_worker` (flat daily rate charged once per day if present for any contracted shift) vs `walk_in_baki` (itemized credit only).
-* **Daily Contract Attendance Grid:** Zero-latency toggle of Breakfast / Lunch / Dinner / Snack; first present shift of the day applies `contract_daily_rate` once; further shifts that day do not double-charge; toggling off the last shift refunds the rate.
-* **Baki & Extra Charges:** Itemized note + amount for walk-in credit or contract-worker extras beyond the daily rate.
-* **Collections:** Segment debt clearing or advance (negative `outstanding_balance` = prepaid). Cash collections require an open session; non-cash may omit `session_id`.
-* **Cached Balance:** `customers.outstanding_balance` maintained by DB triggers (`attendance` / `baki` increase; `collections` decrease).
-* **Ledger Integration:** On collection insert, call internal `post_ledger_entry` (`inflow`, category `Debt Collection`).
+* **Customer Attendance Dashboard (kiosk page):** Searchable customer card list → **Add Attendance** dialog (date, single shift, optional extras, note, amount). First present shift of the day applies `contract_daily_rate` once; further shifts that day do not double-charge. Replaces the old one-tap grid / weekly-monthly attendance UI — see [customer_attendance_page.md](./tasks/customer_attendance_page.md).
+* **Baki Charge Dashboard (kiosk page):** Searchable `walk_in_baki` customer cards → **Add Baki** dialog (shift, multi-line note + amount, live total). Saves via `record_baki_transaction`. Replaces StaffWorkspace inline `BakiChargeDialog` — see [baki_charge_page.md](./tasks/baki_charge_page.md). Contract-worker extras beyond the daily rate stay on the Attendance dialog.
+* **Collections / Baki Payment (kiosk page):** Searchable dues list → **Pay** dialog + **Why owed?** breakdown (recent meals, baki/extras, payments). Saves via `record_customer_collection`. Replaces StaffWorkspace inline `CollectionDialog` — see [baki_payment_page.md](./tasks/baki_payment_page.md). Cash collections require an open session; non-cash may omit `session_id`.
+* **Advance Payment (kiosk page):** Searchable **all active** customers → **Record Advance** dialog (balance chip + amount + method). Same RPC `record_customer_collection`; overpay / pay-when-zero → prepaid (`outstanding_balance < 0`). Stub `KioskAdvancePayment` → full page — see [advance_payment_page.md](./tasks/advance_payment_page.md). Non-cash must work without an open session (do not session-block the tile).
+* **Cached Balance:** `customers.outstanding_balance` maintained by DB triggers (`attendance` / `baki` increase; `collections` decrease). Counter “how much do they owe?” uses this field only. Negative = prepaid credit.
+* **Ledger Integration:** On collection insert, call internal `post_ledger_entry` (`inflow`, category `Debt Collection`). Customer owed explanation uses attendance / baki / collections — **not** `transaction_ledger`.
 * **Closed-Session Lock:** No mutate of attendance / baki / session-linked collections once the operational session is closed.
 * **Localization:** UI strings in **English (`en-US`)** and **Bangla (`bn`)**; amounts via `formatMoney` (default BDT / `bn`).
 
@@ -18,6 +19,10 @@ This document is the Technical Specification (RFC) for the **Meal & Customer Man
 | Feature flag `meal-management` | Seeded in migration |
 | DB tables / RPCs / RLS / balance + lock triggers | Migrated; kiosk customer upsert RPC still missing |
 | Pinia / workspace UI | Built (`WorkspaceCustomers`, detail, dialogs) |
+| Kiosk Customer Attendance page | **Rewrite** — scrap current `KioskAttendance.vue` / `AttendanceGrid.vue`; rebuild per [customer_attendance_page.md](./tasks/customer_attendance_page.md) |
+| Kiosk Baki Charge page | **New** — replace inline StaffWorkspace dialog; build per [baki_charge_page.md](./tasks/baki_charge_page.md) |
+| Kiosk Baki Payment page | **New** — replace inline `CollectionDialog`; **Pay** + **Why owed?** recent breakdown — see [baki_payment_page.md](./tasks/baki_payment_page.md) |
+| Kiosk Advance Payment page | **Rewrite stub** — all active customers + prepaid framing; same `record_customer_collection` — see [advance_payment_page.md](./tasks/advance_payment_page.md) |
 | Kiosk Manager customer CRUD UI | **Gap** — see [temp_restructure.md](./temp_restructure.md) |
 | Upstream `sessions` + `enforce_closed_session_lock` | Migrated ([operational_shifts_sessions.md](./operational_shifts_sessions.md)) |
 | Upstream `post_ledger_entry` | Migrated ([transaction_ledger.md](./transaction_ledger.md)) |
@@ -35,7 +40,7 @@ This document is the Technical Specification (RFC) for the **Meal & Customer Man
 
 1. **As a** Shift Manager, **I want to** register customers on the terminal (Contract Worker or Walk-in Baki), set `contract_daily_rate` and contracted shifts (“meal plan” fields), **so that** enrollment happens at the counter without Owner login.
 2. **As a** Shift Manager, **I want to** open and close the operational session and manage drawer money flow (POS, expense, advance as permitted), **so that** the day runs entirely from the terminal.
-3. **As a** Shift Manager, **I want** a grid of active contract workers with one-tap shift attendance, **so that** I can mark present during service with minimal latency.
+3. **As a** Shift Manager, **I want** a Customer Attendance page (searchable cards + Add Attendance dialog), **so that** I can log a shift (and optional extras) for a worker during service without a dense toggle grid.
 4. **As a** Shift Manager, **I want to** log walk-in baki / extras and record collections, **so that** balances and cash stay correct during the shift.
 
 #### Persona B: Cashier (Kiosk — money ops only)
@@ -166,7 +171,7 @@ Module key: `meal_management`. Feature gate: `enabled_features['meal-management'
 | :--- | :--- | :--- | :--- |
 | Customer read (list / pickers / grid) | true | true | false |
 | Customer write (create / edit / meal rate+shifts) | **true** | false | false |
-| Attendance toggle | true | true | false |
+| Attendance write (Add Attendance) | true | true | false |
 | Baki / extra charge write | true | true | false |
 | Collections write | true | true | false |
 | Sessions open / close | true (see shifts RFC) | false | false |
@@ -322,15 +327,17 @@ create index idx_customer_collections_customer on public.customer_collections (c
 }
 ```
 
-#### 2. Customer statement (workspace oversight)
+#### 2. Customer statement (workspace oversight + kiosk **Why owed?**)
 
 Compose via three selects (no cross-module JOIN required beyond `customers`):
 
-* Attendance: `customer_daily_attendance` for `customer_id` + date range
-* Baki: `baki_transactions` for `customer_id` + date range
-* Collections: `customer_collections` for `customer_id` + date range
+* Attendance: `customer_daily_attendance` for `customer_id` + date range → regular meal / daily rate rows
+* Baki: `baki_transactions` for `customer_id` + date range → extras / walk-in items (`items_description` may pack multiple notes from one save)
+* Collections: `customer_collections` for `customer_id` + date range → payments (−)
 
-Optional RPC `get_customer_statement(p_tenant_id, p_customer_id, p_start, p_end)` returning a unified timeline — ship if UI needs a single call; MVP may use three store fetches.
+**Kiosk Baki Payment:** open **Why owed?** only after staff asks; fetch **recent window** (default last 30 days, `.limit(100)` per table) — never full lifetime on every open. Outstanding amount still comes from `customers.outstanding_balance` (cached), which may include charges older than the window.
+
+Optional RPC `get_customer_statement(p_tenant_id, p_customer_id, p_start, p_end)` returning a unified timeline — ship if UI needs a single call; MVP uses three store / page fetches.
 
 #### 3. `rpc('toggle_contract_attendance')` — kiosk primary
 
@@ -390,9 +397,9 @@ Optional RPC `get_customer_statement(p_tenant_id, p_customer_id, p_start, p_end)
 
 Kiosk: pass device + staff. Workspace Auth path: omit device/staff; set `collected_by_user_id = auth.uid()` and require `collections_write` on `tenant_roles`.
 
-#### 6. Attendance grid payload (kiosk)
+#### 6. Attendance page payload (kiosk)
 
-MVP: select active `contract_worker` customers + today’s `customer_daily_attendance` rows for `business_date` of active session. Client merges into grid state.
+MVP: select active `contract_worker` customers + `customer_daily_attendance` for the dialog/session `business_date`. Client filters cards by name/phone; submit calls `toggle_contract_attendance` (+ optional `record_baki_transaction` when extras enabled).
 
 ### D. API Flow
 
@@ -412,16 +419,25 @@ sequenceDiagram
     Note over DB: Device + staff + customer_write
     DB-->>Store: customer row
 
-    Note over Manager, DB: Toggle attendance
-    Manager->>App: Tap Lunch for Contract Worker A
+    Note over Manager, DB: Add Attendance (dedicated page)
+    Manager->>App: StaffWorkspace → Customer Attendance tile
+    App->>App: Open KioskAttendance page (card list)
+    Manager->>App: Add Attendance dialog (shift + optional extras)
     App->>DB: rpc toggle_contract_attendance
     Note over DB: Open session + staff permission<br/>Insert/update attended_shifts<br/>Balance trigger
+    opt Extras enabled
+      App->>DB: rpc record_baki_transaction
+    end
     DB-->>Store: action_taken + new_balance
+    App-->>Manager: success toast; close dialog
 
-    Note over Manager, DB: Baki / extra charge
-    Manager->>App: Submit BakiChargeDialog
+    Note over Manager, DB: Standalone Baki (dedicated page)
+    Manager->>App: StaffWorkspace → Baki tile
+    App->>App: Open KioskBaki page (walk_in_baki card list)
+    Manager->>App: Add Baki dialog (shift + note/amount lines + total)
     App->>DB: rpc record_baki_transaction
     DB-->>Store: new_balance
+    App-->>Manager: success toast; close dialog
 
     Note over Manager, DB: Collection
     Manager->>App: Submit CollectionDialog
@@ -857,8 +873,8 @@ grant execute on function public.record_customer_collection(uuid, uuid, uuid, nu
 | :--- | :--- | :--- |
 | Customer list + filters | Page / store | Pinia `web/src/stores/customers.ts` |
 | Selected customer + statement slices | Store / detail page | Same store |
-| Attendance grid (today) | Store keyed by `business_date` | Same store |
-| Baki / Collection dialog forms | Local dialog state | Dialog components |
+| Attendance for selected date | Store keyed by `business_date` | Same store |
+| Attendance entry dialog form | Local dialog state | `AttendanceEntryDialog` |
 | Active session | Existing | `web/src/stores/session.ts` |
 | Feature / role gates | Existing | `web/src/stores/tenant.ts` / kiosk store |
 
@@ -1046,7 +1062,7 @@ export const useCustomersStore = defineStore('customers', () => {
 });
 ```
 
-Cache policy: refetch list after upsert; after attendance/baki/collection, patch local `outstanding_balance` from RPC return and refresh attendance grid for the session date.
+Cache policy: refetch list after upsert; after attendance/baki/collection, patch local `outstanding_balance` from RPC return and refresh attendance for the dialog/session date.
 
 ### B. Routing
 
@@ -1081,19 +1097,21 @@ Extend workspace children in `web/src/router/routes.ts`:
 
 **Nav:** Add Customers item in `WorkspaceLayout.vue` when `isFeatureEnabled('meal-management')` and `customer_read` (Owner/Admin oversight).
 
-**Kiosk (primary ops UI):** No dedicated deep routes required. `StaffWorkspace` shows:
+**Kiosk (primary ops UI):**
+* `StaffWorkspace` tile **Customer Attendance** → route `kiosk-attendance` (`KioskAttendance.vue`) — **start fresh** per [customer_attendance_page.md](./tasks/customer_attendance_page.md)
 * **Customers** — list/search + Create/Edit via `CustomerFormDialog` (Manager + `customer_write`; list needs `customer_read`)
-* Attendance grid (Manager/Cashier + `attendance_write`)
-* Baki charge CTA (`baki_write`)
+* `StaffWorkspace` tile **Baki** → route `kiosk-baki` (`KioskBaki.vue`) — per [baki_charge_page.md](./tasks/baki_charge_page.md)
 * Collection CTA (`collections_write`)
 * Existing session open/close + POS/expense money flow (shifts / ledger modules)
 
 Floor money tiles (attendance / baki / cash collection) require open session + feature flag. Customer create/edit may be allowed without an open session (enrollment is master data).
 
+**Remove / do not ship on this page:** embedded `AttendanceGrid`, weekly/monthly attendance tabs, per-shift “Mark Present” rows on the card (superseded by Add Attendance dialog).
+
 ### C. Lazy Loading
 
 * Pages: route-level dynamic import.
-* Dialogs: `defineAsyncComponent` for `CustomerFormDialog`, `BakiChargeDialog`, `CollectionDialog`.
+* Dialogs: `defineAsyncComponent` for `CustomerFormDialog`, `AttendanceEntryDialog`, `BakiEntryDialog`, `CollectionDialog`.
 * Keep `customers.ts` out of auth entry chunk; kiosk imports attendance/baki/collection **and** customer upsert actions.
 
 ---
@@ -1126,42 +1144,123 @@ Floor money tiles (attendance / baki / cash collection) require open session + f
 - **Props:** `attendance`, `baki`, `collections`, `loading`
 - **UI:** Unified timeline or tabbed sections; amounts via `formatMoney`
 
-#### 6. `AttendanceGrid.vue` (kiosk)
-- **Props:** `customers`, `attendanceToday`, `shiftNames: string[]`, `loading`, `disabled`
-- **Emits:** `@toggle({ customerId, shiftName })`
-- **UI:** Dense grid; large touch targets; present cells filled/active
+#### 6. `KioskAttendance.vue` (Customer Attendance Dashboard — kiosk page)
+- **Route:** `kiosk-attendance` from StaffWorkspace **Customer Attendance** tile
+- **Gate:** `meal-management` + `attendance_read` (list); writes need `attendance_write` + open session
+- **Layout:**
+  - Title: Customer Attendance Dashboard
+  - Live search (name or phone)
+  - Vertical list of customer cards: name, phone, institution (`factory_unit`), **Add Attendance** CTA
+- **List scope:** active `contract_worker` customers
+- **Replace:** delete/rewrite existing weekly/monthly/per-shift Mark Present UI; drop unused `AttendanceGrid.vue`
 
-#### 7. `BakiChargeDialog.vue`
-- **Props:** `modelValue`, optional `customerId` preselect
-- **Fields:** customer picker, items_description, amount
+#### 7. `AttendanceEntryDialog.vue`
+- **Props:** `modelValue`, `customer` (required), optional default `businessDate`
+- **Header (display only):** Name | Phone; close (X)
+- **Fields:**
+  1. Date picker — label “Select Date”; default current / session `business_date`
+  2. Shift selector — radio / segmented: Breakfast, Lunch, Afternoon Snacks, Dinner (one required)
+  3. “Add Extra Items?” toggle (default off) → expands note/amount extras block when on
+  4. Note (optional text); Amount (Tk) numeric, prefilled with `contract_daily_rate`
+- **Footer:** Cancel | Submit & Save
+- **Submit:** validate shift selected + amount numeric → `toggle_contract_attendance`; if extras on, also `record_baki_transaction` → success toast → close
+- **Requires:** open session for write
+
+#### 8. `KioskBaki.vue` (Baki Charge Dashboard — kiosk page)
+- **Route:** `kiosk-baki` from StaffWorkspace **Baki** tile
+- **Gate:** `meal-management` + `baki_read` / list; writes need `baki_write` + open session
+- **Layout:**
+  - Title: Baki
+  - Live search (name or phone)
+  - Vertical list of cards: name, phone, institution, outstanding balance, **Add Baki** CTA
+- **List scope:** active `walk_in_baki` customers
+- **Replace:** StaffWorkspace inline open of `BakiChargeDialog`
+
+#### 9. `BakiEntryDialog.vue`
+- **Props:** `modelValue`, `customer` (required)
+- **Header (display only):** Name | Phone; close (X)
+- **Fields:**
+  1. Shift selector — default = current session shift; changeable (Breakfast / Lunch / Afternoon Snacks / Dinner)
+  2. Line items — one or more Note + Amount rows (add/remove); live **Total** at top
+- **Footer:** Cancel | Save
+- **Submit:** validate → `record_baki_transaction` once with total amount; shift prefixed into `items_description` (no schema change)
 - **Requires:** open session
+- **Note:** attendance-linked extras still use `AttendanceEntryDialog`
 
-#### 8. `CollectionDialog.vue`
+#### 10. `CollectionDialog.vue`
 - **Props:** `modelValue`, optional `customerId`
 - **Fields:** customer, amount, payment_method, notes; session auto from store when cash
 - **Requires:** open session for cash
+- **Note:** kiosk primary path moves to `KioskBakiPayment` + `BakiPaymentDialog`; keep this for workspace detail Collect CTA
 
-#### 9. Pages
+#### 11. `KioskBakiPayment.vue` (Baki Payment Dashboard — kiosk page)
+- **Route:** `kiosk-baki-payment` from StaffWorkspace **Baki Payment** / Collection tile
+- **Gate:** `meal-management` + `collections_read` (list / Why owed?); writes need `collections_write` (+ open session for cash)
+- **Layout:**
+  - Title: Baki Payment
+  - Live search (name or phone)
+  - Vertical list of cards: name, phone, institution, total due, **Why owed?** + **Pay**
+- **List scope:** active customers with `outstanding_balance > 0` (`contract_worker` + `walk_in_baki`)
+- **Replace:** StaffWorkspace inline open of `CollectionDialog`
+- **Task:** [baki_payment_page.md](./tasks/baki_payment_page.md)
+
+#### 12. `BakiPaymentDialog.vue`
+- **Props:** `modelValue`, `customer` (required)
+- **Header:** Name | Phone; close (X)
+- **Fields:** total due (read-only), payment amount, method, notes; **Why owed?** secondary control
+- **Submit:** `record_customer_collection`
+- **Requires:** open session for cash
+
+#### 13. `CustomerOwedBreakdownDialog.vue`
+- **Props:** `modelValue`, `customer`, optional `rangeDays` (default 30)
+- **UI:** outstanding chip + caption; reuse `CustomerStatementTable` for recent attendance / baki / collections
+- **Fetch:** three parallel selects with `.gte` date filter + `.limit` — bandwidth-safe; no ledger table
+- **Permissions:** read path only (no session)
+
+#### 14. `KioskAdvancePayment.vue` (Advance Payment Dashboard — kiosk page)
+- **Route:** `kiosk-advance-payment` from StaffWorkspace **Advance Payment** tile (already wired; rewrite stub)
+- **Gate:** meal-management feature + staff `customer_read` (list via `list_customers`); writes need `collections_write` (+ open session for cash)
+- **Layout:**
+  - Title: Advance Payment
+  - Session banner when cash is blocked
+  - Live search (name or phone)
+  - Vertical list of cards: name, phone, institution, due/prepaid chip, **Record Advance**
+- **List scope:** all active customers (`contract_worker` + `walk_in_baki`) — not dues-only
+- **Submit:** `record_customer_collection` (same as Baki Payment); patch balance from RPC return
+- **Task:** [advance_payment_page.md](./tasks/advance_payment_page.md)
+
+#### 15. `AdvancePaymentDialog.vue`
+- **Props:** `modelValue`, `customer` (required), optional `sessionId` / `deviceToken` / `staffId`
+- **Header:** Name | Phone; close (X)
+- **Fields:** current balance (chip), hint (overpay → prepaid), amount, method, notes
+- **Submit:** `record_customer_collection`; do **not** require open session for non-cash
+- **Requires:** open session for cash only
+
+#### 16. Pages
 - `WorkspaceCustomers.vue` — Owner/Admin filters + table + Create CTA (secondary path)
 - `WorkspaceCustomerDetail.vue` — profile header + balance chip + statement + optional Collect CTA if workspace write
-- Kiosk `StaffWorkspace`: Customers list/Create/Edit + `AttendanceGrid` + baki/collection dialogs (Manager primary)
+- Kiosk `StaffWorkspace` → **Customer Attendance** tile → `KioskAttendance.vue` + `AttendanceEntryDialog`
+- Kiosk `StaffWorkspace` → **Baki** tile → `KioskBaki.vue` + `BakiEntryDialog`
+- Kiosk `StaffWorkspace` → **Baki Payment** tile → `KioskBakiPayment.vue` + `BakiPaymentDialog` + `CustomerOwedBreakdownDialog`
+- Kiosk `StaffWorkspace` → **Advance Payment** tile → `KioskAdvancePayment.vue` + `AdvancePaymentDialog` (do not session-block navigation for non-cash)
+- Kiosk Customers list/Create/Edit (Manager primary)
 
 ### B. Responsive Design
 
 | Breakpoint | Behavior |
 | :--- | :--- |
-| Desktop (`gt-md`) | Full tables; attendance grid multi-column |
-| Tablet (`sm`–`md`) | Table horizontal scroll; grid 2–3 columns |
-| Mobile (`lt-sm`) | Customer cards; attendance as stacked chips per worker; dialogs full-width |
+| Desktop (`gt-md`) | Full tables for customers/statement; attendance = single-column card list (readable width) |
+| Tablet (`sm`–`md`) | Table horizontal scroll where needed; attendance cards full width |
+| Mobile (`lt-sm`) | Customer cards; attendance cards stacked; `AttendanceEntryDialog` maximized / full-width |
 
-Touch targets ≥ 48px for attendance toggles and primary CTAs on counter tablet.
+Touch targets ≥ 48px for **Add Attendance** and dialog primary actions.
 
 ### C. Style & Visual States
 
-* Match workspace Quasar tokens: flat bordered sections, `q-col-gutter-md`, `text-grey-8` secondary labels.
+* Match workspace Quasar tokens: flat bordered sections, `q-col-gutter-md`, `text-grey-8` secondary labels; compact padding; consistent border-radius; high-contrast focus rings on inputs.
 * **States:**
   * Debt balance: `text-negative`; prepaid: `text-positive`
-  * Attendance present: filled primary toggle; absent: outline
+  * Add Attendance CTA: primary; disabled when no open session / no `attendance_write`
   * Loading: `q-inner-loading` / skeleton
   * Disabled: no open session → disable floor write CTAs
 * Currency: shared `formatMoney` (BDT / `bn` default).
@@ -1169,10 +1268,9 @@ Touch targets ≥ 48px for attendance toggles and primary CTAs on counter tablet
 ### D. Accessibility (a11y)
 
 * Dialogs: Quasar focus trap; Esc closes when not saving.
-* Attendance toggles: `role="button"`, `aria-pressed`, labelled by customer + shift name.
+* Attendance entry: shift radios labelled; amount `inputmode="decimal"`; invalid fields `aria-invalid` + helper text.
 * Tables: proper `<th>` / `scope`; card lists use headings per customer.
-* Forms: visible labels; `aria-invalid` + helper text on validation.
-* Keyboard: Tab order logical; Enter submits dialogs when focus in form.
+* Forms: visible labels; Enter submits dialogs when focus in form.
 
 ### E. Data Fetching & Error Handling (Frontend)
 
@@ -1274,14 +1372,32 @@ customers: {
     },
   },
   attendance: {
-    title: 'Contract Attendance',
-    subtitle: 'Tap a shift to mark present',
+    title: 'Customer Attendance Dashboard',
+    subtitle: 'Search workers and add attendance',
+    searchPlaceholder: 'Search by name or phone...',
     empty: 'No active contract workers.',
     noSession: 'No open operational session',
-    present: 'Present',
-    absent: 'Absent',
-    rateCharged: 'Daily rate applied',
-    rateRefunded: 'Daily rate refunded',
+    addAttendance: 'Add Attendance',
+    dialog: {
+      headerName: 'Name',
+      headerPhone: 'Phone',
+      selectDate: 'Select Date',
+      selectShift: 'Select Shift',
+      addExtraItems: 'Add Extra Items?',
+      note: 'Note',
+      amount: 'Amount (Tk)',
+      cancel: 'Cancel',
+      submit: 'Submit & Save',
+      shiftRequired: 'Select a shift',
+      amountRequired: 'Enter a valid amount',
+    },
+    shifts: {
+      breakfast: 'Breakfast',
+      lunch: 'Lunch',
+      afternoon_snacks: 'Afternoon Snacks',
+      dinner: 'Dinner',
+    },
+    saved: 'Attendance saved',
   },
   baki: {
     title: 'Baki / Extra Charge',
@@ -1411,14 +1527,32 @@ customers: {
     },
   },
   attendance: {
-    title: 'চুক্তি উপস্থিতি',
-    subtitle: 'উপস্থিত চিহ্নিত করতে শিফটে ট্যাপ করুন',
+    title: 'গ্রাহক উপস্থিতি ড্যাশবোর্ড',
+    subtitle: 'কর্মী খুঁজে উপস্থিতি যোগ করুন',
+    searchPlaceholder: 'নাম বা ফোন দিয়ে খুঁজুন...',
     empty: 'কোনো সক্রিয় চুক্তিভিত্তিক কর্মী নেই।',
     noSession: 'কোনো খোলা অপারেশনাল সেশন নেই',
-    present: 'উপস্থিত',
-    absent: 'অনুপস্থিত',
-    rateCharged: 'দৈনিক রেট প্রয়োগ হয়েছে',
-    rateRefunded: 'দৈনিক রেট ফেরত হয়েছে',
+    addAttendance: 'উপস্থিতি যোগ করুন',
+    dialog: {
+      headerName: 'নাম',
+      headerPhone: 'ফোন',
+      selectDate: 'তারিখ নির্বাচন',
+      selectShift: 'শিফট নির্বাচন',
+      addExtraItems: 'অতিরিক্ত আইটেম যোগ করবেন?',
+      note: 'নোট',
+      amount: 'পরিমাণ (টাকা)',
+      cancel: 'বাতিল',
+      submit: 'জমা ও সংরক্ষণ',
+      shiftRequired: 'একটি শিফট নির্বাচন করুন',
+      amountRequired: 'সঠিক পরিমাণ লিখুন',
+    },
+    shifts: {
+      breakfast: 'সকালের নাস্তা',
+      lunch: 'দুপুরের খাবার',
+      afternoon_snacks: 'বিকেলের নাস্তা',
+      dinner: 'রাতের খাবার',
+    },
+    saved: 'উপস্থিতি সংরক্ষিত হয়েছে',
   },
   baki: {
     title: 'বাকি / অতিরিক্ত চার্জ',
@@ -1486,13 +1620,20 @@ Nav label keys: also add workspace menu entries that reference `customers.nav.la
 - [x] Add Pinia `useCustomersStore`.
 - [x] Add routes `/:tenantSlug/customers` and `/:tenantSlug/customers/:customerId` with feature + permission meta.
 - [x] Add nav entry in `WorkspaceLayout.vue`.
-- [x] Scaffold `web/src/components/customers/` (filters, table, form, balance chip, statement, attendance grid, baki/collection dialogs).
+- [x] Scaffold `web/src/components/customers/` (filters, table, form, balance chip, statement, baki/collection dialogs).
 - [x] Add full `customers` i18n trees to `en-US` and `bn` (§4.F).
 - [ ] Add kiosk i18n keys for Customers / Create meal-plan customer actions.
+- [ ] **Task 1:** Rewrite Customer Attendance page — see [customer_attendance_page.md](./tasks/customer_attendance_page.md).
+- [ ] **Task 2:** Ship Baki Charge page — see [baki_charge_page.md](./tasks/baki_charge_page.md).
+- [ ] **Task 3:** Ship Baki Payment page (**Pay** + **Why owed?** recent breakdown) — see [baki_payment_page.md](./tasks/baki_payment_page.md).
+- [ ] **Task 4:** Ship Advance Payment page (stub → list + dialog; same collection RPC) — see [advance_payment_page.md](./tasks/advance_payment_page.md). Optional: harden RPC customer tenant/active check (Task 0 in that doc).
 
 ### Phase 3: Assembly & Integration
 - [x] Build `WorkspaceCustomers.vue` and `WorkspaceCustomerDetail.vue` (oversight path).
-- [x] Wire kiosk `StaffWorkspace` tiles: attendance grid, baki dialog, collection dialog (gated by feature + staff permission + open session).
+- [x] Wire kiosk `StaffWorkspace` Customer Attendance tile → `kiosk-attendance` route.
+- [ ] **Task 1:** Ship card list + `AttendanceEntryDialog` on that route; remove old grid/weekly/monthly UI.
+- [ ] **Task 2:** Wire StaffWorkspace Baki tile → `kiosk-baki`; ship `KioskBaki` + `BakiEntryDialog`; remove inline `BakiChargeDialog`.
+- [ ] **Task 3:** Wire StaffWorkspace Baki Payment tile → `kiosk-baki-payment`; ship `KioskBakiPayment` + `BakiPaymentDialog` + `CustomerOwedBreakdownDialog`; remove inline kiosk `CollectionDialog`.
 - [ ] **Restructure:** Wire kiosk Customers list + `CustomerFormDialog` for Manager `customer_write`; store dual-path upsert (RPC vs RLS).
 - [ ] Wire `useFeedback` success/error paths for kiosk customer mutations.
 - [ ] Confirm feature toggle off → routes redirect with existing guard message.
@@ -1500,10 +1641,9 @@ Nav label keys: also add workspace menu entries that reference `customers.nav.la
 - [ ] Confirm Cashier cannot create customers; Manager can without workspace login.
 
 ### Phase 4: Optimization & Polish
-- [ ] a11y pass on attendance grid (`aria-pressed`, labels).
-- [ ] Mobile card layouts for list + statement.
-- [ ] Optimistic UI or local balance patch after toggles to keep grid snappy.
-- [ ] Optional: virtualized attendance grid for large contract lists.
+- [ ] a11y pass on attendance entry dialog (labels, focus, validation).
+- [ ] Mobile card layouts for list + statement + attendance dashboard.
+- [ ] Local balance patch after attendance submit to keep list snappy.
 - [ ] Empty/error copy QA in both `en-US` and `bn`.
 - [ ] Remove or archive [temp_restructure.md](./temp_restructure.md) after merge.
 
@@ -1513,6 +1653,11 @@ Nav label keys: also add workspace menu entries that reference `customers.nav.la
 
 | Doc | Relationship |
 | :--- | :--- |
+| [tasks/SL.md](./tasks/SL.md) | Serial list of implementation task docs |
+| [tasks/customer_attendance_page.md](./tasks/customer_attendance_page.md) | **Task 1:** Customer Attendance Dashboard page rewrite (UI blueprint + checklist) |
+| [tasks/baki_charge_page.md](./tasks/baki_charge_page.md) | **Task 2:** Baki Charge Dashboard page (walk-in list + entry dialog) |
+| [tasks/baki_payment_page.md](./tasks/baki_payment_page.md) | **Task 3:** Baki Payment page (**Pay** + **Why owed?** recent breakdown) |
+| [tasks/advance_payment_page.md](./tasks/advance_payment_page.md) | **Task 4:** Advance Payment page (prepaid framing; same `record_customer_collection`) |
 | [temp_restructure.md](./temp_restructure.md) | Temporary change map: Manager terminal primary for customer CRUD |
 | [operational_shifts_sessions.md](./operational_shifts_sessions.md) | Open session context; `enforce_closed_session_lock`; dual-plane roles; Manager ⊃ Cashier |
 | [transaction_ledger.md](./transaction_ledger.md) | `post_ledger_entry`; category `Debt Collection`; cash expected math |

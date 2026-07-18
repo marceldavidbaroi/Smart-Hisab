@@ -108,7 +108,7 @@
                     <q-input
                       v-model="themeColor"
                       filled
-                      placeholder="#6366f1"
+                      placeholder="#0e4a47"
                       color="primary"
                       class="custom-input"
                       :disable="!canEdit"
@@ -162,7 +162,7 @@
                   {{ $t('workspace.settings.accessScopes.privilegesDesc') }}
                 </p>
 
-                <div class="text-subtitle2 q-mb-sm text-indigo-8">
+                <div class="text-subtitle2 q-mb-sm text-teal-8">
                   {{ $t('workspace.settings.accessScopes.planTitle') }}
                 </div>
                 <p class="text-sm text-slate-500">
@@ -288,6 +288,49 @@
                     />
                   </div>
 
+                  <q-separator class="q-my-md" />
+
+                  <div>
+                    <div class="text-subtitle2 text-weight-bold text-slate-800 q-mb-xs">
+                      {{ $t('workspace.settings.posEditWindow.title') }}
+                    </div>
+                    <div class="text-caption text-grey-7 q-mb-md">
+                      {{ $t('workspace.settings.posEditWindow.subtitle') }}
+                    </div>
+                    <div class="row q-col-gutter-sm">
+                      <div class="col-5">
+                        <q-input
+                          v-model.number="posEditValue"
+                          type="number"
+                          filled
+                          dense
+                          class="custom-input"
+                          :label="$t('workspace.settings.posEditWindow.value')"
+                          :disable="!isOwner"
+                          :rules="[
+                            (v) =>
+                              (v !== null && v > 0) ||
+                              $t('workspace.settings.posEditWindow.valueMin'),
+                          ]"
+                          hide-bottom-space
+                        />
+                      </div>
+                      <div class="col-7">
+                        <q-select
+                          v-model="posEditUnit"
+                          :options="posEditUnitOptions"
+                          emit-value
+                          map-options
+                          filled
+                          dense
+                          class="custom-input"
+                          :label="$t('workspace.settings.posEditWindow.unit')"
+                          :disable="!isOwner"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="q-mt-lg" v-if="isOwner">
                     <q-btn
                       type="submit"
@@ -372,16 +415,31 @@
                   </template>
                   <template #body-cell-actions="props">
                     <q-td :props="props" align="right">
-                      <q-btn
-                        dense
-                        color="red-5"
-                        icon="link_off"
-                        :label="$t('workspace.settings.kioskDevices.disconnectBtn')"
-                        class="q-px-sm rounded-btn text-weight-bold cursor-pointer"
-                        size="sm"
-                        unelevated
-                        @click="confirmDisconnectDevice(props.row)"
-                      />
+                      <div class="row q-gutter-xs justify-end no-wrap">
+                        <q-btn
+                          dense
+                          color="primary"
+                          outline
+                          icon="qr_code_2"
+                          :label="$t('workspace.settings.kioskDevices.repairBtn')"
+                          class="q-px-sm rounded-btn text-weight-bold cursor-pointer"
+                          style="min-height: 40px"
+                          size="sm"
+                          unelevated
+                          @click="confirmRepairDevice(props.row)"
+                        />
+                        <q-btn
+                          dense
+                          color="red-5"
+                          icon="link_off"
+                          :label="$t('workspace.settings.kioskDevices.disconnectBtn')"
+                          class="q-px-sm rounded-btn text-weight-bold cursor-pointer"
+                          style="min-height: 40px"
+                          size="sm"
+                          unelevated
+                          @click="confirmDisconnectDevice(props.row)"
+                        />
+                      </div>
                     </q-td>
                   </template>
                   <template #no-data>
@@ -412,10 +470,10 @@
               <q-card-section class="q-pt-md">
                 <div
                   v-if="activePairingCode"
-                  class="column items-center text-center q-pa-md bg-indigo-50 border-indigo-100 rounded-borders border-all"
+                  class="column items-center text-center q-pa-md bg-teal-1 border-teal-100 rounded-borders border-all"
                 >
                   <q-icon name="vpn_key" size="36px" color="primary" class="q-mb-sm" />
-                  <div class="text-caption text-indigo-7 text-weight-bold">
+                  <div class="text-caption text-teal-7 text-weight-bold">
                     {{ $t('workspace.settings.generatePairing.activeTitle') }}
                   </div>
                   <div class="text-subtitle1 text-slate-900 text-weight-bold q-mb-md">
@@ -589,6 +647,48 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Re-pair Device Confirmation Dialog -->
+    <q-dialog v-model="confirmRepair" persistent>
+      <q-card
+        style="width: 400px; max-width: 90vw; border-radius: 16px"
+        class="q-pa-md bg-white text-slate-900"
+      >
+        <q-card-section class="column items-center text-center q-pt-md">
+          <q-avatar size="48px" color="primary" text-color="white" class="q-mb-md">
+            <q-icon name="qr_code_2" size="28px" />
+          </q-avatar>
+          <div class="text-h6 text-bold text-slate-800">
+            {{ $t('workspace.settings.repairDialog.title') }}
+          </div>
+          <p class="text-sm text-slate-500 q-mt-sm">
+            {{
+              $t('workspace.settings.repairDialog.desc', {
+                name: deviceToRepair?.device_name || '',
+              })
+            }}
+          </p>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-gutter-sm">
+          <q-btn
+            flat
+            :label="$t('workspace.settings.repairDialog.cancelBtn')"
+            color="slate-500"
+            v-close-popup
+            class="cursor-pointer"
+            :disable="repairingDevice"
+          />
+          <q-btn
+            color="primary"
+            :label="$t('workspace.settings.repairDialog.confirmBtn')"
+            class="q-px-md text-weight-bold rounded-btn cursor-pointer"
+            :loading="repairingDevice"
+            @click="deviceToRepair && handleRepairDevice(deviceToRepair)"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -597,7 +697,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTenantStore } from '../../stores/tenant';
 import { updateTenantSettings, deleteTenant } from '../../services/multiTenant';
-import { generatePairingCode } from '../../services/staff';
+import { generatePairingCode, prepareDeviceRepair } from '../../services/staff';
 import { supabase } from '../../boot/supabase';
 import { showSuccess, showInfo, showApiError } from '../../composables/useFeedback';
 import { useI18n } from 'vue-i18n';
@@ -617,6 +717,8 @@ const prefCurrency = ref('BDT');
 const prefTimezone = ref('Asia/Dhaka');
 const prefRegion = ref('BD');
 const prefDateFormat = ref('DD/MM/YYYY');
+const posEditValue = ref(24);
+const posEditUnit = ref<'minutes' | 'hours' | 'days'>('hours');
 const savingPreferences = ref(false);
 
 const currencyOptions = [
@@ -649,6 +751,12 @@ const dateFormatOptions = [
   { label: 'MM/DD/YYYY (12/31/2026)', value: 'MM/DD/YYYY' },
   { label: 'YYYY-MM-DD (2026-12-31)', value: 'YYYY-MM-DD' },
 ];
+
+const posEditUnitOptions = computed(() => [
+  { label: t('workspace.settings.posEditWindow.units.minutes'), value: 'minutes' },
+  { label: t('workspace.settings.posEditWindow.units.hours'), value: 'hours' },
+  { label: t('workspace.settings.posEditWindow.units.days'), value: 'days' },
+]);
 
 const preferencePreview = computed(() => {
   const sample = new Date(2026, 11, 31);
@@ -693,6 +801,9 @@ const generatingCode = ref(false);
 
 const confirmDisconnect = ref(false);
 const deviceToDisconnect = ref<PairedDevice | null>(null);
+const confirmRepair = ref(false);
+const deviceToRepair = ref<PairedDevice | null>(null);
+const repairingDevice = ref(false);
 
 const deviceColumns = computed<DeviceColumn[]>(() => [
   {
@@ -756,12 +867,20 @@ const loadTenantSettingsData = () => {
       region?: string;
       date_format?: string;
     };
+    pos_edit_window?: {
+      value?: number;
+      unit?: string;
+    };
   };
   const loc = prefs.localization || {};
   prefCurrency.value = loc.currency || 'BDT';
   prefTimezone.value = loc.timezone || 'Asia/Dhaka';
   prefRegion.value = loc.region || 'BD';
   prefDateFormat.value = loc.date_format || 'DD/MM/YYYY';
+  const pew = prefs.pos_edit_window || {};
+  posEditValue.value = Number(pew.value) > 0 ? Number(pew.value) : 24;
+  posEditUnit.value =
+    pew.unit === 'minutes' || pew.unit === 'days' || pew.unit === 'hours' ? pew.unit : 'hours';
 };
 
 const savePreferences = async () => {
@@ -781,6 +900,10 @@ const savePreferences = async () => {
           timezone: prefTimezone.value,
           region: prefRegion.value,
           date_format: prefDateFormat.value,
+        },
+        pos_edit_window: {
+          value: posEditValue.value,
+          unit: posEditUnit.value,
         },
       },
     });
@@ -946,6 +1069,36 @@ const confirmDisconnectDevice = (device: PairedDevice) => {
   confirmDisconnect.value = true;
 };
 
+const confirmRepairDevice = (device: PairedDevice) => {
+  deviceToRepair.value = device;
+  confirmRepair.value = true;
+};
+
+const handleRepairDevice = async (device: PairedDevice) => {
+  if (!tenantStore.activeTenant) return;
+  repairingDevice.value = true;
+  try {
+    const code = await prepareDeviceRepair(tenantStore.activeTenant.id, device.id);
+    activePairingCode.value = code;
+    activePairingDeviceName.value = device.device_name;
+    deviceNameInput.value = device.device_name;
+
+    const expires = new Date();
+    expires.setMinutes(expires.getMinutes() + 30);
+    activePairingExpires.value = expires.toISOString();
+
+    confirmRepair.value = false;
+    deviceToRepair.value = null;
+
+    await loadPairedDevices();
+    showSuccess(t('workspace.settings.messages.repairSuccess'));
+  } catch (err) {
+    await showApiError(err, t('workspace.settings.messages.repairFailed'));
+  } finally {
+    repairingDevice.value = false;
+  }
+};
+
 const handleDisconnectDevice = async (deviceId: string) => {
   try {
     const { error } = await supabase.from('paired_devices').delete().eq('id', deviceId);
@@ -995,9 +1148,9 @@ onMounted(() => {
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 12px rgba(14, 74, 71, 0.15);
   border: none;
 
   &:hover {

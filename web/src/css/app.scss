@@ -1,6 +1,14 @@
-// app global css for light theme
+// app global css for light theme — Smart Hisab brand
 
 :root {
+  // Brand tokens (mirror quasar.variables.scss)
+  --brand-primary: #0e4a47; // Deep Pine
+  --brand-secondary: #f2a104; // Bangal Marigold
+  --brand-accent: #2ec4b6; // Muted Mint
+  --brand-dark: #1a2223; // Charcoal Ink
+  --brand-soft: #e6f0ef; // Deep Pine @ ~8% on white
+  --brand-surface: #f5f8f8;
+
   // Radius scale — modern standard
   --radius-xs: 4px; // chips/tags density, scrollbar
   --radius-sm: 6px; // compact inputs / dense controls
@@ -12,8 +20,16 @@
 }
 
 body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: var(--brand-surface);
+  color: var(--brand-dark);
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%) !important;
+}
+
+.bg-brand-soft {
+  background-color: var(--brand-soft) !important;
 }
 
 // Utility classes — prefer these over hardcoded px
@@ -63,7 +79,7 @@ body {
 .dialog-card {
   background-color: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
-  color: #0f172a !important;
+  color: var(--brand-dark) !important;
 }
 
 // Scrollbars styling for light theme

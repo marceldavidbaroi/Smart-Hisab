@@ -145,29 +145,27 @@ interface ShiftRow {
   name: string;
   start_time: string;
   end_time: string;
-  is_active: boolean;
 }
 
 const shifts = ref<ShiftRow[]>([]);
 
 const shiftOptions = computed(() => {
   return shifts.value.map((s) => ({
-    label: `${s.name} (${s.start_time.substring(0, 5)} - ${s.end_time.substring(0, 5)})`,
+    label: `${s.name} (${String(s.start_time).substring(0, 5)} - ${String(s.end_time).substring(0, 5)})`,
     value: s.id,
   }));
 });
 
 async function loadShifts() {
   const tenantId = kioskStore.tenantId;
-  if (!tenantId) return;
+  const deviceToken = kioskStore.deviceToken;
+  if (!tenantId || !deviceToken) return;
   loadingShifts.value = true;
   try {
-    const { data, error } = await supabase
-      .from('shifts')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .eq('is_active', true)
-      .order('start_time');
+    const { data, error } = await supabase.rpc('list_active_shifts', {
+      p_tenant_id: tenantId,
+      p_device_token: deviceToken,
+    });
     if (error) throw error;
     shifts.value = (data || []) as ShiftRow[];
     if (shifts.value.length > 0) {

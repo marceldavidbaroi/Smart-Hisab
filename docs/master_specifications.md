@@ -103,7 +103,7 @@ This module manages the temporal and physical cash drawer context for all operat
 2.  **Session Lifecycle Controller:**
     *   **Open Session:** Manager clocks in, selects the active shift, and inputs the **Opening Drawer Cash** amount.
     *   **Active Session Monitoring:** Serves as the system-wide active context. Any log created during this time (POS sale, bazar purchase, staff advance) automatically links to this `session_id` and the current business `date`.
-    *   **Close Session:** Manager records a single aggregated counter money entry representing walk-in regular meal sales (Category: `POS`) for the session, counts physical drawer cash, enters the **Closing Drawer Cash** amount, and closes the session.
+    *   **Close Session:** Manager may optionally log bulk counter money (Category: `POS`, cash and/or online) if not already entered per sale during the shift, counts physical drawer cash, enters the **Closing Drawer Cash** amount, and closes the session.
 3.  **Shift Reconciliation Engine:**
     *   Aggregates expected figures from all modules linked to the active `session_id`:
         *   `Expected Cash = Opening Cash + Cash POS Sales (Counter Sales Entry) + Cash Customer Collections - Cash Bazar Expenses - Cash Staff Advances - Cash Vendor Payments`
@@ -154,16 +154,22 @@ Manages flat-rate contract workers (charged a fixed daily rate if present for an
     *   Tracks a running `outstanding_balance` per customer (supporting segment payments and prepaid advances).
     *   **Primary create/edit UI:** kiosk `StaffWorkspace` (Manager + `customer_write`). Workspace pages remain for Owner/Admin.
 2.  **Daily Contract Attendance Tracker:**
-    *   Fast-access grid UI of active contract workers.
-    *   One-tap shift attendance toggling (Breakfast, Lunch, Dinner, Snack).
+    *   Kiosk **Customer Attendance** tile → dedicated page (`kiosk-attendance`).
+    *   Searchable customer cards → **Add Attendance** dialog (date, one shift, optional extras, note, amount).
     *   Charges the daily rate exactly once per day if marked present for any contracted shifts.
+    *   Implementation task: [customer_attendance_page.md](./tasks/customer_attendance_page.md).
 3.  **Baki (Credit) & Extra Charges Ledger:**
-    *   Record walk-in credit entries and extra charges (above the daily rate) for contract workers.
-    *   Stores a description note of what they ate and its cost.
+    *   Kiosk **Baki** tile → dedicated page (`kiosk-baki`).
+    *   Searchable `walk_in_baki` cards → **Add Baki** dialog (shift, multi-line note + amount, live total).
+    *   Extra charges above the daily rate for contract workers remain on the Attendance dialog.
     *   Links to active `session_id` for audits.
+    *   Implementation task: [baki_charge_page.md](./tasks/baki_charge_page.md).
 4.  **Customer Collections (Receivables):**
+    *   Kiosk **Baki Payment** tile → dedicated page (`kiosk-baki-payment`).
+    *   Searchable dues cards → **Pay** dialog; **Why owed?** shows recent meal / baki / payment breakdown (not the company ledger).
     *   Records payments collected from customers to clear outstanding debts (paid in segments or advance).
     *   Generates a real-time central ledger inflow event (`received_collection`) containing payment details.
+    *   Implementation task: [baki_payment_page.md](./tasks/baki_payment_page.md).
 
 ---
 
@@ -200,8 +206,9 @@ A clean, high-performance financial register acting as the tenant's single bookk
     *   Tracks physical cash changes inside the drawer.
     *   Receives entries from other modules (Procurement, Customer Collections, Staff Payroll, Vendor Payments) associated with a `session_id`.
 2.  **Transaction Audit Log:**
-    *   An append-only, immutable transaction ledger.
+    *   An append-only transaction ledger (POS rows may be edited in-place within a tenant-configured grace window while the session is open).
     *   Fields: `id`, `tenant_id`, `session_id`, `type` (Inflow / Outflow), `category` (POS, Debt Collection, Raw Materials, Payroll, Supplier Payout), `amount`, `payment_method` (Cash, Mobile Wallet, Bank Transfer), `operator_id`, and `created_at`.
+    *   Daily Transaction (POS) is a core tracked inflow: per-sale or bulk, Cash/Online; feeds financial summary, daily breakdown, and session cash math.
 3.  **Tenant Financial Dashboard:**
     *   Aggregated reports: Net Profit/Loss, Outstanding Receivables (Customer Credit), Outstanding Payables (Supplier Credit), and Total Expenses.
 

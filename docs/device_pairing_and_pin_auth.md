@@ -209,6 +209,10 @@ Since the kiosk operates on an anonymous browser/app window, it connects to Supa
   "854921"
   ```
 
+#### 1b. `public.unpair_device` / `public.prepare_device_repair`
+- **`unpair_device(p_device_token, p_tenant_id?)`:** Kiosk self-service. Deletes the matching `paired_devices` row (idempotent). Granted to `anon` + `authenticated`. Called from `kioskStore.unpairDevice` before clearing localStorage so accidental terminal unpair does not leave orphan rows in Settings.
+- **`prepare_device_repair(p_tenant_id, p_device_id)`:** Owner/superadmin. Deletes that paired device and returns a fresh 6-digit code (same `device_name`, 30 min TTL). Workspace Settings **Re-pair** action uses this.
+
 #### 2. `public.verify_pairing_code`
 - **Caller:** Anonymous Client (Device App).
 - **HTTP Endpoint:** `POST /rest/v1/rpc/verify_pairing_code`

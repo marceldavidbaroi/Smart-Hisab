@@ -1600,7 +1600,7 @@ onMounted(() => {
 }
 
 .member-table-avatar {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #2ec4b6 0%, #3b82f6 100%);
   color: white;
   font-weight: 700;
   border: 1px solid rgba(0, 0, 0, 0.05);
@@ -1612,9 +1612,9 @@ onMounted(() => {
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 12px rgba(14, 74, 71, 0.15);
   border: none;
 
   &:hover {

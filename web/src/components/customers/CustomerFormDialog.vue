@@ -24,10 +24,14 @@
           <!-- Phone -->
           <q-input
             v-model="form.phone"
-            :label="$t('customers.form.phone')"
+            :label="$t('customers.form.phone') + ' *'"
             dense
             outlined
             type="tel"
+            :rules="[
+              (val) => !!val || $t('customers.form.phoneRequired'),
+              (val) => /^[0-9+\-\s()]{5,20}$/.test(val) || $t('customers.form.phoneInvalid'),
+            ]"
           />
 
           <!-- Category -->
@@ -117,11 +121,15 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { supabase } from '../../boot/supabase';
 import { useTenantStore } from '../../stores/tenant';
+import { useKioskStore } from '../../stores/kiosk';
 import type { Customer, CustomerCategory } from '../../stores/customers';
+import { showSuccess, showApiError } from '../../composables/useFeedback';
 
 const props = defineProps<{
   modelValue: boolean;
   customer?: Customer | null;
+  deviceToken?: string | null;
+  staffId?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -131,6 +139,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const tenantStore = useTenantStore();
+const kioskStore = useKioskStore();
+
+function resolveTenantId(): string | null {
+  return tenantStore.activeTenant?.id ?? kioskStore.tenantId ?? null;
+}
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -192,24 +205,42 @@ watch(
   { immediate: true },
 );
 
-// Fetch available shifts in the active tenant
-async function fetchShifts() {
-  const tenant = tenantStore.activeTenant;
-  if (!tenant) return;
-  try {
-    const { data, error } = await supabase
-      .from('shifts')
-      .select('name')
-      .eq('tenant_id', tenant.id)
-      .eq('is_active', true)
-      .order('name');
+const DEFAULT_SHIFT_NAMES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
-    if (error) throw error;
-    if (data) {
-      shiftOptions.value = data.map((s) => ({ label: s.name, value: s.name }));
+async function fetchShifts() {
+  const tenantId = resolveTenantId();
+  if (!tenantId) {
+    shiftOptions.value = DEFAULT_SHIFT_NAMES.map((n) => ({ label: n, value: n }));
+    return;
+  }
+  try {
+    const deviceToken = props.deviceToken || kioskStore.deviceToken;
+    if (deviceToken) {
+      const { data, error } = await supabase.rpc('list_active_shifts', {
+        p_tenant_id: tenantId,
+        p_device_token: deviceToken,
+      });
+      if (error) throw error;
+      shiftOptions.value = (data ?? []).map((s: { name: string }) => ({
+        label: s.name,
+        value: s.name,
+      }));
+    } else {
+      const { data, error } = await supabase
+        .from('shifts')
+        .select('name')
+        .eq('tenant_id', tenantId)
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      shiftOptions.value = (data ?? []).map((s) => ({ label: s.name, value: s.name }));
+    }
+    if (shiftOptions.value.length === 0) {
+      shiftOptions.value = DEFAULT_SHIFT_NAMES.map((n) => ({ label: n, value: n }));
     }
   } catch (e) {
     console.error('Failed to load shifts', e);
+    shiftOptions.value = DEFAULT_SHIFT_NAMES.map((n) => ({ label: n, value: n }));
   }
 }
 
@@ -220,15 +251,18 @@ watch(isOpen, (newVal) => {
 });
 
 async function onSubmit() {
-  const tenant = tenantStore.activeTenant;
-  if (!tenant) return;
+  const tenantId = resolveTenantId();
+  if (!tenantId) {
+    void showApiError(new Error('No active tenant'));
+    return;
+  }
 
-  saving.value = ref(true).value;
+  saving.value = true;
   try {
     const payload: Partial<Customer> = {
       full_name: form.value.full_name,
       category: form.value.category,
-      phone: form.value.phone || null,
+      phone: form.value.phone ? form.value.phone.trim() : '',
       factory_unit: form.value.factory_unit || null,
       is_active: form.value.is_active,
     };
@@ -245,16 +279,37 @@ async function onSubmit() {
       payload.id = props.customer.id;
     }
 
-    const row = { ...payload, tenant_id: tenant.id };
-    const { error } = payload.id
-      ? await supabase.from('customers').update(row).eq('id', payload.id)
-      : await supabase.from('customers').insert(row);
+    let error;
+    if (props.deviceToken && props.staffId) {
+      const { error: rpcError } = await supabase.rpc('upsert_customer', {
+        p_tenant_id: tenantId,
+        p_full_name: payload.full_name!,
+        p_category: payload.category!,
+        p_phone: payload.phone,
+        p_contract_daily_rate: payload.contract_daily_rate,
+        p_contract_shifts: payload.contract_shifts,
+        p_factory_unit: payload.factory_unit,
+        p_is_active: payload.is_active!,
+        p_id: payload.id || null,
+        p_device_token: props.deviceToken,
+        p_staff_id: props.staffId,
+      });
+      error = rpcError;
+    } else {
+      const row = { ...payload, tenant_id: tenantId };
+      const { error: dbError } = payload.id
+        ? await supabase.from('customers').update(row).eq('id', payload.id)
+        : await supabase.from('customers').insert(row);
+      error = dbError;
+    }
 
     if (error) throw error;
 
+    showSuccess(t('customers.feedback.saved'));
     emit('saved');
     isOpen.value = false;
   } catch (e) {
+    void showApiError(e);
     console.error(e);
   } finally {
     saving.value = false;

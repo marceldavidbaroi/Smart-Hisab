@@ -6,7 +6,7 @@ This document is the Technical Specification (RFC) for the **Transaction Ledger*
 * **Central Bookkeeping Ledger:** Maintain a single consolidated register (`transaction_ledger`) for all inflows and outflows across the tenant workspace.
 * **Automated Double-Entry Integration:** Receive postings from Meal & Customer (`POS`, `Debt Collection`), Procurement (`Raw Materials`, `Supplier Payout`), and Staff Attendance & Payroll (`Payroll`, `Staff Advance`), plus session close discrepancies (`Bazar Discrepancy` / `Bazar Surplus`).
 * **Temporal & Session Isolation:** Optionally link rows to `session_id` so shift cash reconciliation and drawer expected-cash math work.
-* **Immutable Audit Log:** Block `UPDATE` and `DELETE` at RLS and trigger level.
+* **Immutable Audit Log:** Block `UPDATE` and `DELETE` at RLS and trigger level for all categories except **POS**, which may be edited in-place via `edit_pos_sale` only within a tenant-owner-configured grace window while the session is still open.
 * **Financial Dashboard & Daily Breakdown:** Aggregate net P/L, expenses, receivables, payables, and per-day category cost breakdowns.
 * **Localization:** Format amounts with tenant currency (default BDT / `৳`) and locale (default `bn`) via `Intl.NumberFormat` at the presentation layer.
 
@@ -30,7 +30,8 @@ This document is the Technical Specification (RFC) for the **Transaction Ledger*
 2. **As a** Canteen Owner, **I want to** view a financial dashboard (net P/L, total expenses, customer receivables, supplier payables) over any date range, **so that** I can assess business health.
 3. **As a** Canteen Owner, **I want to** view a daily financial breakdown (revenue, expense, net, and category costs) for a date range, **so that** I can see which costs erode margin day by day.
 4. **As a** Canteen Owner, **I want to** log manual entries (withdrawals, capital, rent, utilities) into the ledger, **so that** off-system costs are bookkept.
-5. **As a** Canteen Owner, **I want** past ledger entries to be immutable, **so that** staff cannot falsify records or cover shortages.
+5. **As a** Canteen Owner, **I want** past ledger entries to be immutable (except POS within an edit window I configure), **so that** staff cannot falsify records or cover shortages.
+6. **As a** Canteen Owner, **I want to** set how long staff may edit Daily Transaction (POS) entries (minutes, hours, or days), **so that** typos can be fixed without leaving the ledger permanently mutable.
 
 #### Persona B: Shift Manager (Kiosk Staff — Manager Role)
 1. **As a** Shift Manager, **I want to** view transactions linked to my active session, **so that** I can verify collections and expenses before closing the drawer.
@@ -175,7 +176,7 @@ Append-only financial ledger for the tenant.
 
 | Category | Typical `type` | Source |
 | :--- | :--- | :--- |
-| `POS` | inflow | Counter aggregated sales / meal module |
+| `POS` | inflow | Core counter Daily Transaction (per-sale or bulk); cash or online (`mobile_wallet`); editable within tenant `pos_edit_window` while session open |
 | `Debt Collection` | inflow | Customer payments |
 | `Raw Materials` | outflow | Bazar / procurement |
 | `Supplier Payout` | outflow | Vendor payments |
@@ -269,6 +270,35 @@ No separate REST server. Client uses Supabase JS (`supabase.from` / `supabase.rp
 **Success response:** `uuid` (new ledger id). Sets `operator_user_id = auth.uid()`.
 
 **Categories allowed for manual path:** `Overhead`, `Manual Inflow`, `Manual Outflow` (and matching `type`). Reject others with validation error.
+
+#### 2b. `rpc('log_pos_sale')` — kiosk Daily Transaction (core POS)
+
+**Request:**
+```json
+{
+  "p_tenant_id": "uuid",
+  "p_device_token": "…",
+  "p_staff_id": "uuid",
+  "p_session_id": "uuid",
+  "p_amount": 150.00,
+  "p_payment_method": "cash",
+  "p_notes": "Walk-in meal"
+}
+```
+
+Posts `inflow` / `POS` via `post_ledger_entry`. `p_payment_method` ∈ `cash` | `mobile_wallet` (UI label for wallet: **Online**). Requires open session + `kiosk.log_pos`. Bulk = call twice (cash total + online total).
+
+#### 2c. `rpc('edit_pos_sale')` — kiosk POS edit window
+
+Updates amount / payment_method / notes on an existing `POS` row when:
+1. Session is still **open**
+2. `now() < created_at + tenant pos_edit_window` (default 24 hours)
+
+Tenant preference (`tenant_settings.preferences`):
+```json
+"pos_edit_window": { "value": 24, "unit": "hours" }
+```
+`unit` ∈ `minutes` | `hours` | `days`. Direct client UPDATE remains blocked; only this security-definer RPC may update POS (GUC-gated immutability trigger).
 
 #### 3. `rpc('get_tenant_financial_summary')` — workspace dashboard
 

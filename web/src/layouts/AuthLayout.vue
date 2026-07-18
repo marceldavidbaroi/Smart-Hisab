@@ -2,20 +2,21 @@
   <q-layout view="hHh Lpr fFf" class="auth-layout-container">
     <q-page-container>
       <q-page class="flex flex-center auth-page">
-        <!-- Glowing background decoration -->
-        <div class="glow-sphere sphere-1"></div>
-        <div class="glow-sphere sphere-2"></div>
+        <div class="glow-orb orb-1" aria-hidden="true" />
+        <div class="glow-orb orb-2" aria-hidden="true" />
 
         <div class="auth-card-wrapper">
-          <div class="text-center q-mb-lg">
-            <div class="app-logo q-mb-xs">
-              <q-icon name="receipt_long" size="48px" class="logo-icon" />
+          <div class="brand-hero text-center q-mb-lg">
+            <div class="logo-container q-mb-md">
+              <img src="../assets/brand-logo.png" alt="Smart Hisab" class="brand-logo-hero" />
             </div>
-            <h1 class="text-h4 text-bold text-slate-800 title-gradient">Smart Hisab</h1>
-            <p class="text-subtitle2 text-slate-500">{{ $t('layouts.auth.tagline') }}</p>
+            <h1 class="brand-wordmark text-h5 text-weight-bold q-my-none">Smart Hisab</h1>
+            <p class="brand-bengali text-subtitle1 text-weight-medium q-mt-xs q-mb-none">
+              স্মার্ট হিসাব
+            </p>
           </div>
 
-          <div class="glass-panel">
+          <div class="auth-card">
             <router-view v-slot="{ Component }">
               <transition name="fade-slide" mode="out-in">
                 <component :is="Component" />
@@ -29,107 +30,172 @@
 </template>
 
 <script setup lang="ts">
-// AuthLayout setup
+// AuthLayout — branded shell for login / auth routes
 </script>
 
 <style scoped lang="scss">
 .auth-layout-container {
-  background: #f8fafc;
+  background: linear-gradient(160deg, var(--brand-soft) 0%, var(--brand-surface) 48%, #d8ebe8 100%);
   min-height: 100vh;
   position: relative;
   overflow: hidden;
   font-family: 'Outfit', 'Inter', sans-serif;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(14, 74, 71, 0.1) 1.25px, transparent 1.25px);
+    background-size: 22px 22px;
+    pointer-events: none;
+    z-index: 1;
+  }
 }
 
 .auth-page {
   position: relative;
   z-index: 2;
   padding: 24px;
+  overflow-x: hidden;
+
+  @media (max-width: 599px) {
+    padding: 16px 12px;
+  }
 }
 
-/* Background Glowing Mesh */
-.glow-sphere {
+.glow-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(100px);
   opacity: 0.35;
-  z-index: 1;
   pointer-events: none;
+  z-index: 0;
 }
 
-.sphere-1 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, #6366f1 0%, rgba(99, 102, 241, 0) 70%);
-  top: -100px;
-  left: -100px;
-  animation: float-slow 15s infinite alternate;
+.orb-1 {
+  width: min(420px, 90vw);
+  height: min(420px, 90vw);
+  background: radial-gradient(circle, var(--brand-accent) 0%, transparent 70%);
+  top: -12%;
+  left: -18%;
+  animation: auth-float 16s ease-in-out infinite alternate;
 }
 
-.sphere-2 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, #06b6d4 0%, rgba(6, 182, 212, 0) 70%);
-  bottom: -150px;
-  right: -100px;
-  animation: float-slow 20s infinite alternate-reverse;
+.orb-2 {
+  width: min(480px, 95vw);
+  height: min(480px, 95vw);
+  background: radial-gradient(circle, var(--brand-primary) 0%, transparent 70%);
+  bottom: -18%;
+  right: -22%;
+  opacity: 0.22;
+  animation: auth-float 20s ease-in-out infinite alternate-reverse;
 }
 
-@keyframes float-slow {
+@keyframes auth-float {
   0% {
     transform: translate(0, 0) scale(1);
   }
   100% {
-    transform: translate(50px, 50px) scale(1.1);
+    transform: translate(36px, 28px) scale(1.08);
   }
 }
 
 .auth-card-wrapper {
   width: 100%;
-  max-width: 450px;
+  max-width: 420px;
   z-index: 3;
+  animation: auth-enter 0.35s ease-out;
 }
 
-.logo-icon {
-  color: #6366f1;
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.2));
+@keyframes auth-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.title-gradient {
-  background: linear-gradient(to right, #0f172a, #334155);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.brand-hero {
+  animation: auth-enter 0.4s ease-out;
 }
 
-/* Glassmorphic Panel */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow:
-    0 20px 40px -15px rgba(0, 0, 0, 0.05),
-    inset 0 1px 1px rgba(255, 255, 255, 0.8);
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Transitions */
+.brand-logo-hero {
+  height: 112px;
+  width: 112px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 20px rgba(14, 74, 71, 0.18));
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  @media (max-width: 599px) {
+    height: 96px;
+    width: 96px;
+  }
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.brand-wordmark {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  letter-spacing: 0.4px;
+  color: var(--brand-primary);
+}
+
+.brand-bengali {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: var(--brand-primary);
+  opacity: 0.78;
+}
+
+.auth-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: var(--radius-2xl);
+  padding: 32px 28px 28px;
+  box-shadow: 0 12px 32px rgba(14, 74, 71, 0.1), 0 2px 8px rgba(14, 74, 71, 0.04);
+  border: 1px solid rgba(14, 74, 71, 0.1);
+  overflow: hidden;
+  z-index: 2;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
+    z-index: 3;
+  }
+
+  @media (max-width: 599px) {
+    padding: 24px 18px 22px;
+    border-radius: var(--radius-xl);
+  }
+}
+
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .fade-slide-enter-from {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(8px);
 }
 
 .fade-slide-leave-to {
   opacity: 0;
-  transform: translateY(-12px);
+  transform: translateY(-8px);
 }
 </style>

@@ -13,8 +13,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'signup',
-        name: 'signup',
-        component: () => import('@/pages/auth/SignupPage.vue'),
+        redirect: { name: 'login' },
       },
       {
         path: 'no-tenant',
@@ -39,23 +38,31 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/:tenantSlug/login',
-    component: () => import('@/layouts/AuthLayout.vue'),
-    children: [
-      {
-        path: '',
-        name: 'tenant-login',
-        component: () => import('@/pages/auth/LoginPage.vue'),
-      },
-    ],
-  },
-  {
     path: '/admin/auth/login',
     component: () => import('@/layouts/AuthLayout.vue'),
     children: [
       {
         path: '',
         name: 'admin-login',
+        component: () => import('@/pages/auth/LoginPage.vue'),
+      },
+    ],
+  },
+  {
+    path: '/:tenantSlug/login',
+    component: () => import('@/layouts/AuthLayout.vue'),
+    beforeEnter: (to) => {
+      const slug = to.params.tenantSlug;
+      const reserved = new Set(['auth', 'admin', 'kiosk', 'forbidden', 'error']);
+      if (typeof slug === 'string' && reserved.has(slug)) {
+        return slug === 'admin' ? { name: 'admin-login' } : { name: 'login' };
+      }
+      return true;
+    },
+    children: [
+      {
+        path: '',
+        name: 'tenant-login',
         component: () => import('@/pages/auth/LoginPage.vue'),
       },
     ],
@@ -210,6 +217,24 @@ const routes: RouteRecordRaw[] = [
         path: 'workspace',
         name: 'kiosk-workspace',
         component: () => import('@/pages/kiosk/StaffWorkspace.vue'),
+        meta: { requiresPairing: true, requiresStaffAuth: true },
+      },
+      {
+        path: 'customers',
+        name: 'kiosk-customers',
+        component: () => import('@/pages/kiosk/KioskCustomers.vue'),
+        meta: { requiresPairing: true, requiresStaffAuth: true },
+      },
+      {
+        path: 'attendance',
+        name: 'kiosk-attendance',
+        component: () => import('@/pages/kiosk/KioskAttendance.vue'),
+        meta: { requiresPairing: true, requiresStaffAuth: true },
+      },
+      {
+        path: 'advance-payment',
+        name: 'kiosk-advance-payment',
+        component: () => import('@/pages/kiosk/KioskAdvancePayment.vue'),
         meta: { requiresPairing: true, requiresStaffAuth: true },
       },
     ],

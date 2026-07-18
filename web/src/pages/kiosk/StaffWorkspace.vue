@@ -1,286 +1,275 @@
-<!--
-  Lean Mode Checklist (Phase 4):
-  - [x] Staff header & Clock Out visible
-  - [x] Operational session banner visible
-  - [x] SessionCashBalance chip visible (Manager/Cashier + cash_balance_read)
-  - [x] Active-session ledger read-only list visible (session_ledger_read)
-  - [x] Hide unbuilt action cards (Record Meal, POS Sale, Cash Advance) when feature flags are disabled
--->
 <template>
   <q-page class="bg-grey-2 text-dark q-pa-md">
     <div class="workspace-container q-mx-auto">
-      <!-- Welcome & Shift Header -->
-      <div class="row items-center justify-between q-mb-lg q-col-gutter-sm">
-        <div>
-          <h1 class="text-h4 text-weight-bold q-my-none text-dark">
+      <!-- Welcome & Clock Header — stacks on phone -->
+      <div class="row q-col-gutter-sm q-mb-lg items-start items-md-center">
+        <div class="col-12 col-md">
+          <h1 class="text-h5 text-weight-bold q-my-none text-dark">
             {{ $t('kioskUI.workspace.title') }}
           </h1>
-          <p class="text-subtitle2 text-grey-7 q-my-none">
+          <p class="text-subtitle2 text-grey-7 q-my-none ellipsis">
             {{ currentStaffName }} —
             <span class="capitalize text-primary font-semibold">{{ currentStaffRole }}</span>
           </p>
         </div>
-        <div class="row items-center q-gutter-sm">
-          <q-card class="flat bordered bg-white q-px-md q-py-sm row items-center text-dark">
-            <q-icon name="timer" size="20px" color="primary" class="q-mr-sm" />
+        <div class="col-12 col-md-auto">
+          <q-card
+            flat
+            bordered
+            class="bg-white q-px-md q-py-sm row items-center text-dark"
+            style="min-height: 48px"
+          >
+            <q-icon name="schedule" size="22px" color="primary" class="q-mr-sm" />
             <div class="column">
-              <span class="text-caption text-grey-7 leading-none">{{
-                $t('kioskUI.workspace.shiftDuration')
+              <span class="text-subtitle2 text-weight-bold font-mono leading-none">{{
+                clockTimeStr
               }}</span>
-              <span class="text-subtitle2 text-weight-bold font-mono">{{ shiftTimeStr }}</span>
+              <span class="text-caption text-grey-7">{{ clockDateStr }}</span>
             </div>
           </q-card>
-          <q-btn
-            color="red-5"
-            icon="logout"
-            :label="$t('kioskUI.workspace.clockOutBtn')"
-            class="rounded-btn q-px-md text-weight-bold cursor-pointer"
-            style="min-height: 44px"
-            @click="confirmClockOut = true"
-            unelevated
-          />
         </div>
       </div>
 
       <!-- Operational Session Control Banner -->
       <div v-if="isShiftSessionsEnabled" class="q-mb-lg">
         <q-card flat bordered class="bg-white text-dark q-pa-md border-all">
-          <div class="row items-center justify-between no-wrap">
-            <div class="row items-center q-gutter-x-md">
-              <q-avatar
-                size="48px"
-                :color="sessionStore.hasActiveSession ? 'green-1' : 'red-1'"
-                :text-color="sessionStore.hasActiveSession ? 'positive' : 'negative'"
-              >
-                <q-icon
-                  :name="sessionStore.hasActiveSession ? 'check_circle' : 'error_outline'"
-                  size="28px"
-                />
-              </q-avatar>
-              <div>
-                <div class="text-subtitle1 text-weight-bold">
-                  {{
-                    sessionStore.hasActiveSession
-                      ? $t('kioskUI.workspace.statusOpen')
-                      : $t('kioskUI.workspace.statusClosed')
-                  }}
-                </div>
-                <div
-                  v-if="sessionStore.hasActiveSession && sessionStore.activeSession"
-                  class="text-caption text-grey-7"
+          <div class="row q-col-gutter-md items-start items-md-center">
+            <div class="col-12 col-md">
+              <div class="row items-start no-wrap q-gutter-x-sm">
+                <q-avatar
+                  size="48px"
+                  class="shrink-0"
+                  :color="sessionStore.hasActiveSession ? 'green-1' : 'red-1'"
+                  :text-color="sessionStore.hasActiveSession ? 'positive' : 'negative'"
                 >
-                  {{ $t('kioskUI.workspace.shiftLabel') }}
-                  <strong class="text-slate-800">{{
-                    sessionStore.activeSession.shifts?.name || $t('sessions.banner.loadingShift')
-                  }}</strong>
-                  | {{ $t('kioskUI.workspace.businessDateLabel') }}
-                  <strong class="text-slate-800">{{
-                    sessionStore.activeSession.business_date
-                  }}</strong>
-                  | {{ $t('kioskUI.workspace.openedByLabel') }}
-                  <strong class="text-slate-800">{{ currentStaffName }}</strong> |
-                  {{ $t('kioskUI.workspace.openingCashLabel') }}
-                  <strong class="text-slate-800"
-                    >{{ sessionStore.activeSession.opening_cash }} BDT</strong
+                  <q-icon
+                    :name="sessionStore.hasActiveSession ? 'check_circle' : 'error_outline'"
+                    size="28px"
+                  />
+                </q-avatar>
+                <div class="col" style="min-width: 0">
+                  <div class="text-subtitle1 text-weight-bold">
+                    {{
+                      sessionStore.hasActiveSession
+                        ? $t('kioskUI.workspace.statusOpen')
+                        : $t('kioskUI.workspace.statusClosed')
+                    }}
+                  </div>
+                  <div
+                    v-if="sessionStore.hasActiveSession && sessionStore.activeSession"
+                    class="text-caption text-grey-7"
                   >
-                </div>
-                <div v-else class="text-caption text-red-5 font-medium">
-                  {{ $t('kioskUI.workspace.sessionBlockedWarning') }}
+                    {{ $t('kioskUI.workspace.shiftLabel') }}
+                    <strong>{{
+                      sessionStore.activeSession.shifts?.name || $t('sessions.banner.loadingShift')
+                    }}</strong>
+                    · {{ $t('kioskUI.workspace.businessDateLabel') }}
+                    <strong>{{ sessionStore.activeSession.business_date }}</strong>
+                    · {{ $t('kioskUI.workspace.openedByLabel') }}
+                    <strong>{{ currentStaffName }}</strong>
+                    · {{ $t('kioskUI.workspace.openingCashLabel') }}
+                    <strong>{{ sessionStore.activeSession.opening_cash }} BDT</strong>
+                  </div>
+                  <div v-else class="text-caption text-negative text-weight-medium">
+                    {{ $t('kioskUI.workspace.sessionBlockedWarning') }}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="row q-gutter-x-sm items-center">
-              <SessionCashBalance
-                v-if="
-                  isFinancialLedgerEnabled && canReadCashBalance && sessionStore.hasActiveSession
-                "
-                :balance="ledgerStore.cashBalance"
-                class="q-mr-sm"
-              />
-              <q-btn
-                v-if="!sessionStore.hasActiveSession && canOpenSession"
-                color="primary"
-                icon="vpn_key"
-                :label="$t('sessions.open.openBtn')"
-                unelevated
-                dense
-                class="q-px-md text-weight-bold rounded-btn"
-                style="min-height: 40px"
-                @click="showOpenDialog = true"
-              />
-              <q-btn
-                v-if="sessionStore.hasActiveSession && canCloseSession"
-                color="red-5"
-                icon="lock"
-                :label="$t('sessions.close.closeBtn')"
-                unelevated
-                dense
-                class="q-px-md text-weight-bold rounded-btn"
-                style="min-height: 40px"
-                @click="showCloseDialog = true"
-              />
+            <div class="col-12 col-md-auto">
+              <div class="row q-gutter-sm items-center wrap">
+                <SessionCashBalance
+                  v-if="
+                    isFinancialLedgerEnabled && canReadCashBalance && sessionStore.hasActiveSession
+                  "
+                  :balance="ledgerStore.cashBalance"
+                />
+                <q-btn
+                  v-if="!sessionStore.hasActiveSession && canOpenSession"
+                  color="primary"
+                  icon="vpn_key"
+                  :label="$t('sessions.open.openBtn')"
+                  unelevated
+                  class="q-px-md text-weight-bold rounded-btn col-grow"
+                  style="min-height: 48px"
+                  @click="showOpenDialog = true"
+                />
+                <q-btn
+                  v-if="sessionStore.hasActiveSession && canCloseSession"
+                  color="red-5"
+                  icon="lock"
+                  :label="$t('sessions.close.closeBtn')"
+                  unelevated
+                  class="q-px-md text-weight-bold rounded-btn col-grow"
+                  style="min-height: 48px"
+                  @click="showCloseDialog = true"
+                />
+              </div>
             </div>
           </div>
         </q-card>
       </div>
 
-      <!-- Quick Action Cards Grid -->
-      <div class="row q-col-gutter-md q-mb-lg">
-        <!-- Action 1: POS Sale -->
-        <div v-if="isMealManagementEnabled" class="col-12 col-sm-4">
+      <!-- Quick Action Cards — 2-col phone / 3-col sm+ -->
+      <div class="row q-col-gutter-sm q-col-gutter-md-md q-mb-lg">
+        <!-- Daily Transaction (POS) -->
+        <div v-if="canLogPos" class="col-6 col-sm-4">
           <q-card
             flat
             bordered
-            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-md text-dark"
             :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
             role="button"
             tabindex="0"
             v-ripple
             @click="openPosDialog"
           >
-            <q-avatar size="56px" color="green-1" text-color="green-8" class="q-mb-md">
-              <q-icon name="shopping_cart" size="28px" />
+            <q-avatar size="48px" color="green-1" text-color="green-8" class="q-mb-sm">
+              <q-icon name="point_of_sale" size="26px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">
+            <div class="text-subtitle2 text-weight-bold text-center">
               {{ $t('kioskUI.workspace.actions.posSale.title') }}
             </div>
-            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none gt-sm">
               {{ $t('kioskUI.workspace.actions.posSale.desc') }}
             </p>
           </q-card>
         </div>
 
-        <!-- Action 2: Record Meal -->
-        <div v-if="isMealManagementEnabled" class="col-12 col-sm-4">
+        <!-- Customer Attendance -->
+        <div v-if="isMealManagementEnabled && canReadAttendance" class="col-6 col-sm-4">
           <q-card
             flat
             bordered
-            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-md text-dark"
             :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
             role="button"
             tabindex="0"
             v-ripple
-            @click="openMealDialog"
+            @click="goToKioskAttendance"
           >
-            <q-avatar size="56px" color="orange-1" text-color="orange-8" class="q-mb-md">
-              <q-icon name="restaurant" size="28px" />
+            <q-avatar size="48px" color="deep-purple-1" text-color="deep-purple-8" class="q-mb-sm">
+              <q-icon name="event_available" size="26px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">
-              {{ $t('kioskUI.workspace.actions.recordMeal.title') }}
+            <div class="text-subtitle2 text-weight-bold text-center">
+              {{ $t('kioskUI.workspace.actions.mealAttendance.title') }}
             </div>
-            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
-              {{ $t('kioskUI.workspace.actions.recordMeal.desc') }}
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none gt-sm">
+              {{ $t('kioskUI.workspace.actions.mealAttendance.desc') }}
             </p>
           </q-card>
         </div>
 
-        <!-- Action 3: Cash Advance -->
-        <div v-if="isStaffPayrollEnabled" class="col-12 col-sm-4">
+        <!-- Baki -->
+        <div v-if="isMealManagementEnabled && canLogBaki" class="col-6 col-sm-4">
           <q-card
             flat
             bordered
-            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
-            :class="{ 'opacity-50 pointer-events-none': isActionBlocked || !canLogAdvance }"
-            role="button"
-            tabindex="0"
-            v-ripple
-            @click="openAdvanceDialog"
-          >
-            <q-avatar size="56px" color="blue-1" text-color="blue-8" class="q-mb-md">
-              <q-icon name="payments" size="28px" />
-            </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">
-              {{ $t('kioskUI.workspace.actions.cashAdvance.title') }}
-            </div>
-            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
-              {{ $t('kioskUI.workspace.actions.cashAdvance.desc') }}
-            </p>
-          </q-card>
-        </div>
-
-        <!-- Action 4: Baki / Extra Charge -->
-        <div v-if="isMealManagementEnabled && canLogBaki" class="col-12 col-sm-4">
-          <q-card
-            flat
-            bordered
-            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-md text-dark"
             :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
             role="button"
             tabindex="0"
             v-ripple
             @click="showBakiDialog = true"
           >
-            <q-avatar size="56px" color="red-1" text-color="red-8" class="q-mb-md">
-              <q-icon name="assignment_late" size="28px" />
+            <q-avatar size="48px" color="red-1" text-color="red-8" class="q-mb-sm">
+              <q-icon name="assignment_late" size="26px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">
+            <div class="text-subtitle2 text-weight-bold text-center">
               {{ $t('kioskUI.workspace.actions.bakiCharge.title') }}
             </div>
-            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none gt-sm">
               {{ $t('kioskUI.workspace.actions.bakiCharge.desc') }}
             </p>
           </q-card>
         </div>
 
-        <!-- Action 5: Customer Collection -->
-        <div v-if="isMealManagementEnabled && canLogCollection" class="col-12 col-sm-4">
+        <!-- Customer Book -->
+        <div v-if="isMealManagementEnabled && canReadCustomers" class="col-6 col-sm-4">
           <q-card
             flat
             bordered
-            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-lg text-dark"
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-md text-dark"
+            role="button"
+            tabindex="0"
+            v-ripple
+            @click="goToKioskCustomers"
+          >
+            <q-avatar size="48px" color="teal-1" text-color="teal-8" class="q-mb-sm">
+              <q-icon name="menu_book" size="26px" />
+            </q-avatar>
+            <div class="text-subtitle2 text-weight-bold text-center">
+              {{ $t('kioskUI.workspace.actions.customers.title') }}
+            </div>
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none gt-sm">
+              {{ $t('kioskUI.workspace.actions.customers.desc') }}
+            </p>
+          </q-card>
+        </div>
+
+        <!-- Baki Payment -->
+        <div v-if="isMealManagementEnabled && canLogCollection" class="col-6 col-sm-4">
+          <q-card
+            flat
+            bordered
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-md text-dark"
             :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
             role="button"
             tabindex="0"
             v-ripple
             @click="showCollectionDialog = true"
           >
-            <q-avatar size="56px" color="teal-1" text-color="teal-8" class="q-mb-md">
-              <q-icon name="payments" size="28px" />
+            <q-avatar size="48px" color="teal-1" text-color="teal-8" class="q-mb-sm">
+              <q-icon name="payments" size="26px" />
             </q-avatar>
-            <div class="text-subtitle1 text-weight-bold">
+            <div class="text-subtitle2 text-weight-bold text-center">
               {{ $t('kioskUI.workspace.actions.collection.title') }}
             </div>
-            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none">
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none gt-sm">
               {{ $t('kioskUI.workspace.actions.collection.desc') }}
             </p>
           </q-card>
         </div>
-      </div>
 
-      <!-- Contract Worker Attendance Grid -->
-      <div
-        v-if="
-          isMealManagementEnabled &&
-          canToggleAttendance &&
-          canReadCustomers &&
-          sessionStore.hasActiveSession
-        "
-        class="q-mb-lg"
-      >
-        <AttendanceGrid
-          :customers="customersStore.customers.filter((c) => c.category === 'contract_worker')"
-          :attendance-today="customersStore.attendanceToday"
-          :shift-names="['Breakfast', 'Lunch', 'Dinner', 'Snack']"
-          :loading="customersStore.loading"
-          :disabled="isActionBlocked"
-          @toggle="handleToggleAttendance"
-        />
+        <!-- Advance Payment -->
+        <div v-if="isMealManagementEnabled" class="col-6 col-sm-4">
+          <q-card
+            flat
+            bordered
+            class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-md text-dark"
+            :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
+            role="button"
+            tabindex="0"
+            v-ripple
+            @click="goToAdvancePayment"
+          >
+            <q-avatar size="48px" color="blue-1" text-color="blue-8" class="q-mb-sm">
+              <q-icon name="account_balance_wallet" size="26px" />
+            </q-avatar>
+            <div class="text-subtitle2 text-weight-bold text-center">
+              {{ $t('kioskUI.workspace.actions.advancePayment.title') }}
+            </div>
+            <p class="text-caption text-grey-7 text-center q-mt-xs q-mb-none gt-sm">
+              {{ $t('kioskUI.workspace.actions.advancePayment.desc') }}
+            </p>
+          </q-card>
+        </div>
       </div>
 
       <!-- Shift History Logs Table -->
       <q-card class="flat bordered bg-white text-dark q-pa-md border-all">
         <div class="text-h6 text-weight-bold q-mb-md">{{ $t('workspace.ledger.cardTitle') }}</div>
         <q-table
-          :rows="isFinancialLedgerEnabled && canReadSessionLedger ? ledgerStore.entries : shiftLogs"
-          :columns="isFinancialLedgerEnabled && canReadSessionLedger ? ledgerColumns : logColumns"
+          v-if="isFinancialLedgerEnabled && canReadSessionLedger"
+          :rows="ledgerStore.entries"
+          :columns="ledgerColumns"
           row-key="id"
           flat
-          class="bg-white text-dark"
+          class="bg-white text-dark gt-sm"
           :no-data-label="$t('ledger.table.noTransactions')"
           dense
         >
-          <!-- Custom Type Badges -->
           <template #body-cell-type="props">
             <q-td :props="props">
               <q-badge
@@ -291,254 +280,92 @@
               </q-badge>
             </q-td>
           </template>
-
-          <!-- Custom Time Format -->
           <template #body-cell-time="props">
             <q-td :props="props">
-              {{ formatTime(props.row.created_at || props.row.time) }}
+              {{ formatTime(props.row.created_at) }}
             </q-td>
           </template>
-
-          <!-- Custom Value / Amount Format -->
           <template #body-cell-value="props">
             <q-td :props="props">
-              <span v-if="isFinancialLedgerEnabled && canReadSessionLedger">
-                {{ formatMoney(props.row.amount) }}
-              </span>
-              <span v-else>
-                {{ props.value }}
+              {{ formatMoney(props.row.amount) }}
+            </q-td>
+          </template>
+          <template #body-cell-actions="props">
+            <q-td :props="props">
+              <q-btn
+                v-if="canEditPosRow(props.row)"
+                flat
+                dense
+                color="primary"
+                icon="edit"
+                class="cursor-pointer"
+                style="min-height: 44px; min-width: 44px"
+                @click="openPosEdit(props.row)"
+              />
+              <span v-else-if="props.row.category === 'POS'" class="text-caption text-grey-6">
+                {{ $t('kioskUI.workspace.pos.editClosed') }}
               </span>
             </q-td>
           </template>
         </q-table>
+
+        <!-- Mobile card list -->
+        <div
+          v-if="isFinancialLedgerEnabled && canReadSessionLedger"
+          class="lt-md column q-gutter-y-sm"
+        >
+          <q-card
+            v-for="row in ledgerStore.entries"
+            :key="row.id"
+            flat
+            bordered
+            class="q-pa-md bg-grey-1"
+          >
+            <div class="row items-start justify-between">
+              <div>
+                <div class="text-subtitle2 text-weight-bold">{{ row.category }}</div>
+                <div class="text-caption text-grey-7">{{ formatTime(row.created_at) }}</div>
+                <q-badge :color="getTypeColor(row.type)" class="text-weight-bold uppercase q-mt-xs">
+                  {{ row.type }}
+                </q-badge>
+                <div class="text-caption q-mt-xs text-grey-8">
+                  {{ paymentLabel(row.payment_method) }}
+                </div>
+              </div>
+              <div class="column items-end">
+                <div class="text-subtitle1 text-weight-bold font-mono">
+                  {{ formatMoney(row.amount) }}
+                </div>
+                <q-btn
+                  v-if="canEditPosRow(row)"
+                  flat
+                  dense
+                  color="primary"
+                  icon="edit"
+                  class="cursor-pointer q-mt-xs"
+                  style="min-height: 44px; min-width: 44px"
+                  @click="openPosEdit(row)"
+                />
+              </div>
+            </div>
+          </q-card>
+          <div
+            v-if="!ledgerStore.entries.length"
+            class="text-caption text-grey-6 text-center q-pa-md"
+          >
+            {{ $t('ledger.table.noTransactions') }}
+          </div>
+        </div>
       </q-card>
     </div>
 
-    <!-- Confirm Clock Out Dialog -->
-    <q-dialog v-model="confirmClockOut" persistent>
-      <q-card class="bg-white text-dark border-all rounded-borders q-pa-md">
-        <q-card-section class="row items-center">
-          <q-avatar icon="logout" color="red-1" text-color="red-9" class="q-mr-md" />
-          <span class="text-h6 text-weight-bold">{{
-            $t('kioskUI.workspace.clockOutDialog.title')
-          }}</span>
-        </q-card-section>
-
-        <q-card-section class="q-py-md text-grey-7">
-          {{ $t('kioskUI.workspace.clockOutDialog.body') }}
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn
-            flat
-            :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
-            v-close-popup
-            color="grey-7"
-          />
-          <q-btn
-            flat
-            :label="$t('kioskUI.workspace.clockOutDialog.confirmBtn')"
-            color="red-5"
-            @click="handleClockOut"
-            v-close-popup
-            class="text-weight-bold"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- POS Sale Dialog -->
-    <q-dialog v-model="showPosDialog" persistent>
-      <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">
-            {{ $t('kioskUI.workspace.actions.posSale.title') }}
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
-        </q-card-section>
-
-        <q-form @submit.prevent="submitPosSale" class="q-gutter-y-md q-mt-sm">
-          <q-card-section class="q-py-none">
-            <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
-                $t('ledger.manual.amount')
-              }}</label>
-              <q-input
-                v-model.number="posAmount"
-                type="number"
-                filled
-                color="primary"
-                class="custom-input text-h6 font-mono"
-                :rules="[(val) => (val !== null && val > 0) || $t('ledger.manual.amountMin')]"
-                hide-bottom-space
-              />
-            </div>
-            <div>
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
-                $t('sessions.close.notesLabel')
-              }}</label>
-              <q-input
-                v-model="posDescription"
-                type="textarea"
-                filled
-                color="primary"
-                class="custom-input"
-                rows="2"
-              />
-            </div>
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn
-              flat
-              :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
-              v-close-popup
-              color="grey-7"
-            />
-            <q-btn
-              type="submit"
-              :label="$t('ledger.manual.saveBtn')"
-              color="positive"
-              class="q-px-md text-weight-bold cursor-pointer"
-              style="min-height: 40px"
-            />
-          </q-card-actions>
-        </q-form>
-      </q-card>
-    </q-dialog>
-
-    <!-- Record Meal Dialog -->
-    <q-dialog v-model="showMealDialog" persistent>
-      <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">
-            {{ $t('kioskUI.workspace.actions.recordMeal.title') }}
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
-        </q-card-section>
-
-        <q-form @submit.prevent="submitMeal" class="q-gutter-y-md q-mt-sm">
-          <q-card-section class="q-py-none">
-            <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >Consumer Category</label
-              >
-              <q-select
-                v-model="mealCategory"
-                :options="['Contract Employee', 'Kitchen Staff', 'Canteen Customer']"
-                filled
-                color="primary"
-                class="custom-input"
-              />
-            </div>
-            <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >Meal Selection</label
-              >
-              <q-select
-                v-model="mealType"
-                :options="['Standard Breakfast', 'Full Lunch Set', 'Dinner Combo']"
-                filled
-                color="primary"
-                class="custom-input"
-              />
-            </div>
-            <div>
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs"
-                >Quantity</label
-              >
-              <q-input
-                v-model.number="mealQty"
-                type="number"
-                filled
-                color="primary"
-                class="custom-input font-mono"
-                :rules="[(val) => (val !== null && val > 0) || 'Quantity must be 1 or more']"
-                hide-bottom-space
-              />
-            </div>
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn
-              flat
-              :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
-              v-close-popup
-              color="grey-7"
-            />
-            <q-btn
-              type="submit"
-              :label="$t('kioskUI.workspace.actions.recordMeal.title')"
-              color="warning"
-              class="q-px-md text-weight-bold cursor-pointer"
-              style="min-height: 40px"
-            />
-          </q-card-actions>
-        </q-form>
-      </q-card>
-    </q-dialog>
-
-    <!-- Cash Advance Dialog -->
-    <q-dialog v-model="showAdvanceDialog" persistent>
-      <q-card class="bg-white text-dark border-all rounded-borders dialog-card q-pa-md">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">
-            {{ $t('kioskUI.workspace.actions.cashAdvance.title') }}
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
-        </q-card-section>
-
-        <q-form @submit.prevent="submitAdvance" class="q-gutter-y-md q-mt-sm">
-          <q-card-section class="q-py-none">
-            <div class="q-mb-md">
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
-                $t('ledger.manual.amount')
-              }}</label>
-              <q-input
-                v-model.number="advanceAmount"
-                type="number"
-                filled
-                color="primary"
-                class="custom-input text-h6 font-mono"
-                :rules="[(val) => (val !== null && val > 0) || $t('ledger.manual.amountMin')]"
-                hide-bottom-space
-              />
-            </div>
-            <div>
-              <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
-                $t('sessions.close.notesLabel')
-              }}</label>
-              <q-input
-                v-model="advanceReason"
-                type="textarea"
-                filled
-                color="primary"
-                class="custom-input"
-                rows="2"
-                :rules="[(val) => !!val || $t('sessions.close.notesLabel') + ' is required']"
-                hide-bottom-space
-              />
-            </div>
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn
-              flat
-              :label="$t('kioskUI.workspace.clockOutDialog.cancelBtn')"
-              v-close-popup
-              color="grey-7"
-            />
-            <q-btn
-              type="submit"
-              :label="$t('kioskUI.workspace.actions.cashAdvance.title')"
-              color="info"
-              class="q-px-md text-weight-bold cursor-pointer"
-              style="min-height: 40px"
-            />
-          </q-card-actions>
-        </q-form>
-      </q-card>
-    </q-dialog>
+    <PosSaleDialog
+      v-if="sessionStore.activeSession"
+      v-model="showPosDialog"
+      :session-id="sessionStore.activeSession.id"
+      :edit-entry="posEditEntry"
+      @saved="onPosRecorded"
+    />
 
     <!-- Operational Sessions Dialogs -->
     <SessionOpenDialog v-model="showOpenDialog" @opened="handleSessionOpened" />
@@ -578,21 +405,22 @@ import { useKioskStore } from '../../stores/kiosk';
 import { useSessionStore } from '../../stores/session';
 import { useLedgerStore } from '../../stores/ledger';
 import { supabase } from '../../boot/supabase';
-import { showSuccess, showWarning, showError } from '../../composables/useFeedback';
+import { showWarning } from '../../composables/useFeedback';
 import SessionOpenDialog from '../../components/sessions/SessionOpenDialog.vue';
 import SessionCloseDialog from '../../components/sessions/SessionCloseDialog.vue';
 import SessionCashBalance from '../../components/ledger/SessionCashBalance.vue';
+import PosSaleDialog from '../../components/kiosk/PosSaleDialog.vue';
 import { formatMoney } from '../../utils/format';
 import { useI18n } from 'vue-i18n';
 import { useCustomersStore } from '../../stores/customers';
-import AttendanceGrid from '../../components/customers/AttendanceGrid.vue';
 import BakiChargeDialog from '../../components/customers/BakiChargeDialog.vue';
 import CollectionDialog from '../../components/customers/CollectionDialog.vue';
+import type { LedgerEntry } from '../../stores/ledger';
 
 const router = useRouter();
 const kioskStore = useKioskStore();
 const sessionStore = useSessionStore();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const currentStaffName = computed(() => kioskStore.currentStaff?.fullName || 'Staff');
 const currentStaffRole = computed(() => kioskStore.currentStaff?.role || 'Operator');
@@ -601,7 +429,6 @@ const currentStaffRole = computed(() => kioskStore.currentStaff?.role || 'Operat
 const isShiftSessionsEnabled = ref(false);
 const isFinancialLedgerEnabled = ref(false);
 const isMealManagementEnabled = ref(false);
-const isStaffPayrollEnabled = ref(false);
 
 const showOpenDialog = ref(false);
 const showCloseDialog = ref(false);
@@ -610,9 +437,6 @@ const customersStore = useCustomersStore();
 const showBakiDialog = ref(false);
 const showCollectionDialog = ref(false);
 
-const canToggleAttendance = computed(() =>
-  kioskStore.hasStaffPermission('meal_management', 'attendance_write'),
-);
 const canLogBaki = computed(() => kioskStore.hasStaffPermission('meal_management', 'baki_write'));
 const canLogCollection = computed(() =>
   kioskStore.hasStaffPermission('meal_management', 'collections_write'),
@@ -620,6 +444,20 @@ const canLogCollection = computed(() =>
 const canReadCustomers = computed(() =>
   kioskStore.hasStaffPermission('meal_management', 'customer_read'),
 );
+const canReadAttendance = computed(() =>
+  kioskStore.hasStaffPermission('meal_management', 'attendance_read'),
+);
+const canLogPos = computed(
+  () => isFinancialLedgerEnabled.value && kioskStore.hasStaffPermission('kiosk', 'log_pos'),
+);
+
+function goToKioskCustomers() {
+  void router.push({ name: 'kiosk-customers' });
+}
+
+function goToKioskAttendance() {
+  void router.push({ name: 'kiosk-attendance' });
+}
 
 const ledgerStore = useLedgerStore();
 
@@ -629,7 +467,6 @@ const canOpenSession = computed(() =>
 const canCloseSession = computed(() =>
   kioskStore.hasStaffPermission('operational_shifts', 'sessions_close'),
 );
-const canLogAdvance = computed(() => kioskStore.hasStaffPermission('kiosk', 'log_advance'));
 
 const canReadCashBalance = computed(() =>
   kioskStore.hasStaffPermission('financial_ledger', 'cash_balance_read'),
@@ -641,6 +478,14 @@ const canReadSessionLedger = computed(() =>
 const isActionBlocked = computed(() => {
   return isShiftSessionsEnabled.value && !sessionStore.hasActiveSession;
 });
+
+function goToAdvancePayment() {
+  if (isActionBlocked.value) {
+    showWarning(t('kioskUI.workspace.sessionBlockedWarning'));
+    return;
+  }
+  void router.push({ name: 'kiosk-advance-payment' });
+}
 
 async function loadCustomersData(businessDate: string) {
   if (isMealManagementEnabled.value && canReadCustomers.value) {
@@ -658,6 +503,7 @@ watch(
   async (session) => {
     if (session) {
       if (isFinancialLedgerEnabled.value) {
+        await ledgerStore.fetchPosEditWindow().catch(() => null);
         if (canReadCashBalance.value) {
           await ledgerStore.fetchCashBalance(session.id);
         }
@@ -668,32 +514,11 @@ watch(
       await loadCustomersData(session.business_date);
     } else {
       ledgerStore.clearLedger();
-      customersStore.clearCustomers();
+      customersStore.clearAttendanceToday();
     }
   },
   { immediate: true },
 );
-
-async function handleToggleAttendance(params: { customerId: string; shiftName: string }) {
-  if (!sessionStore.activeSession) return;
-  try {
-    await customersStore.toggleAttendance({
-      customerId: params.customerId,
-      sessionId: sessionStore.activeSession.id,
-      shiftName: params.shiftName,
-      deviceToken: kioskStore.deviceToken,
-      staffId: kioskStore.currentStaff?.id,
-    });
-
-    showSuccess(t('customers.feedback.attendanceUpdated'));
-
-    if (isFinancialLedgerEnabled.value && canReadSessionLedger.value) {
-      await ledgerStore.fetchEntries({ sessionId: sessionStore.activeSession.id });
-    }
-  } catch (e) {
-    void showError(e instanceof Error ? e.message : 'Toggle attendance failed');
-  }
-}
 
 async function onBakiRecorded() {
   if (!sessionStore.activeSession) return;
@@ -720,22 +545,31 @@ async function onCollectionRecorded() {
   }
   await customersStore.fetchCustomers({ activeOnly: true });
 }
+
+async function onPosRecorded() {
+  if (!sessionStore.activeSession) return;
+  if (canReadSessionLedger.value) {
+    await ledgerStore.fetchEntries({ sessionId: sessionStore.activeSession.id });
+  }
+  if (canReadCashBalance.value) {
+    await ledgerStore.fetchCashBalance(sessionStore.activeSession.id);
+  }
+}
 async function checkFeatureGate() {
   const tenantId = kioskStore.tenantId;
-  if (!tenantId) return;
+  const deviceToken = kioskStore.deviceToken;
+  if (!tenantId || !deviceToken) return;
   try {
-    const { data, error } = await supabase
-      .from('tenant_settings')
-      .select('enabled_features')
-      .eq('tenant_id', tenantId)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc('get_enabled_features', {
+      p_tenant_id: tenantId,
+      p_device_token: deviceToken,
+    });
 
     if (!error && data) {
-      const features = data.enabled_features as Record<string, boolean> | null;
-      isShiftSessionsEnabled.value = !!features?.['shift-sessions'];
-      isFinancialLedgerEnabled.value = !!features?.['financial-ledger'];
-      isMealManagementEnabled.value = !!features?.['meal-management'];
-      isStaffPayrollEnabled.value = !!features?.['staff-payroll'];
+      const features = data as Record<string, boolean>;
+      isShiftSessionsEnabled.value = !!features['shift-sessions'];
+      isFinancialLedgerEnabled.value = !!features['financial-ledger'];
+      isMealManagementEnabled.value = !!features['meal-management'];
     }
   } catch (err) {
     console.error('Failed to load tenant settings in kiosk workspace:', err);
@@ -750,55 +584,33 @@ const handleSessionClosed = () => {
   sessionStore.clearSession();
 };
 
-// Shift duration timer
-const shiftSeconds = ref(0);
+// Live clock
+const now = ref(new Date());
 let timerId: number | null = null;
 
-const shiftTimeStr = computed(() => {
-  const hrs = Math.floor(shiftSeconds.value / 3600);
-  const mins = Math.floor((shiftSeconds.value % 3600) / 60);
-  const secs = shiftSeconds.value % 60;
-  return [
-    hrs.toString().padStart(2, '0'),
-    mins.toString().padStart(2, '0'),
-    secs.toString().padStart(2, '0'),
-  ].join(':');
-});
+const clockLocale = computed(() =>
+  locale.value?.toString().startsWith('bn') ? 'bn-BD' : undefined,
+);
 
-// Logs list state
-interface ShiftLog {
-  id: string;
-  time: Date;
-  type: 'sale' | 'meal' | 'advance';
-  details: string;
-  value: string;
-}
+const clockTimeStr = computed(() =>
+  now.value.toLocaleTimeString(clockLocale.value, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }),
+);
 
-const shiftLogs = ref<ShiftLog[]>([]);
+const clockDateStr = computed(() =>
+  now.value.toLocaleDateString(clockLocale.value, {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }),
+);
 
-const logColumns = computed(() => [
-  {
-    name: 'time',
-    align: 'left' as const,
-    label: t('ledger.table.cols.dateTime'),
-    field: 'time',
-    sortable: true,
-  },
-  {
-    name: 'type',
-    align: 'left' as const,
-    label: t('ledger.table.cols.type'),
-    field: 'type',
-    sortable: true,
-  },
-  {
-    name: 'details',
-    align: 'left' as const,
-    label: t('ledger.table.cols.notes'),
-    field: 'details',
-  },
-  { name: 'value', align: 'right' as const, label: t('ledger.table.cols.amount'), field: 'value' },
-]);
+// Logs list state removed — session ledger is source of truth
 
 const ledgerColumns = computed<QTableColumn[]>(() => [
   {
@@ -823,32 +635,38 @@ const ledgerColumns = computed<QTableColumn[]>(() => [
     sortable: true,
   },
   { name: 'value', align: 'right', label: t('ledger.table.cols.amount'), field: 'amount' },
+  {
+    name: 'actions',
+    align: 'right',
+    label: t('kioskUI.workspace.pos.actions'),
+    field: 'id',
+  },
 ]);
 
 // Dialog visibilities
-const confirmClockOut = ref(false);
 const showPosDialog = ref(false);
-const showMealDialog = ref(false);
-const showAdvanceDialog = ref(false);
-
-// Forms values
-const posAmount = ref<number | null>(null);
-const posDescription = ref('');
-
-const mealCategory = ref('Contract Employee');
-const mealType = ref('Full Lunch Set');
-const mealQty = ref(1);
-
-const advanceAmount = ref<number | null>(null);
-const advanceReason = ref('');
+const posEditEntry = ref<{
+  id: string;
+  amount: number;
+  payment_method: string;
+  notes: string | null;
+} | null>(null);
 
 onMounted(async () => {
   await checkFeatureGate();
   if (isShiftSessionsEnabled.value) {
     await sessionStore.fetchActiveSession();
   }
+  if (isMealManagementEnabled.value && canReadCustomers.value) {
+    try {
+      await customersStore.fetchCustomers({ activeOnly: true });
+    } catch (e) {
+      console.error('Failed to load customers on mount', e);
+    }
+  }
+  now.value = new Date();
   timerId = window.setInterval(() => {
-    shiftSeconds.value += 1;
+    now.value = new Date();
   }, 1000);
 });
 
@@ -856,93 +674,46 @@ onUnmounted(() => {
   if (timerId) clearInterval(timerId);
 });
 
-const handleClockOut = () => {
-  kioskStore.logoutStaff();
-  showSuccess(t('kioskUI.workspace.clockOutBtn') + ' completed');
-  void router.push({ name: 'kiosk-login' });
-};
-
-// Open dialogs
 const openPosDialog = () => {
   if (isActionBlocked.value) {
     showWarning(t('kioskUI.workspace.sessionBlockedWarning'));
     return;
   }
-  posAmount.value = null;
-  posDescription.value = '';
+  if (!canLogPos.value) {
+    showWarning(t('kioskUI.workspace.pos.permissionDenied'));
+    return;
+  }
+  posEditEntry.value = null;
   showPosDialog.value = true;
 };
 
-const openMealDialog = () => {
-  if (isActionBlocked.value) {
-    showWarning(t('kioskUI.workspace.sessionBlockedWarning'));
+function canEditPosRow(row: LedgerEntry) {
+  return (
+    canLogPos.value &&
+    row.category === 'POS' &&
+    ledgerStore.isPosEditable(row.created_at, sessionStore.hasActiveSession)
+  );
+}
+
+function openPosEdit(row: LedgerEntry) {
+  if (!canEditPosRow(row)) {
+    showWarning(t('kioskUI.workspace.pos.editClosed'));
     return;
   }
-  mealCategory.value = 'Contract Employee';
-  mealType.value = 'Full Lunch Set';
-  mealQty.value = 1;
-  showMealDialog.value = true;
-};
+  posEditEntry.value = {
+    id: row.id,
+    amount: row.amount,
+    payment_method: row.payment_method,
+    notes: row.notes,
+  };
+  showPosDialog.value = true;
+}
 
-const openAdvanceDialog = async () => {
-  if (isActionBlocked.value) {
-    showWarning(t('kioskUI.workspace.sessionBlockedWarning'));
-    return;
-  }
-  if (!canLogAdvance.value) {
-    await showError(t('errors.forbiddenText'));
-    return;
-  }
-  advanceAmount.value = null;
-  advanceReason.value = '';
-  showAdvanceDialog.value = true;
-};
-
-// Submitting logs
-const submitPosSale = () => {
-  if (!posAmount.value) return;
-
-  shiftLogs.value.unshift({
-    id: Math.random().toString(36).substring(7),
-    time: new Date(),
-    type: 'sale',
-    details: posDescription.value || 'Walk-in cash sale',
-    value: `${posAmount.value.toFixed(2)} BDT`,
-  });
-
-  showPosDialog.value = false;
-  showSuccess(t('kioskUI.workspace.actions.posSale.title') + ' recorded.');
-};
-
-const submitMeal = () => {
-  if (!mealQty.value) return;
-
-  shiftLogs.value.unshift({
-    id: Math.random().toString(36).substring(7),
-    time: new Date(),
-    type: 'meal',
-    details: `${mealCategory.value} - ${mealType.value}`,
-    value: `${mealQty.value} Serving(s)`,
-  });
-
-  showMealDialog.value = false;
-  showSuccess(t('kioskUI.workspace.actions.recordMeal.title') + ' recorded.');
-};
-
-const submitAdvance = () => {
-  if (!advanceAmount.value) return;
-
-  shiftLogs.value.unshift({
-    id: Math.random().toString(36).substring(7),
-    time: new Date(),
-    type: 'advance',
-    details: advanceReason.value,
-    value: `${advanceAmount.value.toFixed(2)} BDT`,
-  });
-
-  showAdvanceDialog.value = false;
-  showSuccess(t('kioskUI.workspace.actions.cashAdvance.title') + ' requested.');
-};
+function paymentLabel(method: string) {
+  if (method === 'mobile_wallet') return t('kioskUI.workspace.pos.online');
+  if (method === 'cash') return t('kioskUI.workspace.pos.cash');
+  return method;
+}
 
 const getTypeColor = (type: string) => {
   if (type === 'sale' || type === 'inflow') return 'positive';
@@ -950,8 +721,9 @@ const getTypeColor = (type: string) => {
   return 'info';
 };
 
-const formatTime = (date: Date) => {
-  return date.toLocaleTimeString(undefined, {
+const formatTime = (date: Date | string) => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleTimeString(undefined, {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
@@ -967,7 +739,8 @@ const formatTime = (date: Date) => {
 .action-card {
   border-radius: 16px;
   border-width: 1.5px;
-  min-height: 200px;
+  min-height: 120px;
+  height: 100%;
 
   &:focus-visible {
     outline: 2px solid var(--q-primary);

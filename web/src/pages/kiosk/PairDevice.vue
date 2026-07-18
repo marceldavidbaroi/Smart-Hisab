@@ -1,7 +1,7 @@
 <template>
-  <q-page class="flex flex-center bg-grey-2 text-dark q-pa-md">
+  <q-page class="flex flex-center bg-grey-2 text-dark kiosk-pair-page">
     <div class="pair-card-container full-width">
-      <q-card class="flat bordered bg-white q-pa-lg text-dark">
+      <q-card class="flat bordered bg-white kiosk-pair-card text-dark">
         <q-card-section class="column items-center q-pb-none text-center">
           <q-avatar size="64px" color="grey-3" text-color="primary" class="q-mb-md">
             <q-icon name="devices" size="36px" />
@@ -116,11 +116,29 @@ const handlePairDevice = async () => {
 </script>
 
 <style scoped lang="scss">
+.kiosk-pair-page {
+  padding: 24px;
+
+  @media (max-width: 599px) {
+    padding: 12px;
+  }
+}
+
+.kiosk-pair-card {
+  padding: 24px;
+
+  @media (max-width: 599px) {
+    padding: 16px;
+    border-radius: 12px;
+  }
+}
+
 .pair-card-container {
   max-width: 420px;
 }
 
 .custom-input :deep(.q-field__control) {
+  min-height: 48px;
   border-radius: 12px;
   background: #ffffff !important;
   border: 1px solid #cbd5e1;
@@ -137,10 +155,11 @@ const handlePairDevice = async () => {
 }
 
 .btn-gradient {
+  min-height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 12px rgba(14, 74, 71, 0.15);
   border: none;
 
   &:hover {

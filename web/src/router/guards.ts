@@ -24,8 +24,11 @@ function firstWorkspaceSlug(tenantStore: ReturnType<typeof useTenantStore>): str
   return null;
 }
 
-/** Normal / tenant login scope: workspace first; admin only as last-resort fallback. */
+/** Prefer active admin console; otherwise workspace; else no-tenant gate. */
 function redirectTenantScope(tenantStore: ReturnType<typeof useTenantStore>): RouteLocationRaw {
+  if (tenantStore.isSuperadmin && tenantStore.isAdminSession) {
+    return { name: 'admin-dashboard' };
+  }
   const slug = firstWorkspaceSlug(tenantStore);
   if (slug) {
     return { name: 'workspace-dashboard', params: { tenantSlug: slug } };
@@ -33,20 +36,49 @@ function redirectTenantScope(tenantStore: ReturnType<typeof useTenantStore>): Ro
   return noTenantTarget(tenantStore.isSuperadmin);
 }
 
+function isInAdminScope(tenantStore: ReturnType<typeof useTenantStore>): boolean {
+  return tenantStore.isSuperadmin && tenantStore.isAdminSession;
+}
+
 /** Platform admin login scope: always admin portal (never workspace). */
 function redirectAdminScope(
   tenantStore: ReturnType<typeof useTenantStore>,
+  to: RouteLocationNormalized,
 ): RouteLocationRaw | true {
-  if (tenantStore.isSuperadmin) {
-    tenantStore.setAdminSession(true);
-    return { name: 'admin-dashboard' };
+  if (!tenantStore.hasUserProfile) {
+    return { name: 'error-403' };
   }
-  // Stay on /admin/auth/login so the page can show Access Denied.
-  return true;
+  if (!tenantStore.isSuperadmin) {
+    // Stay on /admin/auth/login so the page can show Access Denied after a fresh login.
+    return true;
+  }
+  tenantStore.setAdminSession(true);
+  const deepLink = redirectFromQuery(to);
+  if (isSafeAdminDeepLink(deepLink)) {
+    return deepLink;
+  }
+  return { name: 'admin-dashboard' };
 }
 
 function isAdminLoginRoute(to: RouteLocationNormalized) {
   return to.name === 'admin-login' || to.query.scope === 'admin';
+}
+
+/** Safe post-login deep link from `?redirect=` (same-origin path only). */
+function redirectFromQuery(to: RouteLocationNormalized): string | null {
+  const raw = to.query.redirect;
+  if (typeof raw !== 'string' || !raw.startsWith('/') || raw.startsWith('//')) {
+    return null;
+  }
+  return raw;
+}
+
+function isSafeAdminDeepLink(path: string | null): path is string {
+  return !!path && path.startsWith('/admin') && !path.startsWith('/admin/auth');
+}
+
+function isSafeWorkspaceDeepLink(path: string | null): path is string {
+  return !!path && path.startsWith('/') && !path.startsWith('/admin');
 }
 
 export function setupRouteGuards(router: Router, pinia: Pinia) {
@@ -88,6 +120,7 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
     const isAdminRoute = to.path.startsWith('/admin');
     const tenantSlug = to.params.tenantSlug as string | undefined;
     const isNoTenantGate = to.name === 'no-tenant' || to.name === 'pending-access';
+    const isForbiddenRoute = to.name === 'error-403' || to.path.startsWith('/forbidden');
 
     // 4. Unauthenticated user flow
     if (!isAuthenticated) {
@@ -96,6 +129,19 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
         return { name: 'admin-login', query: { redirect: to.fullPath } };
       }
       return { name: 'login', query: { redirect: to.fullPath } };
+    }
+
+    // 4b. Authenticated but no user_profiles row — block platform/workspace (not login form itself)
+    if (!tenantStore.hasUserProfile && !isForbiddenRoute) {
+      if (
+        to.name === 'login' ||
+        to.name === 'admin-login' ||
+        to.name === 'tenant-login' ||
+        to.name === 'signup'
+      ) {
+        return true;
+      }
+      return { name: 'error-403' };
     }
 
     // 5. Authenticated user on auth routes — honor login scope
@@ -114,9 +160,20 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
         return true;
       }
 
-      // /admin/auth/login (or ?scope=admin) → platform scope only
+      // /admin/auth/login (or ?scope=admin) → platform scope BEFORE deep-link
       if (isAdminLoginRoute(to)) {
-        return redirectAdminScope(tenantStore);
+        return redirectAdminScope(tenantStore, to);
+      }
+
+      // Admin scope sticky: never follow workspace deep-links while in platform mode
+      if (isInAdminScope(tenantStore)) {
+        return { name: 'admin-dashboard' };
+      }
+
+      // Workspace login deep-link (never into /admin without admin scope)
+      const deepLink = redirectFromQuery(to);
+      if (isSafeWorkspaceDeepLink(deepLink)) {
+        return deepLink;
       }
 
       // /auth/login, /:slug/login → tenant/workspace scope
@@ -128,19 +185,30 @@ export function setupRouteGuards(router: Router, pinia: Pinia) {
       !firstWorkspaceSlug(tenantStore) &&
       !tenantStore.isSuperadmin &&
       !isNoTenantGate &&
-      !to.path.startsWith('/forbidden')
+      !isForbiddenRoute
     ) {
       return noTenantTarget();
     }
 
-    // 7. Admin access check
+    // 7. Admin access check (/admin/auth/login already handled above as auth route)
     if (isAdminRoute) {
-      if (tenantStore.isSuperadmin && tenantStore.isAdminSession) return true;
-      return { name: 'error-403' };
+      if (!tenantStore.isSuperadmin) {
+        return { name: 'error-403' };
+      }
+      // Tenant scope sticky: require explicit admin login to enter platform mode
+      if (!tenantStore.isAdminSession) {
+        return { name: 'admin-login', query: { redirect: to.fullPath } };
+      }
+      return true;
     }
 
     // 8. Tenant workspace access check
     if (tenantSlug) {
+      // Admin scope sticky: stay in platform console unless explicitly switched
+      if (isInAdminScope(tenantStore)) {
+        return { name: 'admin-dashboard' };
+      }
+
       try {
         await tenantStore.setActiveTenantBySlug(tenantSlug);
 

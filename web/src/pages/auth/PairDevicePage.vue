@@ -1,79 +1,63 @@
 <template>
-  <q-page class="flex flex-center bg-grey-2 q-pa-md">
-    <q-card
-      class="pairing-card no-shadow bordered rounded-borders"
-      style="width: 100%; max-width: 400px"
-    >
-      <q-card-section class="text-center q-pt-xl">
-        <q-icon name="devices" size="48px" color="primary" class="q-mb-md" />
-        <div class="text-h5 text-weight-bold text-slate-800">{{ $t('auth.pair.title') }}</div>
-        <p class="text-slate-500 text-sm q-mt-sm">
-          {{ $t('auth.pair.subtitle') }}
-        </p>
-      </q-card-section>
+  <div class="pairing-container">
+    <div class="text-subtitle1 text-weight-bold text-center text-slate-800 q-mb-md">
+      {{ $t('auth.pair.title') }}
+    </div>
 
-      <q-card-section>
-        <q-form @submit.prevent="handlePairing" class="q-gutter-y-md">
-          <q-input
-            v-model="pairingCode"
-            filled
-            mask="### ###"
-            unmasked-value
-            :label="$t('auth.pair.pairingCode')"
-            placeholder="000 000"
-            color="primary"
-            class="custom-input q-mb-md text-center text-h6"
-            :rules="[
-              (val) => !!val || $t('auth.pair.pairingCodeRequired'),
-              (val) => val.length === 6 || $t('auth.pair.pairingCodeInvalid'),
-            ]"
-            hide-bottom-space
-            autofocus
-          />
-
-          <q-input
-            v-model="deviceName"
-            filled
-            :label="$t('auth.pair.deviceName')"
-            placeholder="e.g. Counter Tablet 1"
-            color="primary"
-            class="custom-input"
-            hide-bottom-space
-          />
-
-          <q-banner
-            v-if="errorMsg"
-            class="bg-red-1 text-red-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow"
-          >
-            <template #avatar>
-              <q-icon name="error" color="red-9" />
-            </template>
-            {{ errorMsg }}
-          </q-banner>
-
-          <q-btn
-            type="submit"
-            color="primary"
-            class="full-width q-py-sm rounded-btn btn-gradient q-mt-lg text-weight-bold"
-            :label="$t('auth.pair.pairDevice')"
-            :loading="loading"
-          />
-        </q-form>
-      </q-card-section>
-
-      <q-card-section class="text-center q-pt-none q-pb-lg">
-        <q-btn
-          flat
-          color="slate-500"
-          no-caps
-          class="hover-underline text-weight-medium"
-          to="/auth/login"
+    <q-form @submit.prevent="handlePairing" class="q-gutter-y-md">
+      <div>
+        <label class="input-label text-grey-7 text-weight-bold q-mb-xs block text-caption"
+          >Pairing Code</label
         >
-          {{ $t('auth.pair.returnLogin') }}
-        </q-btn>
-      </q-card-section>
-    </q-card>
-  </q-page>
+        <q-input
+          v-model="pairingCode"
+          filled
+          mask="### ###"
+          unmasked-value
+          placeholder="000 000"
+          color="primary"
+          class="custom-input text-center text-h6"
+          :rules="[
+            (val) => !!val || $t('auth.pair.pairingCodeRequired'),
+            (val) => val.length === 6 || $t('auth.pair.pairingCodeInvalid'),
+          ]"
+          hide-bottom-space
+          autofocus
+        />
+      </div>
+
+      <q-banner
+        v-if="errorMsg"
+        class="bg-red-1 text-red-9 rounded-borders q-mt-md q-pa-sm text-sm no-shadow"
+      >
+        <template #avatar>
+          <q-icon name="error" color="red-9" />
+        </template>
+        {{ errorMsg }}
+      </q-banner>
+
+      <q-btn
+        type="submit"
+        color="primary"
+        class="full-width q-py-sm rounded-btn btn-gradient q-mt-lg text-weight-bold"
+        :label="$t('auth.pair.pairDevice')"
+        :loading="loading"
+      />
+    </q-form>
+
+    <div class="text-center q-mt-md">
+      <q-btn
+        flat
+        color="slate-500"
+        no-caps
+        class="hover-underline text-weight-medium"
+        style="min-height: 48px"
+        to="/auth/login"
+      >
+        {{ $t('auth.pair.returnLogin') }}
+      </q-btn>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -114,19 +98,23 @@ const handlePairing = async () => {
 </script>
 
 <style scoped lang="scss">
-.pairing-card {
-  border-radius: 16px;
-  background: white;
+.pairing-container {
+  width: 100%;
+}
+
+.block {
+  display: block;
 }
 
 .rounded-btn {
   border-radius: 12px;
+  min-height: 48px;
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
+  background: linear-gradient(135deg, #0e4a47 0%, #2ec4b6 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(14, 74, 71, 0.3);
   border: none;
 
   &:hover {
@@ -135,6 +123,7 @@ const handlePairing = async () => {
 }
 
 .custom-input :deep(.q-field__control) {
+  min-height: 48px;
   border-radius: 12px;
   background: #f8fafc !important;
   border: 1px solid #cbd5e1;
@@ -145,9 +134,9 @@ const handlePairing = async () => {
   }
 
   &.q-field__control--focused {
-    border-color: #6366f1;
+    border-color: #0e4a47;
     background: #ffffff !important;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 2px rgba(14, 74, 71, 0.15);
   }
 }
 

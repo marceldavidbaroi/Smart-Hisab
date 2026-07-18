@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="sessionStore.hasActiveSession && sessionStore.activeSession"
-    class="bg-indigo-50 border-indigo-200 border-b q-px-md q-py-xs text-slate-800 row items-center justify-between"
+    class="bg-teal-1 border-teal-2 border-b q-px-md q-py-xs text-slate-800 row items-center justify-between"
   >
     <div class="row items-center q-gutter-x-sm">
       <q-chip

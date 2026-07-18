@@ -46,14 +46,18 @@
                 dense
                 color="primary"
                 class="custom-input"
-                mask="time"
-                :rules="[(val) => !!val || $t('sessions.shiftForm.startTimeRequired')]"
+                mask="##:## AA"
+                placeholder="05:00 AM"
+                :rules="[(val) => !!val || $t('sessions.shiftForm.startTimeRequired'), time12hRule]"
                 hide-bottom-space
               >
                 <template v-slot:append>
                   <q-icon name="access_time" class="cursor-pointer">
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-time v-model="form.start_time">
+                      <q-time
+                        :model-value="to24h(form.start_time)"
+                        @update:model-value="(v) => (form.start_time = to12h(v))"
+                      >
                         <div class="row items-center justify-end">
                           <q-btn
                             v-close-popup
@@ -78,14 +82,18 @@
                 dense
                 color="primary"
                 class="custom-input"
-                mask="time"
-                :rules="[(val) => !!val || $t('sessions.shiftForm.endTimeRequired')]"
+                mask="##:## AA"
+                placeholder="05:00 PM"
+                :rules="[(val) => !!val || $t('sessions.shiftForm.endTimeRequired'), time12hRule]"
                 hide-bottom-space
               >
                 <template v-slot:append>
                   <q-icon name="access_time" class="cursor-pointer">
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-time v-model="form.end_time">
+                      <q-time
+                        :model-value="to24h(form.end_time)"
+                        @update:model-value="(v) => (form.end_time = to12h(v))"
+                      >
                         <div class="row items-center justify-end">
                           <q-btn
                             v-close-popup
@@ -162,24 +170,69 @@ const emit = defineEmits<{
   (e: 'submit', data: Shift): void;
 }>();
 
+const TIME12H_RE = /^(0[1-9]|1[0-2]):([0-5][0-9])\s?(AM|PM)$/i;
+
 const form = ref<Shift>({
   name: '',
-  start_time: '08:00',
-  end_time: '16:00',
+  start_time: '08:00 AM',
+  end_time: '04:00 PM',
   is_active: true,
 });
+
+function to12h(time24: string | null | undefined): string {
+  if (!time24) return '';
+  const [hRaw = '0', mRaw = '00'] = time24.split(':');
+  let hours = parseInt(hRaw, 10);
+  if (Number.isNaN(hours)) return '';
+  const minutes = (mRaw || '00').slice(0, 2).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+}
+
+function to24h(time12: string | null | undefined): string {
+  if (!time12) return '';
+  const match = time12.trim().match(TIME12H_RE);
+  if (!match) {
+    // Already 24h from picker / DB (HH:mm[:ss])
+    const [h = '', m = '00'] = time12.split(':');
+    if (/^\d{1,2}$/.test(h) && /^\d{2}/.test(m)) {
+      return `${h.padStart(2, '0')}:${m.slice(0, 2)}`;
+    }
+    return '';
+  }
+  let hours = parseInt(match[1]!, 10);
+  const minutes = match[2]!;
+  const ampm = match[3]!.toUpperCase();
+  if (ampm === 'AM') {
+    hours = hours === 12 ? 0 : hours;
+  } else {
+    hours = hours === 12 ? 12 : hours + 12;
+  }
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
+
+function time12hRule(val: string) {
+  if (!val?.trim()) return true;
+  return TIME12H_RE.test(val.trim()) || 'Use format 05:00 AM';
+}
 
 watch(
   () => props.modelValue,
   (isOpen) => {
     if (isOpen) {
       if (props.initialData) {
-        form.value = { ...props.initialData };
+        form.value = {
+          ...props.initialData,
+          start_time: to12h(props.initialData.start_time),
+          end_time: to12h(props.initialData.end_time),
+        };
       } else {
         form.value = {
           name: '',
-          start_time: '08:00',
-          end_time: '16:00',
+          start_time: '08:00 AM',
+          end_time: '04:00 PM',
           is_active: true,
         };
       }
@@ -188,7 +241,11 @@ watch(
 );
 
 function handleSubmit() {
-  emit('submit', form.value);
+  emit('submit', {
+    ...form.value,
+    start_time: to24h(form.value.start_time),
+    end_time: to24h(form.value.end_time),
+  });
 }
 </script>
 

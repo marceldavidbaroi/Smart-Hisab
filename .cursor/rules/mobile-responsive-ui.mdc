@@ -1,0 +1,42 @@
+---
+description: STRICT — Terminal (kiosk) and platform (workspace/admin) UI must be phone-app first and fully responsive.
+globs: web/src/**/*.{vue,scss,css}
+alwaysApply: true
+---
+
+# Mobile-First UI — Terminal & Platform (STRICT)
+
+All Quasar UI for this product — **kiosk/terminal** and **platform** (workspace + admin) — is designed as a **phone app first**, then scaled up. Desktop is enhancement only.
+
+## Non-negotiable
+
+- Design **mobile-first**: default styles target `xs` / `sm`. Add `md` / `lg` refinements after the phone layout works.
+- Every screen must be **fully responsive** with **no horizontal page scroll** on phone widths.
+- Touch targets ≥ **44px** (prefer **48px** for primary actions). Dense desktop controls are allowed only as progressive enhancement, never as the only usable affordance.
+- Prefer **single-column** flows on phone: stacked actions, full-width buttons, bottom sheets / maximized dialogs.
+- Do **not** ship desktop-only tables, multi-column dashboards, or hover-only interactions as the primary UX.
+- On `xs` / `sm`: replace wide `q-table` grids with **cards / lists** when columns will not fit; keep tables behind `gt-sm` when both exist.
+- Dialogs and forms must fit a phone viewport (scrollable body, sticky footer actions when needed).
+- Mental model: staff or owner using a **phone in one hand** (counter terminal or office).
+
+## Surfaces
+
+| Surface | Paths (typical) | Extra expectation |
+| :--- | :--- | :--- |
+| Terminal / kiosk | `pages/kiosk/**`, `layouts/KioskLayout.vue`, terminal-facing session/customer dialogs | Counter phone/tablet; large primary actions |
+| Platform workspace | `pages/workspace/**`, `layouts/WorkspaceLayout.vue` | Same mobile-first bar; drawer/nav must work on phone |
+| Platform admin | `pages/admin/**`, `layouts/AdminLayout.vue` | Same rules; no admin exception for desktop-only layouts |
+
+## Quasar patterns (required)
+
+- Grid: `col-12` base, then `col-sm-*` / `col-md-*` / `col-lg-*`.
+- Visibility: `lt-sm` / `lt-md` for mobile chrome; `gt-sm` / `gt-md` for desktop-only density.
+- Spacing via Quasar helpers (`q-pa-*`, `q-col-gutter-*`); never pad `QLayout` / `QPageContainer` / `QDrawer` wrappers.
+- Follow [`.agents/skills/quasar-ui-ux-design/SKILL.md`](../../.agents/skills/quasar-ui-ux-design/SKILL.md) for density, tokens, and touch hitboxes.
+
+## Banned
+
+- Fixed pixel widths that break below ~360px content width.
+- Side-by-side critical actions that clip or wrap unreadably on phone.
+- Hover-only menus/tooltips as the sole way to reach a required action.
+- “Looks fine on desktop” as acceptance criteria without a phone-width check.

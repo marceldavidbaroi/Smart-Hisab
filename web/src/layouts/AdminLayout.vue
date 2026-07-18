@@ -1,173 +1,209 @@
 <template>
   <q-layout view="hHh Lpr lFf" class="admin-layout">
-    <!-- Header -->
-    <q-header elevated class="bg-slate-950 border-bottom text-slate-800">
-      <q-toolbar class="q-py-sm">
+    <q-header bordered class="bg-white text-dark border-bottom">
+      <q-toolbar dense class="q-px-sm">
         <q-btn
           flat
-          dense
           round
           icon="menu"
           aria-label="Menu"
-          class="q-mr-sm text-slate-600"
+          class="menu-btn text-grey-7 cursor-pointer q-mr-xs"
           @click="toggleLeftDrawer"
         />
 
-        <div class="row items-center q-gutter-sm">
-          <q-icon name="admin_panel_settings" size="28px" class="text-amber-800" />
-          <q-toolbar-title class="text-weight-bold text-slate-900">
-            {{ $t('admin.layout.console') }}
-          </q-toolbar-title>
-          <q-badge color="amber" text-color="black" class="text-weight-bold uppercase">
+        <div class="row items-center no-wrap col overflow-hidden">
+          <img
+            src="~@/assets/brand-mark.png"
+            alt="Smart Hisab"
+            class="header-brand-mark shrink-0 q-mr-sm"
+          />
+          <div class="column overflow-hidden min-width-0">
+            <div class="text-weight-bold text-dark text-body2 ellipsis">
+              <span class="lt-sm">{{ $t('admin.layout.platformAdmin') }}</span>
+              <span class="gt-xs">{{ $t('admin.layout.console') }}</span>
+            </div>
+            <div class="text-caption text-grey-7 gt-xs" style="font-size: 11px; line-height: 1.2">
+              {{ $t('admin.layout.globalControl') }}
+            </div>
+          </div>
+          <q-badge
+            color="secondary"
+            text-color="dark"
+            class="q-ml-sm text-weight-bold gt-sm shrink-0"
+          >
             {{ $t('admin.layout.superadmin') }}
           </q-badge>
         </div>
 
         <q-space />
 
-        <!-- Language Switcher Toggle -->
-        <q-btn-toggle
-          v-model="locale"
-          toggle-color="primary"
-          color="indigo-1"
-          text-color="primary"
-          toggle-text-color="white"
-          flat
-          dense
-          unelevated
-          class="q-mr-sm text-xs text-weight-bold"
-          style="
-            font-size: 11px;
-            height: 32px;
-            border-radius: 8px;
-            padding: 2px;
-            border: 1.5px solid var(--q-primary);
-          "
-          :options="toggleOptions"
-        />
+        <LocaleSwitcher class="q-mr-xs" />
 
-        <!-- View Workspaces Button -->
-        <q-btn
-          flat
-          no-caps
-          icon="launch"
-          :label="$t('admin.layout.workspaceView')"
-          color="amber-9"
-          class="q-mr-md"
-          @click="goToWorkspace"
-        />
+        <q-btn-dropdown flat round class="user-menu-btn cursor-pointer">
+          <template #label>
+            <q-avatar size="36px" class="user-avatar text-white">
+              <img
+                v-if="tenantStore.userProfile?.avatar_url"
+                :src="tenantStore.userProfile.avatar_url"
+              />
+              <span v-else>{{ userInitials }}</span>
+            </q-avatar>
+          </template>
 
-        <!-- User Profile Dropdown -->
-        <div class="row items-center no-wrap">
-          <q-btn-dropdown flat round dense class="user-dropdown-btn">
-            <template #label>
-              <q-avatar size="32px" class="user-avatar text-white">
+          <q-list class="user-menu-list bg-white text-dark q-py-sm">
+            <div class="q-px-md q-py-sm">
+              <div class="text-weight-bold text-dark">
+                {{ tenantStore.userProfile?.full_name || $t('admin.layout.adminUser') }}
+              </div>
+              <div class="text-caption text-grey-7 ellipsis">{{ tenantStore.user?.email }}</div>
+              <q-badge color="secondary" text-color="dark" class="q-mt-xs text-weight-bold">
+                {{ $t('admin.layout.superadmin') }}
+              </q-badge>
+            </div>
+
+            <q-separator class="q-my-sm" />
+
+            <q-item clickable v-close-popup class="text-negative" @click="handleSignOut">
+              <q-item-section avatar>
+                <q-icon name="logout" size="20px" color="negative" />
+              </q-item-section>
+              <q-item-section>{{ $t('admin.layout.signOut') }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+      </q-toolbar>
+    </q-header>
+
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      :mini="miniState"
+      :width="260"
+      :breakpoint="600"
+      bordered
+      class="bg-white text-dark border-right"
+      @mouseover="onMouseOver"
+      @mouseleave="onMouseOut"
+    >
+      <div class="column fit no-wrap">
+        <div
+          class="brand-section border-bottom row items-center q-px-sm full-width shrink-0"
+          :class="miniState ? 'justify-center' : 'justify-start'"
+        >
+          <img
+            src="../assets/brand-mark.png"
+            alt="Smart Hisab"
+            class="header-brand-mark shrink-0"
+            :class="{ 'q-mr-sm': !miniState }"
+          />
+          <div v-if="!miniState" class="overflow-hidden min-width-0">
+            <div class="text-weight-bold text-dark text-body2 ellipsis leading-tight">
+              {{ $t('admin.layout.globalControl') }}
+            </div>
+            <div class="text-caption text-grey-7">{{ $t('admin.layout.platformAdmin') }}</div>
+          </div>
+        </div>
+
+        <div class="border-bottom q-py-xs bg-white full-width shrink-0">
+          <q-item class="q-px-sm full-width" dense>
+            <q-item-section avatar>
+              <q-avatar size="28px" class="user-avatar text-white">
                 <img
                   v-if="tenantStore.userProfile?.avatar_url"
                   :src="tenantStore.userProfile.avatar_url"
                 />
                 <span v-else>{{ userInitials }}</span>
               </q-avatar>
-            </template>
+              <q-tooltip
+                v-if="miniState"
+                anchor="center right"
+                self="center left"
+                :offset="[10, 10]"
+              >
+                {{ tenantStore.userProfile?.full_name || $t('admin.layout.adminUser') }}
+              </q-tooltip>
+            </q-item-section>
+            <q-item-section v-if="!miniState">
+              <q-item-label class="text-weight-bold text-dark text-caption ellipsis">
+                {{ tenantStore.userProfile?.full_name || $t('admin.layout.adminUser') }}
+              </q-item-label>
+              <q-item-label caption class="text-grey-7 ellipsis" style="font-size: 10px">
+                {{ tenantStore.user?.email }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </div>
 
-            <q-list style="min-width: 220px" class="bg-slate-950 text-slate-900 border-all q-py-sm">
-              <div class="q-px-md q-py-sm">
-                <div class="text-weight-bold text-amber-900">
-                  {{ tenantStore.userProfile?.full_name || $t('admin.layout.adminUser') }}
-                </div>
-                <div class="text-caption text-slate-500">{{ tenantStore.user?.email }}</div>
-                <div class="q-mt-xs">
-                  <q-badge color="amber" class="text-black text-weight-bold">{{
-                    $t('admin.layout.superadmin')
-                  }}</q-badge>
-                </div>
-              </div>
+        <q-scroll-area class="col full-width">
+          <q-list class="q-px-sm q-pt-sm q-pb-md full-width">
+            <template v-for="(group, groupIndex) in navGroups" :key="group.id">
+              <q-separator
+                v-if="groupIndex > 0"
+                class="q-my-sm"
+                :class="miniState ? 'q-mx-xs' : 'q-mx-sm'"
+              />
+              <q-item-label
+                v-if="group.label && !miniState"
+                header
+                class="nav-group-label text-grey-6 text-weight-bold"
+              >
+                {{ group.label }}
+              </q-item-label>
 
-              <q-separator class="q-my-sm" />
-
-              <q-item clickable v-close-popup @click="handleSignOut" class="text-negative">
+              <q-item
+                v-for="item in group.items"
+                :key="item.to"
+                clickable
+                exact
+                :to="item.to"
+                class="nav-link-item q-mb-xs cursor-pointer"
+                active-class="nav-active-item"
+              >
                 <q-item-section avatar>
-                  <q-icon name="logout" size="20px" color="negative" />
+                  <q-icon :name="item.icon" size="22px" />
                 </q-item-section>
-                <q-item-section>{{ $t('admin.layout.signOut') }}</q-item-section>
+                <q-item-section v-if="!miniState">{{ item.label }}</q-item-section>
+                <q-tooltip
+                  v-if="miniState"
+                  anchor="center right"
+                  self="center left"
+                  :offset="[10, 10]"
+                >
+                  {{ item.label }}
+                </q-tooltip>
               </q-item>
-            </q-list>
-          </q-btn-dropdown>
-        </div>
-      </q-toolbar>
-    </q-header>
-
-    <!-- Sidebar Drawer -->
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-      class="bg-slate-950 text-slate-900 border-right"
-      :width="260"
-    >
-      <div class="drawer-content flex flex-col justify-between">
-        <div>
-          <!-- Brand Logo/Header -->
-          <div class="q-pa-md brand-section border-bottom flex items-center">
-            <q-icon name="shield" size="28px" class="text-amber-800 q-mr-sm" />
-            <div>
-              <div class="text-weight-bold text-slate-900 text-subtitle1 leading-tight">
-                {{ $t('admin.layout.globalControl') }}
-              </div>
-              <div class="text-xs text-slate-500">{{ $t('admin.layout.platformAdmin') }}</div>
-            </div>
-          </div>
-
-          <!-- Navigation Links -->
-          <q-list class="q-px-sm q-py-md">
-            <q-item
-              clickable
-              exact
-              to="/admin/dashboard"
-              class="nav-link-item q-mb-sm"
-              active-class="nav-active-item"
-            >
-              <q-item-section avatar>
-                <q-icon name="dashboard" size="22px" />
-              </q-item-section>
-              <q-item-section>{{ $t('admin.layout.dashboard') }}</q-item-section>
-            </q-item>
-
-            <q-item
-              clickable
-              to="/admin/tenants"
-              class="nav-link-item q-mb-sm"
-              active-class="nav-active-item"
-            >
-              <q-item-section avatar>
-                <q-icon name="business" size="22px" />
-              </q-item-section>
-              <q-item-section>{{ $t('admin.layout.tenants') }}</q-item-section>
-            </q-item>
-
-            <q-item
-              clickable
-              to="/admin/billing"
-              class="nav-link-item q-mb-sm"
-              active-class="nav-active-item"
-            >
-              <q-item-section avatar>
-                <q-icon name="credit_card" size="22px" />
-              </q-item-section>
-              <q-item-section>{{ $t('admin.layout.billing') }}</q-item-section>
-            </q-item>
+            </template>
           </q-list>
-        </div>
+        </q-scroll-area>
 
-        <!-- Footer / Version -->
-        <div class="q-pa-md text-center text-xs text-slate-400 border-top">
-          {{ $t('admin.layout.version') }}
+        <div class="border-top q-py-sm bg-white full-width shrink-0">
+          <q-item
+            clickable
+            class="q-px-sm text-negative full-width sign-out-item cursor-pointer"
+            @click="handleSignOut"
+          >
+            <q-item-section avatar>
+              <q-icon name="logout" size="20px" color="negative" />
+              <q-tooltip
+                v-if="miniState"
+                anchor="center right"
+                self="center left"
+                :offset="[10, 10]"
+              >
+                {{ $t('admin.layout.signOut') }}
+              </q-tooltip>
+            </q-item-section>
+            <q-item-section v-if="!miniState">
+              <q-item-label class="text-caption text-weight-bold">
+                {{ $t('admin.layout.signOut') }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
         </div>
       </div>
     </q-drawer>
 
-    <!-- Page Container -->
-    <q-page-container class="bg-slate-900 text-slate-800 min-h-screen">
+    <q-page-container>
       <router-view v-slot="{ Component }">
         <transition name="fade-slide" mode="out-in">
           <component :is="Component" />
@@ -180,17 +216,70 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 import { useTenantStore } from '../stores/tenant';
-import { useLocale } from '../composables/useLocale';
+import { useI18n } from 'vue-i18n';
+import LocaleSwitcher from '../components/LocaleSwitcher.vue';
 
 const router = useRouter();
+const $q = useQuasar();
 const tenantStore = useTenantStore();
-const leftDrawerOpen = ref(true);
-const { locale, toggleOptions } = useLocale();
+const { t } = useI18n();
+
+const leftDrawerOpen = ref(false);
+const isPinned = ref(false);
+const miniState = ref(true);
 
 const toggleLeftDrawer = () => {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
+  if ($q.screen.gt.xs) {
+    isPinned.value = !isPinned.value;
+    miniState.value = !isPinned.value;
+  } else {
+    leftDrawerOpen.value = !leftDrawerOpen.value;
+    miniState.value = false;
+  }
 };
+
+const onMouseOver = () => {
+  if ($q.screen.gt.xs && !isPinned.value) {
+    miniState.value = false;
+  }
+};
+
+const onMouseOut = () => {
+  if ($q.screen.gt.xs && !isPinned.value) {
+    miniState.value = true;
+  }
+};
+
+const navGroups = computed(() => [
+  {
+    id: 'console',
+    items: [
+      {
+        label: t('admin.layout.dashboard'),
+        icon: 'dashboard',
+        to: '/admin/dashboard',
+      },
+    ],
+  },
+  {
+    id: 'management',
+    label: t('admin.layout.platformAdmin'),
+    items: [
+      {
+        label: t('admin.layout.tenants'),
+        icon: 'business',
+        to: '/admin/tenants',
+      },
+      {
+        label: t('admin.layout.billing'),
+        icon: 'credit_card',
+        to: '/admin/billing',
+      },
+    ],
+  },
+]);
 
 const getInitials = (name: string) => {
   if (!name) return 'AD';
@@ -207,87 +296,97 @@ const userInitials = computed(() => {
   return getInitials(profileName);
 });
 
-const goToWorkspace = async () => {
-  if (tenantStore.myTenants.length > 0 && tenantStore.myTenants[0]?.tenants) {
-    await router.push(`/${tenantStore.myTenants[0]?.tenants?.slug}/dashboard`);
-  } else {
-    await router.push('/');
-  }
-};
-
 const handleSignOut = async () => {
   await tenantStore.logout();
-  await router.push('/auth/login');
+  await router.push('/admin/auth/login');
 };
 </script>
 
 <style scoped lang="scss">
 .admin-layout {
   font-family: 'Outfit', 'Inter', sans-serif;
-  background-color: #f8fafc;
-}
-
-.bg-slate-900 {
-  background-color: #f8fafc !important;
-}
-
-.bg-slate-950 {
-  background-color: #ffffff !important;
+  background-color: var(--brand-surface);
 }
 
 .border-bottom {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(14, 74, 71, 0.08);
 }
 
 .border-top {
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid rgba(14, 74, 71, 0.08);
 }
 
 .border-right {
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  border-right: 1px solid rgba(14, 74, 71, 0.08);
 }
 
-.border-all {
-  border: 1px solid rgba(0, 0, 0, 0.06);
+.menu-btn,
+.user-menu-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.header-brand-mark {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
+}
+
+.user-menu-list {
+  min-width: 220px;
+  max-width: min(280px, 90vw);
+  border: 1px solid rgba(14, 74, 71, 0.1);
+  border-radius: var(--radius-lg);
+}
+
+.brand-section {
+  height: 56px;
+}
+
+.nav-group-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .nav-link-item {
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   color: #475569;
-  transition: all 0.2s ease;
+  min-height: 44px;
+  transition: background-color 0.15s ease, color 0.15s ease;
 
   &:hover {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: var(--brand-soft);
+    color: var(--brand-dark);
   }
 }
 
 .nav-active-item {
-  background: rgba(245, 158, 11, 0.08) !important;
-  color: #b45309 !important;
-  border-left: 3px solid #f59e0b;
+  background: rgba(14, 74, 71, 0.08) !important;
+  color: var(--brand-primary) !important;
+  border-left: 3px solid var(--brand-primary);
   font-weight: 600;
 }
 
-.drawer-content {
-  height: 100%;
+.sign-out-item {
+  min-height: 48px;
+  border-radius: var(--radius-lg);
 }
 
-.brand-section {
-  height: 64px;
+.min-width-0 {
+  min-width: 0;
 }
 
-/* Transitions */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .fade-slide-enter-from {

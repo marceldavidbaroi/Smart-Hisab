@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { supabase } from '../boot/supabase';
 import { useTenantStore } from './tenant';
+import { useKioskStore } from './kiosk';
 
 export interface LedgerEntry {
   id: string;
@@ -15,6 +16,7 @@ export interface LedgerEntry {
   operator_staff_id: string | null;
   notes: string | null;
   created_at: string;
+  updated_at?: string;
   operator_staff?: { full_name: string } | null;
 }
 
@@ -29,12 +31,25 @@ export interface FinancialSummary {
   payroll_expenses: number;
 }
 
+export interface PosEditWindow {
+  value: number;
+  unit: 'minutes' | 'hours' | 'days';
+  interval_seconds: number;
+}
+
+export type PosPaymentMethod = 'cash' | 'mobile_wallet';
+
 export const useLedgerStore = defineStore('ledger', () => {
   const entries = ref<LedgerEntry[]>([]);
   const summary = ref<FinancialSummary | null>(null);
   const cashBalance = ref<number | null>(null);
+  const posEditWindow = ref<PosEditWindow | null>(null);
   const loading = ref(false);
   const lastError = ref<string | null>(null);
+
+  function resolveTenantId(): string | null {
+    return useTenantStore().activeTenant?.id ?? useKioskStore().tenantId ?? null;
+  }
 
   async function fetchEntries(
     filters: {
@@ -48,15 +63,34 @@ export const useLedgerStore = defineStore('ledger', () => {
       to?: number;
     } = {},
   ) {
-    const tenant = useTenantStore().activeTenant;
-    if (!tenant) return;
+    const tenantId = resolveTenantId();
+    if (!tenantId) return;
     loading.value = true;
     lastError.value = null;
     try {
+      const kiosk = useKioskStore();
+      if (kiosk.deviceToken && kiosk.currentStaff?.id && filters.sessionId) {
+        const { data, error } = await supabase.rpc('list_session_ledger_entries', {
+          p_tenant_id: tenantId,
+          p_device_token: kiosk.deviceToken,
+          p_staff_id: kiosk.currentStaff.id,
+          p_session_id: filters.sessionId,
+        });
+        if (error) throw error;
+        let rows = (data ?? []) as LedgerEntry[];
+        if (filters.category) rows = rows.filter((r) => r.category === filters.category);
+        if (filters.type) rows = rows.filter((r) => r.type === filters.type);
+        if (filters.paymentMethod) {
+          rows = rows.filter((r) => r.payment_method === filters.paymentMethod);
+        }
+        entries.value = rows;
+        return;
+      }
+
       let q = supabase
         .from('transaction_ledger')
         .select('*, operator_staff:staff_members!operator_staff_id(full_name)')
-        .eq('tenant_id', tenant.id)
+        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false });
 
       if (filters.type) q = q.eq('type', filters.type);
@@ -107,6 +141,93 @@ export const useLedgerStore = defineStore('ledger', () => {
     }
   }
 
+  async function logPosSale(params: {
+    sessionId: string;
+    amount: number;
+    paymentMethod: PosPaymentMethod;
+    notes?: string | null;
+  }) {
+    const kiosk = useKioskStore();
+    const tenantId = kiosk.tenantId;
+    if (!tenantId || !kiosk.deviceToken || !kiosk.currentStaff?.id) {
+      throw new Error('Kiosk session required');
+    }
+    loading.value = true;
+    try {
+      const { data, error } = await supabase.rpc('log_pos_sale', {
+        p_tenant_id: tenantId,
+        p_device_token: kiosk.deviceToken,
+        p_staff_id: kiosk.currentStaff.id,
+        p_session_id: params.sessionId,
+        p_amount: params.amount,
+        p_payment_method: params.paymentMethod,
+        p_notes: params.notes ?? null,
+      });
+      if (error) throw error;
+      return data as string;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function editPosSale(params: {
+    ledgerId: string;
+    amount: number;
+    paymentMethod: PosPaymentMethod;
+    notes?: string | null;
+  }) {
+    const kiosk = useKioskStore();
+    const tenantId = kiosk.tenantId;
+    if (!tenantId || !kiosk.deviceToken || !kiosk.currentStaff?.id) {
+      throw new Error('Kiosk session required');
+    }
+    loading.value = true;
+    try {
+      const { data, error } = await supabase.rpc('edit_pos_sale', {
+        p_tenant_id: tenantId,
+        p_device_token: kiosk.deviceToken,
+        p_staff_id: kiosk.currentStaff.id,
+        p_ledger_id: params.ledgerId,
+        p_amount: params.amount,
+        p_payment_method: params.paymentMethod,
+        p_notes: params.notes ?? null,
+      });
+      if (error) throw error;
+      return data as string;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function fetchPosEditWindow() {
+    const tenantId = resolveTenantId();
+    if (!tenantId) return null;
+    const kiosk = useKioskStore();
+    const { data, error } = await supabase.rpc('get_pos_edit_window', {
+      p_tenant_id: tenantId,
+      p_device_token: kiosk.deviceToken ?? undefined,
+    });
+    if (error) throw error;
+    const raw = data as {
+      value?: number;
+      unit?: string;
+      interval_seconds?: number;
+    } | null;
+    posEditWindow.value = {
+      value: Number(raw?.value ?? 24),
+      unit: (raw?.unit as PosEditWindow['unit']) || 'hours',
+      interval_seconds: Number(raw?.interval_seconds ?? 86400),
+    };
+    return posEditWindow.value;
+  }
+
+  function isPosEditable(createdAt: string, sessionOpen = true): boolean {
+    if (!sessionOpen) return false;
+    const seconds = posEditWindow.value?.interval_seconds ?? 86400;
+    const created = new Date(createdAt).getTime();
+    return Date.now() < created + seconds * 1000;
+  }
+
   async function fetchSummary(start: string, end: string) {
     const tenant = useTenantStore().activeTenant;
     if (!tenant) return;
@@ -125,10 +246,22 @@ export const useLedgerStore = defineStore('ledger', () => {
   }
 
   async function fetchCashBalance(sessionId: string) {
-    const tenant = useTenantStore().activeTenant;
-    if (!tenant) return;
+    const tenantId = resolveTenantId();
+    if (!tenantId) return;
+    const kiosk = useKioskStore();
+    if (kiosk.deviceToken && kiosk.currentStaff?.id) {
+      const { data, error } = await supabase.rpc('get_cash_register_running_balance_kiosk', {
+        p_tenant_id: tenantId,
+        p_device_token: kiosk.deviceToken,
+        p_staff_id: kiosk.currentStaff.id,
+        p_session_id: sessionId,
+      });
+      if (error) throw error;
+      cashBalance.value = Number(data);
+      return;
+    }
     const { data, error } = await supabase.rpc('get_cash_register_running_balance', {
-      p_tenant_id: tenant.id,
+      p_tenant_id: tenantId,
       p_session_id: sessionId,
     });
     if (error) throw error;
@@ -146,10 +279,15 @@ export const useLedgerStore = defineStore('ledger', () => {
     entries,
     summary,
     cashBalance,
+    posEditWindow,
     loading,
     lastError,
     fetchEntries,
     logManualEntry,
+    logPosSale,
+    editPosSale,
+    fetchPosEditWindow,
+    isPosEditable,
     fetchSummary,
     fetchCashBalance,
     clearLedger,

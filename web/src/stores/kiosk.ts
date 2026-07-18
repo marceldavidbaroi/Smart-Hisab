@@ -17,7 +17,28 @@ export const useKioskStore = defineStore('kiosk', () => {
   const tenantName = ref<string | null>(localStorage.getItem('kiosk.tenant_name'));
   const deviceName = ref<string | null>(localStorage.getItem('kiosk.device_name'));
 
-  const currentStaff = ref<KioskStaff | null>(null);
+  function readPersistedStaff(): KioskStaff | null {
+    if (typeof window === 'undefined') return null;
+    const id = localStorage.getItem('staff_session_id');
+    if (!id) return null;
+    let permissions: Record<string, unknown> | undefined;
+    const rawPerms = localStorage.getItem('staff_session_permissions');
+    if (rawPerms) {
+      try {
+        permissions = JSON.parse(rawPerms) as Record<string, unknown>;
+      } catch {
+        permissions = undefined;
+      }
+    }
+    return {
+      id,
+      fullName: localStorage.getItem('staff_session_name') || 'Staff',
+      role: localStorage.getItem('staff_session_role') || 'Staff',
+      permissions,
+    };
+  }
+
+  const currentStaff = ref<KioskStaff | null>(readPersistedStaff());
   const isSetupRequired = ref<boolean>(false);
   const failedPinMessage = ref<string | null>(null);
   const loading = ref<boolean>(false);
@@ -118,7 +139,7 @@ export const useKioskStore = defineStore('kiosk', () => {
       console.error('Failed to fetch staff list, attempting to load from cache:', err);
       const error = err as { message?: string; code?: string };
       if (error.message?.includes('Unauthorized device token') || error.code === '42501') {
-        unpairDevice();
+        void unpairDevice({ skipServer: true });
         throw err;
       }
       const cached = localStorage.getItem('kiosk.staff_list');
@@ -160,7 +181,7 @@ export const useKioskStore = defineStore('kiosk', () => {
 
       if (!res.success) {
         if (res.code === 'DEVICE_BLOCKED') {
-          unpairDevice();
+          void unpairDevice();
         }
         failedPinMessage.value = res.message || 'Verification failed';
         return { success: false };
@@ -194,6 +215,11 @@ export const useKioskStore = defineStore('kiosk', () => {
       localStorage.setItem('staff_session_id', res.staff_id);
       localStorage.setItem('staff_session_name', res.full_name!);
       localStorage.setItem('staff_session_role', res.role!);
+      if (res.permissions) {
+        localStorage.setItem('staff_session_permissions', JSON.stringify(res.permissions));
+      } else {
+        localStorage.removeItem('staff_session_permissions');
+      }
 
       return { success: true, setupRequired: false };
     } catch (err) {
@@ -237,6 +263,7 @@ export const useKioskStore = defineStore('kiosk', () => {
     localStorage.removeItem('staff_session_id');
     localStorage.removeItem('staff_session_name');
     localStorage.removeItem('staff_session_role');
+    localStorage.removeItem('staff_session_permissions');
   }
 
   function hasStaffPermission(moduleName: string, permissionName: string): boolean {
@@ -247,7 +274,21 @@ export const useKioskStore = defineStore('kiosk', () => {
     return !!mod[permissionName];
   }
 
-  function unpairDevice() {
+  async function unpairDevice(opts?: { skipServer?: boolean }) {
+    const token = deviceToken.value;
+    const tid = tenantId.value;
+
+    if (!opts?.skipServer && token) {
+      try {
+        await supabase.rpc('unpair_device', {
+          p_device_token: token,
+          p_tenant_id: tid,
+        });
+      } catch (err) {
+        console.error('Server unpair failed; clearing local pairing anyway:', err);
+      }
+    }
+
     logoutStaff();
     deviceToken.value = null;
     tenantId.value = null;
@@ -260,6 +301,7 @@ export const useKioskStore = defineStore('kiosk', () => {
     localStorage.removeItem('kiosk.tenant_slug');
     localStorage.removeItem('kiosk.tenant_name');
     localStorage.removeItem('kiosk.device_name');
+    localStorage.removeItem('kiosk.staff_list');
 
     // Remove legacy keys
     localStorage.removeItem('device_token');

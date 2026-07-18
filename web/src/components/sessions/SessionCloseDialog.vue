@@ -18,6 +18,45 @@
         <q-form @submit.prevent="handleSubmit" class="q-gutter-y-md q-mt-sm">
           <q-card-section class="q-py-none">
             <div class="q-mb-md">
+              <div class="text-subtitle2 text-weight-bold q-mb-sm">
+                {{ $t('kioskUI.workspace.pos.bulkCloseTitle') }}
+              </div>
+              <div class="text-caption text-grey-7 q-mb-sm">
+                {{ $t('kioskUI.workspace.pos.bulkCloseHint') }}
+              </div>
+              <div class="q-mb-sm">
+                <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                  $t('kioskUI.workspace.pos.bulkCash')
+                }}</label>
+                <q-input
+                  v-model.number="posBulkCash"
+                  type="number"
+                  filled
+                  dense
+                  color="primary"
+                  class="custom-input font-mono"
+                  :disable="loading"
+                  hide-bottom-space
+                />
+              </div>
+              <div>
+                <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
+                  $t('kioskUI.workspace.pos.bulkOnline')
+                }}</label>
+                <q-input
+                  v-model.number="posBulkOnline"
+                  type="number"
+                  filled
+                  dense
+                  color="primary"
+                  class="custom-input font-mono"
+                  :disable="loading"
+                  hide-bottom-space
+                />
+              </div>
+            </div>
+
+            <div class="q-mb-md">
               <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
                 $t('sessions.close.closingCash')
               }}</label>
@@ -140,6 +179,7 @@
 import { ref } from 'vue';
 import { useSessionStore } from '../../stores/session';
 import { useKioskStore } from '../../stores/kiosk';
+import { useLedgerStore } from '../../stores/ledger';
 import { showApiError } from '../../composables/useFeedback';
 import { useI18n } from 'vue-i18n';
 
@@ -161,10 +201,13 @@ const emit = defineEmits<{
 
 const sessionStore = useSessionStore();
 const kioskStore = useKioskStore();
+const ledgerStore = useLedgerStore();
 const { t } = useI18n();
 
 const closingCash = ref<number>(0);
 const notes = ref<string>('');
+const posBulkCash = ref<number | null>(null);
+const posBulkOnline = ref<number | null>(null);
 const loading = ref(false);
 
 const closedResult = ref<ClosedResult | null>(null);
@@ -178,7 +221,29 @@ async function handleSubmit() {
       throw new Error(t('sessions.open.messages.unauthenticated'));
     }
 
-    // exactOptionalPropertyTypes compliance
+    const canPos = kioskStore.hasStaffPermission('kiosk', 'log_pos');
+    if (canPos) {
+      const cash = posBulkCash.value && posBulkCash.value > 0 ? posBulkCash.value : 0;
+      const online = posBulkOnline.value && posBulkOnline.value > 0 ? posBulkOnline.value : 0;
+      const noteText = notes.value.trim() || null;
+      if (cash > 0) {
+        await ledgerStore.logPosSale({
+          sessionId: props.sessionId,
+          amount: cash,
+          paymentMethod: 'cash',
+          notes: noteText,
+        });
+      }
+      if (online > 0) {
+        await ledgerStore.logPosSale({
+          sessionId: props.sessionId,
+          amount: online,
+          paymentMethod: 'mobile_wallet',
+          notes: noteText,
+        });
+      }
+    }
+
     const closeParams: {
       sessionId: string;
       closingCash: number;
@@ -217,6 +282,8 @@ function handleDismiss() {
   closedResult.value = null;
   closingCash.value = 0;
   notes.value = '';
+  posBulkCash.value = null;
+  posBulkOnline.value = null;
 }
 </script>
 

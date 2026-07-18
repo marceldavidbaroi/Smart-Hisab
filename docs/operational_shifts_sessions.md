@@ -9,7 +9,7 @@ Instead of treating dates and shifts as static attributes on transactions, the s
 * **Physical Cash Tracking:** Enforce opening and closing drawer counts to prevent leakage and ensure accountability.
 * **Automatic Financial Reconciliation:** Calculate expected ending cash from recorded cash movements and compute variance against the physical drawer count.
 * **Immutable Transaction Locking:** Lock all transaction logs associated with a session once that session is closed.
-* **Non-Itemized Counter Sales:** Cashiers count total counter revenue at shift-end and log it as a single aggregated counter money inflow (Category: `POS`).
+* **Counter Daily Transactions (POS):** Staff log walk-in meal money as ledger `POS` inflows — either **per sale during the shift** or **bulk totals** at shift end. Source is **Cash** or **Online** (`mobile_wallet`). Entries feed reports and expected-cash math (cash POS only).
 
 ### Implementation Status (as of this RFC)
 | Layer | Status |
@@ -33,7 +33,8 @@ Instead of treating dates and shifts as static attributes on transactions, the s
 #### Persona B: Shift Manager / Cashier (Kiosk Staff Roles)
 1. **As a** Shift Manager (kiosk staff), **I want to** open a session on the paired terminal by choosing a shift and entering opening drawer cash, **so that** the register is initialized for operations.
 2. **As a** Shift Manager, **I want to** see an active session indicator, **so that** I know subsequent operations bind to the correct session.
-3. **As a** Cashier / Manager, **I want to** log aggregated counter cash sales as a single POS inflow before close, **so that** expected cash matches the drawer.
+3. **As a** Cashier / Manager, **I want to** log Daily Transactions (POS) per sale or as bulk cash/online totals before close, **so that** expected cash and reports stay accurate.
+4. **As a** Cashier / Manager, **I want to** edit a POS entry within the owner-configured time window while the session is open, **so that** I can correct mistakes.
 4. **As a** Shift Manager, **I want to** close the session with physical closing cash, **so that** the system reconciles expected vs actual and locks the shift.
 
 **Role inclusion:** Manager ⊃ Cashier for money ops (POS, expense, ledger read as seeded). Only Manager defaults include `sessions_open` / `sessions_close`. Customer / meal enrollment on the terminal is specified in [meal_customer_management.md](./meal_customer_management.md) and tracked in [temp_restructure.md](./temp_restructure.md).

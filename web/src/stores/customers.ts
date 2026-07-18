@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { supabase } from '../boot/supabase';
 import { useTenantStore } from './tenant';
+import { useKioskStore } from './kiosk';
 
 export type CustomerCategory = 'contract_worker' | 'walk_in_baki';
 
@@ -30,6 +31,10 @@ export interface DailyAttendance {
   rate_applied: number;
 }
 
+function resolveTenantId(): string | null {
+  return useTenantStore().activeTenant?.id ?? useKioskStore().tenantId ?? null;
+}
+
 export const useCustomersStore = defineStore('customers', () => {
   const customers = ref<Customer[]>([]);
   const attendanceToday = ref<DailyAttendance[]>([]);
@@ -43,30 +48,57 @@ export const useCustomersStore = defineStore('customers', () => {
       search?: string | undefined;
     } = {},
   ) {
-    const tenant = useTenantStore().activeTenant;
-    if (!tenant) return;
+    const tenantId = resolveTenantId();
+    if (!tenantId) return;
     loading.value = true;
     lastError.value = null;
     try {
-      let q = supabase
-        .from('customers')
-        .select('*')
-        .eq('tenant_id', tenant.id)
-        .order('full_name', { ascending: true });
+      const kiosk = useKioskStore();
+      let rows: Customer[] = [];
+
+      if (kiosk.deviceToken && kiosk.currentStaff?.id) {
+        const { data, error } = await supabase.rpc('list_customers', {
+          p_tenant_id: tenantId,
+          p_device_token: kiosk.deviceToken,
+          p_staff_id: kiosk.currentStaff.id,
+          p_active_only: filters.activeOnly !== false,
+        });
+        if (error) throw error;
+        rows = (data ?? []) as Customer[];
+      } else {
+        let q = supabase
+          .from('customers')
+          .select('*')
+          .eq('tenant_id', tenantId)
+          .order('full_name', { ascending: true });
+
+        if (filters.category) {
+          q = q.eq('category', filters.category);
+        }
+        if (filters.activeOnly !== false) {
+          q = q.eq('is_active', true);
+        }
+        if (filters.search) {
+          q = q.or(`full_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+        }
+
+        const { data, error } = await q;
+        if (error) throw error;
+        rows = (data ?? []) as Customer[];
+      }
 
       if (filters.category) {
-        q = q.eq('category', filters.category);
-      }
-      if (filters.activeOnly !== false) {
-        q = q.eq('is_active', true);
+        rows = rows.filter((c) => c.category === filters.category);
       }
       if (filters.search) {
-        q = q.ilike('full_name', `%${filters.search}%`);
+        const s = filters.search.toLowerCase();
+        rows = rows.filter(
+          (c) =>
+            c.full_name.toLowerCase().includes(s) || (c.phone && c.phone.toLowerCase().includes(s)),
+        );
       }
 
-      const { data, error } = await q;
-      if (error) throw error;
-      customers.value = (data ?? []) as Customer[];
+      customers.value = rows;
     } catch (e) {
       lastError.value = e instanceof Error ? e.message : 'Failed to load customers';
       throw e;
@@ -78,9 +110,9 @@ export const useCustomersStore = defineStore('customers', () => {
   async function upsertCustomer(
     payload: Partial<Customer> & { full_name: string; category: CustomerCategory },
   ) {
-    const tenant = useTenantStore().activeTenant;
-    if (!tenant) throw new Error('No active tenant');
-    const row = { ...payload, tenant_id: tenant.id };
+    const tenantId = resolveTenantId();
+    if (!tenantId) throw new Error('No active tenant');
+    const row = { ...payload, tenant_id: tenantId };
     const { error } = payload.id
       ? await supabase.from('customers').update(row).eq('id', payload.id)
       : await supabase.from('customers').insert(row);
@@ -89,12 +121,12 @@ export const useCustomersStore = defineStore('customers', () => {
   }
 
   async function fetchAttendanceForDate(businessDate: string) {
-    const tenant = useTenantStore().activeTenant;
-    if (!tenant) return;
+    const tenantId = resolveTenantId();
+    if (!tenantId) return;
     const { data, error } = await supabase
       .from('customer_daily_attendance')
       .select('*')
-      .eq('tenant_id', tenant.id)
+      .eq('tenant_id', tenantId)
       .eq('business_date', businessDate);
     if (error) throw error;
     attendanceToday.value = (data ?? []) as DailyAttendance[];
@@ -107,10 +139,10 @@ export const useCustomersStore = defineStore('customers', () => {
     deviceToken?: string | null | undefined;
     staffId?: string | null | undefined;
   }) {
-    const tenant = useTenantStore().activeTenant;
-    if (!tenant) throw new Error('No active tenant');
+    const tenantId = resolveTenantId();
+    if (!tenantId) throw new Error('No active tenant');
     const { data, error } = await supabase.rpc('toggle_contract_attendance', {
-      p_tenant_id: tenant.id,
+      p_tenant_id: tenantId,
       p_customer_id: params.customerId,
       p_session_id: params.sessionId,
       p_shift_name: params.shiftName,
@@ -162,10 +194,10 @@ export const useCustomersStore = defineStore('customers', () => {
     deviceToken?: string | null | undefined;
     staffId?: string | null | undefined;
   }) {
-    const tenant = useTenantStore().activeTenant;
-    if (!tenant) throw new Error('No active tenant');
+    const tenantId = resolveTenantId();
+    if (!tenantId) throw new Error('No active tenant');
     const { data, error } = await supabase.rpc('record_baki_transaction', {
-      p_tenant_id: tenant.id,
+      p_tenant_id: tenantId,
       p_customer_id: params.customerId,
       p_session_id: params.sessionId,
       p_items_description: params.itemsDescription,
@@ -186,10 +218,10 @@ export const useCustomersStore = defineStore('customers', () => {
     deviceToken?: string | null | undefined;
     staffId?: string | null | undefined;
   }) {
-    const tenant = useTenantStore().activeTenant;
-    if (!tenant) throw new Error('No active tenant');
+    const tenantId = resolveTenantId();
+    if (!tenantId) throw new Error('No active tenant');
     const { data, error } = await supabase.rpc('record_customer_collection', {
-      p_tenant_id: tenant.id,
+      p_tenant_id: tenantId,
       p_customer_id: params.customerId,
       p_session_id: params.sessionId,
       p_amount: params.amount,
@@ -208,6 +240,10 @@ export const useCustomersStore = defineStore('customers', () => {
     lastError.value = null;
   }
 
+  function clearAttendanceToday() {
+    attendanceToday.value = [];
+  }
+
   return {
     customers,
     attendanceToday,
@@ -220,5 +256,6 @@ export const useCustomersStore = defineStore('customers', () => {
     recordBaki,
     recordCollection,
     clearCustomers,
+    clearAttendanceToday,
   };
 });

@@ -9,7 +9,7 @@
     style="font-size: 13px"
   >
     <div class="row items-center no-wrap">
-      <span class="text-caption text-indigo-1 q-mr-xs text-weight-normal">{{
+      <span class="text-caption text-teal-1 q-mr-xs text-weight-normal">{{
         $t('ledger.cash.expectedDrawerCash')
       }}</span>
       <span v-if="loading">
@@ -18,7 +18,7 @@
       <span v-else-if="balance !== null">
         {{ formatMoney(balance) }}
       </span>
-      <span v-else class="text-indigo-2"> — </span>
+      <span v-else class="text-teal-2"> — </span>
     </div>
   </q-chip>
 </template>

@@ -14,13 +14,13 @@ export function useLocale() {
     },
   });
 
-  const toggleOptions = [
-    { value: 'en-US', label: 'EN' },
-    { value: 'bn', label: 'বাং' },
+  const localeOptions = [
+    { value: 'en-US' as const, short: 'EN', labelKey: 'common.english' },
+    { value: 'bn' as const, short: 'বাং', labelKey: 'common.bangla' },
   ];
 
   return {
     locale: currentLocale,
-    toggleOptions,
+    localeOptions,
   };
 }
