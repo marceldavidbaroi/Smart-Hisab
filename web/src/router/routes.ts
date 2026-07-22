@@ -232,10 +232,26 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresPairing: true, requiresStaffAuth: true },
       },
       {
+        path: 'baki',
+        name: 'kiosk-baki',
+        component: () => import('@/pages/kiosk/KioskBaki.vue'),
+        meta: { requiresPairing: true, requiresStaffAuth: true },
+      },
+      {
+        path: 'baki-payment',
+        name: 'kiosk-baki-payment',
+        component: () => import('@/pages/kiosk/KioskBakiPayment.vue'),
+        meta: { requiresPairing: true, requiresStaffAuth: true },
+      },
+      {
         path: 'advance-payment',
         name: 'kiosk-advance-payment',
         component: () => import('@/pages/kiosk/KioskAdvancePayment.vue'),
-        meta: { requiresPairing: true, requiresStaffAuth: true },
+        meta: {
+          requiresPairing: true,
+          requiresStaffAuth: true,
+          requiredFeature: 'meal-management',
+        },
       },
     ],
   },

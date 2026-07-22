@@ -20,10 +20,13 @@
     "backend:push": "npx supabase db push --linked",
     "backend:deploy": "bash ./deploy_backend.sh",
     "deploy:backend": "bash ./deploy_backend.sh",
+    "deploy:frontend": "bash ./scripts/deploy-frontend.sh",
+    "deploy:web": "bash ./scripts/deploy-frontend.sh",
     "clear-tenant": "bash ./scripts/clear-tenant.sh"
   },
   "devDependencies": {
     "supabase": "^2.105.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.93.1"
   }
 }

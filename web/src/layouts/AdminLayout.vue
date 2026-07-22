@@ -360,7 +360,9 @@ const handleSignOut = async () => {
   border-radius: var(--radius-lg);
   color: #475569;
   min-height: 44px;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 
   &:hover {
     background: var(--brand-soft);

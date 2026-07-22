@@ -103,6 +103,7 @@
     <CustomerFormDialog
       v-model="showFormDialog"
       :customer="selectedCustomer"
+      :default-category="activeTab"
       @saved="loadCustomers"
     />
   </q-page>
@@ -126,7 +127,7 @@ const { t } = useI18n();
 
 const showFormDialog = ref(false);
 const selectedCustomer = ref<Customer | null>(null);
-const activeTab = ref('contract_worker');
+const activeTab = ref<CustomerCategory>('contract_worker');
 
 const activeFilters = ref<{
   category?: CustomerCategory | undefined;

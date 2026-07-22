@@ -79,7 +79,9 @@ const activeShort = computed(
   border: 1.5px solid rgba(14, 74, 71, 0.22);
   background: var(--brand-soft);
   padding: 0 10px;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 
   &:hover {
     border-color: var(--brand-primary);

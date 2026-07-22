@@ -68,9 +68,7 @@ const { t } = useI18n();
 const loading = ref(false);
 const errorMsg = ref('');
 
-const isAdminLogin = computed(
-  () => route.name === 'admin-login' || route.query.scope === 'admin',
-);
+const isAdminLogin = computed(() => route.name === 'admin-login' || route.query.scope === 'admin');
 
 const showPairDevice = computed(() => !isAdminLogin.value);
 
@@ -150,7 +148,10 @@ const handleGoogleLogin = async () => {
   background: #ffffff !important;
   border: 1px solid rgba(14, 74, 71, 0.18) !important;
   color: var(--brand-dark) !important;
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
     background: var(--brand-surface) !important;

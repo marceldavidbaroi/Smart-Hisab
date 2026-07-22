@@ -162,7 +162,9 @@
   background: #ffffff;
   border-radius: var(--radius-2xl);
   padding: 32px 28px 28px;
-  box-shadow: 0 12px 32px rgba(14, 74, 71, 0.1), 0 2px 8px rgba(14, 74, 71, 0.04);
+  box-shadow:
+    0 12px 32px rgba(14, 74, 71, 0.1),
+    0 2px 8px rgba(14, 74, 71, 0.04);
   border: 1px solid rgba(14, 74, 71, 0.1);
   overflow: hidden;
   z-index: 2;

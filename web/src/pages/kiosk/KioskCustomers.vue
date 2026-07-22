@@ -113,6 +113,7 @@
       :customer="selectedCustomer"
       :device-token="kioskStore.deviceToken"
       :staff-id="kioskStore.currentStaff?.id || null"
+      :default-category="activeTab"
       @saved="loadCustomers"
     />
   </q-page>
@@ -122,7 +123,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import type { Customer } from '../../stores/customers';
+import type { Customer, CustomerCategory } from '../../stores/customers';
 import { useCustomersStore } from '../../stores/customers';
 import { useKioskStore } from '../../stores/kiosk';
 import CustomerTable from '../../components/customers/CustomerTable.vue';
@@ -136,7 +137,7 @@ const feedback = useFeedback();
 const customersStore = useCustomersStore();
 const kioskStore = useKioskStore();
 
-const activeTab = ref('contract_worker');
+const activeTab = ref<CustomerCategory>('contract_worker');
 const searchQuery = ref('');
 const showFormDialog = ref(false);
 const selectedCustomer = ref<Customer | null>(null);

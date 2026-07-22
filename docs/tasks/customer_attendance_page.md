@@ -116,6 +116,7 @@ Triggered by **Add Attendance** on a card.
 
 No schema change for Task 1. Existing:
 
+- `list_attendance_for_date` — kiosk attendance list query.
 - `toggle_contract_attendance` — shift on `customer_daily_attendance.attended_shifts`; daily rate once per day.
 - `record_baki_transaction` — extras / note + amount.
 

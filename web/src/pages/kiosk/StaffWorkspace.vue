@@ -171,7 +171,7 @@
             role="button"
             tabindex="0"
             v-ripple
-            @click="showBakiDialog = true"
+            @click="goToKioskBaki"
           >
             <q-avatar size="48px" color="red-1" text-color="red-8" class="q-mb-sm">
               <q-icon name="assignment_late" size="26px" />
@@ -218,7 +218,7 @@
             role="button"
             tabindex="0"
             v-ripple
-            @click="showCollectionDialog = true"
+            @click="goToKioskBakiPayment"
           >
             <q-avatar size="48px" color="teal-1" text-color="teal-8" class="q-mb-sm">
               <q-icon name="payments" size="26px" />
@@ -233,12 +233,11 @@
         </div>
 
         <!-- Advance Payment -->
-        <div v-if="isMealManagementEnabled" class="col-6 col-sm-4">
+        <div v-if="isMealManagementEnabled && canLogCollection" class="col-6 col-sm-4">
           <q-card
             flat
             bordered
             class="action-card cursor-pointer transition-all bg-white border-all hover-card column justify-center items-center q-pa-md text-dark"
-            :class="{ 'opacity-50 pointer-events-none': isActionBlocked }"
             role="button"
             tabindex="0"
             v-ripple
@@ -257,110 +256,200 @@
         </div>
       </div>
 
-      <!-- Shift History Logs Table -->
-      <q-card class="flat bordered bg-white text-dark q-pa-md border-all">
-        <div class="text-h6 text-weight-bold q-mb-md">{{ $t('workspace.ledger.cardTitle') }}</div>
-        <q-table
-          v-if="isFinancialLedgerEnabled && canReadSessionLedger"
-          :rows="ledgerStore.entries"
-          :columns="ledgerColumns"
-          row-key="id"
-          flat
-          class="bg-white text-dark gt-sm"
-          :no-data-label="$t('ledger.table.noTransactions')"
+      <!-- Shift History Logs & Customer Add-ons Card -->
+      <q-card class="flat bordered bg-white text-dark border-all q-mb-md">
+        <q-tabs
+          v-model="workspaceTab"
           dense
+          class="text-grey-7"
+          active-color="primary"
+          indicator-color="primary"
+          align="justify"
+          narrow-indicator
+          style="min-height: 48px"
         >
-          <template #body-cell-type="props">
-            <q-td :props="props">
-              <q-badge
-                :color="getTypeColor(props.row.type)"
-                class="text-weight-bold uppercase q-py-xs q-px-sm"
-              >
-                {{ props.row.type }}
-              </q-badge>
-            </q-td>
-          </template>
-          <template #body-cell-time="props">
-            <q-td :props="props">
-              {{ formatTime(props.row.created_at) }}
-            </q-td>
-          </template>
-          <template #body-cell-value="props">
-            <q-td :props="props">
-              {{ formatMoney(props.row.amount) }}
-            </q-td>
-          </template>
-          <template #body-cell-actions="props">
-            <q-td :props="props">
-              <q-btn
-                v-if="canEditPosRow(props.row)"
-                flat
-                dense
-                color="primary"
-                icon="edit"
-                class="cursor-pointer"
-                style="min-height: 44px; min-width: 44px"
-                @click="openPosEdit(props.row)"
-              />
-              <span v-else-if="props.row.category === 'POS'" class="text-caption text-grey-6">
-                {{ $t('kioskUI.workspace.pos.editClosed') }}
-              </span>
-            </q-td>
-          </template>
-        </q-table>
+          <q-tab
+            name="ledger"
+            :label="$t('ledger.title') || 'Transactions'"
+            class="cursor-pointer"
+          />
+          <q-tab
+            name="addons"
+            :label="$t('customers.baki.title') || 'Customer Add-ons'"
+            class="cursor-pointer"
+          />
+        </q-tabs>
 
-        <!-- Mobile card list -->
-        <div
-          v-if="isFinancialLedgerEnabled && canReadSessionLedger"
-          class="lt-md column q-gutter-y-sm"
-        >
-          <q-card
-            v-for="row in ledgerStore.entries"
-            :key="row.id"
-            flat
-            bordered
-            class="q-pa-md bg-grey-1"
-          >
-            <div class="row items-start justify-between">
-              <div>
-                <div class="text-subtitle2 text-weight-bold">{{ row.category }}</div>
-                <div class="text-caption text-grey-7">{{ formatTime(row.created_at) }}</div>
-                <q-badge :color="getTypeColor(row.type)" class="text-weight-bold uppercase q-mt-xs">
-                  {{ row.type }}
-                </q-badge>
-                <div class="text-caption q-mt-xs text-grey-8">
-                  {{ paymentLabel(row.payment_method) }}
+        <q-separator />
+
+        <q-tab-panels v-model="workspaceTab" animated class="bg-white text-dark">
+          <!-- Ledger Tab -->
+          <q-tab-panel name="ledger" class="q-pa-md">
+            <div class="text-h6 text-weight-bold q-mb-md">
+              {{ $t('workspace.ledger.cardTitle') }}
+            </div>
+            <q-table
+              v-if="isFinancialLedgerEnabled && canReadSessionLedger"
+              :rows="ledgerStore.entries"
+              :columns="ledgerColumns"
+              row-key="id"
+              flat
+              class="bg-white text-dark gt-sm"
+              :no-data-label="$t('ledger.table.noTransactions')"
+              dense
+            >
+              <template #body-cell-type="props">
+                <q-td :props="props">
+                  <q-badge
+                    :color="getTypeColor(props.row.type)"
+                    class="text-weight-bold uppercase q-py-xs q-px-sm"
+                  >
+                    {{ props.row.type }}
+                  </q-badge>
+                </q-td>
+              </template>
+              <template #body-cell-time="props">
+                <q-td :props="props">
+                  {{ formatTime(props.row.created_at) }}
+                </q-td>
+              </template>
+              <template #body-cell-value="props">
+                <q-td :props="props">
+                  {{ formatMoney(props.row.amount) }}
+                </q-td>
+              </template>
+              <template #body-cell-actions="props">
+                <q-td :props="props">
+                  <q-btn
+                    v-if="canEditPosRow(props.row)"
+                    flat
+                    dense
+                    color="primary"
+                    icon="edit"
+                    class="cursor-pointer"
+                    style="min-height: 44px; min-width: 44px"
+                    @click="openPosEdit(props.row)"
+                  />
+                  <span v-else-if="props.row.category === 'POS'" class="text-caption text-grey-6">
+                    {{ $t('kioskUI.workspace.pos.editClosed') }}
+                  </span>
+                </q-td>
+              </template>
+            </q-table>
+
+            <!-- Mobile card list -->
+            <div
+              v-if="isFinancialLedgerEnabled && canReadSessionLedger"
+              class="lt-md column q-gutter-y-sm"
+            >
+              <q-card
+                v-for="row in ledgerStore.entries"
+                :key="row.id"
+                flat
+                bordered
+                class="q-pa-md bg-grey-1"
+              >
+                <div class="row items-start justify-between">
+                  <div>
+                    <div class="text-subtitle2 text-weight-bold">{{ row.category }}</div>
+                    <div class="text-caption text-grey-7">{{ formatTime(row.created_at) }}</div>
+                    <q-badge
+                      :color="getTypeColor(row.type)"
+                      class="text-weight-bold uppercase q-mt-xs"
+                    >
+                      {{ row.type }}
+                    </q-badge>
+                    <div class="text-caption q-mt-xs text-grey-8">
+                      {{ paymentLabel(row.payment_method) }}
+                    </div>
+                  </div>
+                  <div class="column items-end">
+                    <div class="text-subtitle1 text-weight-bold font-mono">
+                      {{ formatMoney(row.amount) }}
+                    </div>
+                    <q-btn
+                      v-if="canEditPosRow(row)"
+                      flat
+                      dense
+                      color="primary"
+                      icon="edit"
+                      class="cursor-pointer q-mt-xs"
+                      style="min-height: 44px; min-width: 44px"
+                      @click="openPosEdit(row)"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div class="column items-end">
-                <div class="text-subtitle1 text-weight-bold font-mono">
-                  {{ formatMoney(row.amount) }}
-                </div>
-                <q-btn
-                  v-if="canEditPosRow(row)"
-                  flat
-                  dense
-                  color="primary"
-                  icon="edit"
-                  class="cursor-pointer q-mt-xs"
-                  style="min-height: 44px; min-width: 44px"
-                  @click="openPosEdit(row)"
-                />
+              </q-card>
+              <div
+                v-if="!ledgerStore.entries.length"
+                class="text-caption text-grey-6 text-center q-pa-md"
+              >
+                {{ $t('ledger.table.noTransactions') }}
               </div>
             </div>
-          </q-card>
-          <div
-            v-if="!ledgerStore.entries.length"
-            class="text-caption text-grey-6 text-center q-pa-md"
-          >
-            {{ $t('ledger.table.noTransactions') }}
-          </div>
-        </div>
+          </q-tab-panel>
+
+          <!-- Addons Tab -->
+          <q-tab-panel name="addons" class="q-pa-md">
+            <div class="text-h6 text-weight-bold q-mb-md">
+              {{ $t('customers.baki.title') || 'Customer Add-ons' }}
+            </div>
+
+            <q-table
+              :rows="customersStore.sessionBakiTransactions"
+              :columns="addonColumns"
+              row-key="id"
+              flat
+              class="bg-white text-dark gt-sm"
+              :no-data-label="$t('ledger.table.noTransactions') || 'No add-ons recorded'"
+              dense
+            >
+              <template #body-cell-time="props">
+                <q-td :props="props">
+                  {{ formatTime(props.row.created_at) }}
+                </q-td>
+              </template>
+              <template #body-cell-value="props">
+                <q-td :props="props"> ৳{{ props.row.amount }} </q-td>
+              </template>
+            </q-table>
+
+            <!-- Mobile Add-ons list -->
+            <div class="lt-md column q-gutter-y-sm">
+              <q-card
+                v-for="row in customersStore.sessionBakiTransactions"
+                :key="row.id"
+                flat
+                bordered
+                class="q-pa-md bg-grey-1"
+              >
+                <div class="row items-start justify-between">
+                  <div>
+                    <div class="text-subtitle2 text-weight-bold">{{ row.customer_name }}</div>
+                    <div class="text-caption text-grey-7">{{ formatTime(row.created_at) }}</div>
+                    <div class="text-caption q-mt-xs text-grey-8">
+                      {{ row.items_description }}
+                    </div>
+                  </div>
+                  <div class="column items-end">
+                    <div class="text-subtitle1 text-weight-bold font-mono">৳{{ row.amount }}</div>
+                  </div>
+                </div>
+              </q-card>
+              <div
+                v-if="!customersStore.sessionBakiTransactions.length"
+                class="text-caption text-grey-6 text-center q-pa-md"
+              >
+                No add-ons recorded
+              </div>
+            </div>
+          </q-tab-panel>
+        </q-tab-panels>
       </q-card>
     </div>
 
     <PosSaleDialog
-      v-if="sessionStore.activeSession"
+      v-if="sessionStore.activeSession && showPosDialog"
       v-model="showPosDialog"
       :session-id="sessionStore.activeSession.id"
       :edit-entry="posEditEntry"
@@ -368,31 +457,16 @@
     />
 
     <!-- Operational Sessions Dialogs -->
-    <SessionOpenDialog v-model="showOpenDialog" @opened="handleSessionOpened" />
+    <SessionOpenDialog
+      v-if="showOpenDialog"
+      v-model="showOpenDialog"
+      @opened="handleSessionOpened"
+    />
     <SessionCloseDialog
-      v-if="sessionStore.activeSession"
+      v-if="sessionStore.activeSession && showCloseDialog"
       v-model="showCloseDialog"
       :session-id="sessionStore.activeSession.id"
       @closed="handleSessionClosed"
-    />
-
-    <!-- Customers Baki & Collection Dialogs -->
-    <BakiChargeDialog
-      v-if="sessionStore.activeSession"
-      v-model="showBakiDialog"
-      :session-id="sessionStore.activeSession.id"
-      :device-token="kioskStore.deviceToken"
-      :staff-id="kioskStore.currentStaff?.id"
-      @saved="onBakiRecorded"
-    />
-
-    <CollectionDialog
-      v-if="sessionStore.activeSession"
-      v-model="showCollectionDialog"
-      :session-id="sessionStore.activeSession.id"
-      :device-token="kioskStore.deviceToken"
-      :staff-id="kioskStore.currentStaff?.id"
-      @saved="onCollectionRecorded"
     />
   </q-page>
 </template>
@@ -413,8 +487,7 @@ import PosSaleDialog from '../../components/kiosk/PosSaleDialog.vue';
 import { formatMoney } from '../../utils/format';
 import { useI18n } from 'vue-i18n';
 import { useCustomersStore } from '../../stores/customers';
-import BakiChargeDialog from '../../components/customers/BakiChargeDialog.vue';
-import CollectionDialog from '../../components/customers/CollectionDialog.vue';
+
 import type { LedgerEntry } from '../../stores/ledger';
 
 const router = useRouter();
@@ -434,8 +507,39 @@ const showOpenDialog = ref(false);
 const showCloseDialog = ref(false);
 
 const customersStore = useCustomersStore();
-const showBakiDialog = ref(false);
-const showCollectionDialog = ref(false);
+
+const workspaceTab = ref('ledger');
+
+const addonColumns = computed<QTableColumn[]>(() => [
+  {
+    name: 'time',
+    align: 'left',
+    label: t('ledger.table.cols.dateTime'),
+    field: 'created_at',
+    sortable: true,
+  },
+  {
+    name: 'customer',
+    align: 'left',
+    label: t('customers.baki.customer') || 'Customer',
+    field: 'customer_name',
+    sortable: true,
+  },
+  {
+    name: 'description',
+    align: 'left',
+    label: t('customers.baki.itemsDescription') || 'Description',
+    field: 'items_description',
+    sortable: true,
+  },
+  {
+    name: 'value',
+    align: 'right',
+    label: t('ledger.table.cols.amount'),
+    field: 'amount',
+    sortable: true,
+  },
+]);
 
 const canLogBaki = computed(() => kioskStore.hasStaffPermission('meal_management', 'baki_write'));
 const canLogCollection = computed(() =>
@@ -459,6 +563,14 @@ function goToKioskAttendance() {
   void router.push({ name: 'kiosk-attendance' });
 }
 
+function goToKioskBaki() {
+  void router.push({ name: 'kiosk-baki' });
+}
+
+function goToKioskBakiPayment() {
+  void router.push({ name: 'kiosk-baki-payment' });
+}
+
 const ledgerStore = useLedgerStore();
 
 const canOpenSession = computed(() =>
@@ -480,22 +592,7 @@ const isActionBlocked = computed(() => {
 });
 
 function goToAdvancePayment() {
-  if (isActionBlocked.value) {
-    showWarning(t('kioskUI.workspace.sessionBlockedWarning'));
-    return;
-  }
   void router.push({ name: 'kiosk-advance-payment' });
-}
-
-async function loadCustomersData(businessDate: string) {
-  if (isMealManagementEnabled.value && canReadCustomers.value) {
-    try {
-      await customersStore.fetchCustomers({ activeOnly: true });
-      await customersStore.fetchAttendanceForDate(businessDate);
-    } catch (e) {
-      console.error('Failed to load customers/attendance data', e);
-    }
-  }
 }
 
 watch(
@@ -511,7 +608,9 @@ watch(
           await ledgerStore.fetchEntries({ sessionId: session.id });
         }
       }
-      await loadCustomersData(session.business_date);
+      if (isMealManagementEnabled.value) {
+        await customersStore.fetchSessionBakiTransactions(session.id).catch(() => null);
+      }
     } else {
       ledgerStore.clearLedger();
       customersStore.clearAttendanceToday();
@@ -519,32 +618,6 @@ watch(
   },
   { immediate: true },
 );
-
-async function onBakiRecorded() {
-  if (!sessionStore.activeSession) return;
-  if (isFinancialLedgerEnabled.value) {
-    if (canReadSessionLedger.value) {
-      await ledgerStore.fetchEntries({ sessionId: sessionStore.activeSession.id });
-    }
-    if (canReadCashBalance.value) {
-      await ledgerStore.fetchCashBalance(sessionStore.activeSession.id);
-    }
-  }
-  await customersStore.fetchCustomers({ activeOnly: true });
-}
-
-async function onCollectionRecorded() {
-  if (!sessionStore.activeSession) return;
-  if (isFinancialLedgerEnabled.value) {
-    if (canReadSessionLedger.value) {
-      await ledgerStore.fetchEntries({ sessionId: sessionStore.activeSession.id });
-    }
-    if (canReadCashBalance.value) {
-      await ledgerStore.fetchCashBalance(sessionStore.activeSession.id);
-    }
-  }
-  await customersStore.fetchCustomers({ activeOnly: true });
-}
 
 async function onPosRecorded() {
   if (!sessionStore.activeSession) return;
@@ -656,13 +729,6 @@ onMounted(async () => {
   await checkFeatureGate();
   if (isShiftSessionsEnabled.value) {
     await sessionStore.fetchActiveSession();
-  }
-  if (isMealManagementEnabled.value && canReadCustomers.value) {
-    try {
-      await customersStore.fetchCustomers({ activeOnly: true });
-    } catch (e) {
-      console.error('Failed to load customers on mount', e);
-    }
   }
   now.value = new Date();
   timerId = window.setInterval(() => {

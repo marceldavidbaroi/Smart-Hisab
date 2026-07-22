@@ -1116,6 +1116,7 @@ export type Database = {
         Args: { p_email: string; p_role_id: string; p_tenant_id: string };
         Returns: string;
       };
+      claim_pending_invitations: { Args: never; Returns: number };
       is_superadmin: { Args: never; Returns: boolean };
       is_tenant_member: { Args: { p_tenant_id: string }; Returns: boolean };
       is_tenant_owner: { Args: { p_tenant_id: string }; Returns: boolean };
@@ -1127,6 +1128,31 @@ export type Database = {
           name: string;
           start_time: string;
         }[];
+      };
+      list_attendance_for_date: {
+        Args: {
+          p_business_date: string;
+          p_device_token: string;
+          p_staff_id: string;
+          p_tenant_id: string;
+        };
+        Returns: {
+          attended_shifts: string[];
+          business_date: string;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          rate_applied: number;
+          session_id: string;
+          tenant_id: string;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'customer_daily_attendance';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
       };
       list_customers: {
         Args: {
@@ -1155,6 +1181,23 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      list_session_baki_transactions: {
+        Args: {
+          p_device_token: string;
+          p_session_id: string;
+          p_staff_id: string;
+          p_tenant_id: string;
+        };
+        Returns: {
+          amount: number;
+          created_at: string;
+          customer_id: string;
+          customer_name: string;
+          id: string;
+          items_description: string;
+          staff_name: string;
+        }[];
       };
       list_session_ledger_entries: {
         Args: {
@@ -1243,6 +1286,7 @@ export type Database = {
       record_baki_transaction: {
         Args: {
           p_amount: number;
+          p_business_date?: string;
           p_customer_id: string;
           p_device_token?: string;
           p_items_description: string;
@@ -1255,6 +1299,7 @@ export type Database = {
       record_customer_collection: {
         Args: {
           p_amount: number;
+          p_collected_at?: string;
           p_customer_id: string;
           p_device_token?: string;
           p_notes?: string;

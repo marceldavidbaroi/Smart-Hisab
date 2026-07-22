@@ -178,6 +178,68 @@
             </template>
           </q-table>
         </q-card>
+
+        <!-- Pending email invites -->
+        <q-card class="glass-card">
+          <q-card-section class="q-py-md border-bottom row items-center justify-between">
+            <div class="text-h6 text-bold text-slate-800">
+              {{ $t('workspace.members.pendingTable.title') }}
+            </div>
+            <q-btn
+              flat
+              round
+              dense
+              icon="refresh"
+              color="grey-7"
+              @click="loadPendingInvites"
+              :loading="loadingPending"
+            />
+          </q-card-section>
+
+          <q-table
+            :rows="pendingInvites"
+            :columns="pendingColumns"
+            row-key="id"
+            flat
+            binary-state-sort
+            class="bg-transparent border-none text-slate-800"
+            :loading="loadingPending"
+            :no-data-label="$t('workspace.members.pendingTable.noData')"
+            dense
+          >
+            <template #body-cell-role="props">
+              <q-td :props="props">
+                <q-badge outline color="primary" class="q-py-xs q-px-sm font-semibold">
+                  {{ props.row.tenant_roles?.name || 'Member' }}
+                </q-badge>
+              </q-td>
+            </template>
+
+            <template #body-cell-status="props">
+              <q-td :props="props">
+                <q-badge color="warning" class="text-weight-bold text-white uppercase">
+                  {{ props.row.status }}
+                </q-badge>
+              </q-td>
+            </template>
+
+            <template #body-cell-actions="props">
+              <q-td :props="props" class="text-right">
+                <q-btn
+                  v-if="canManage"
+                  flat
+                  round
+                  dense
+                  icon="delete"
+                  color="negative"
+                  @click="handleCancelInvite(props.row)"
+                >
+                  <q-tooltip>{{ $t('workspace.members.pendingTable.cancelTooltip') }}</q-tooltip>
+                </q-btn>
+              </q-td>
+            </template>
+          </q-table>
+        </q-card>
       </q-tab-panel>
 
       <!-- Tab 2: Kiosks & Staff -->
@@ -910,8 +972,10 @@ import { useTenantStore } from '../../stores/tenant';
 import {
   getTenantMembers,
   getTenantRoles,
+  getTenantInvitations,
   inviteUser,
   removeMember,
+  cancelInvitation,
 } from '../../services/multiTenant';
 import {
   getStaffMembers,
@@ -945,14 +1009,29 @@ export interface MemberWithProfile {
   } | null;
 }
 
+export interface PendingInviteRow {
+  id: string;
+  email: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+  tenant_roles: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
+}
+
 // Tab state
 const tab = ref('team');
 
 // Team Members state
 const members = ref<MemberWithProfile[]>([]);
+const pendingInvites = ref<PendingInviteRow[]>([]);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const roles = ref<any[]>([]);
 const loadingMembers = ref(false);
+const loadingPending = ref(false);
 
 const errorMsg = ref('');
 const successMsg = ref('');
@@ -1014,6 +1093,36 @@ const columns = computed(() => [
     name: 'actions',
     align: 'right' as const,
     label: t('workspace.members.teamTable.cols.actions'),
+    field: 'actions',
+  },
+]);
+
+const pendingColumns = computed(() => [
+  {
+    name: 'email',
+    align: 'left' as const,
+    label: t('workspace.members.pendingTable.cols.email'),
+    field: 'email',
+    sortable: true,
+  },
+  {
+    name: 'role',
+    align: 'left' as const,
+    label: t('workspace.members.pendingTable.cols.role'),
+    field: 'tenant_roles',
+    sortable: true,
+  },
+  {
+    name: 'status',
+    align: 'left' as const,
+    label: t('workspace.members.pendingTable.cols.status'),
+    field: 'status',
+    sortable: true,
+  },
+  {
+    name: 'actions',
+    align: 'right' as const,
+    label: t('workspace.members.pendingTable.cols.actions'),
     field: 'actions',
   },
 ]);
@@ -1100,6 +1209,19 @@ const loadMembers = async () => {
   }
 };
 
+const loadPendingInvites = async () => {
+  if (!tenantStore.activeTenant) return;
+  loadingPending.value = true;
+  try {
+    const list = await getTenantInvitations(tenantStore.activeTenant.id);
+    pendingInvites.value = (list || []) as unknown as PendingInviteRow[];
+  } catch (err) {
+    console.error('Failed to load pending invites:', err);
+  } finally {
+    loadingPending.value = false;
+  }
+};
+
 const loadRoles = async () => {
   if (!tenantStore.activeTenant) return;
   try {
@@ -1120,15 +1242,40 @@ const handleInvite = async () => {
   errorMsg.value = '';
   successMsg.value = '';
   try {
-    await inviteUser(tenantStore.activeTenant.id, inviteEmail.value, inviteRole.value);
-    successMsg.value = t('workspace.members.messages.inviteSuccess', { email: inviteEmail.value });
+    const result = await inviteUser(
+      tenantStore.activeTenant.id,
+      inviteEmail.value,
+      inviteRole.value,
+    );
+    const email = inviteEmail.value;
+    successMsg.value =
+      result === 'member_added'
+        ? t('workspace.members.messages.inviteMemberAdded', { email })
+        : t('workspace.members.messages.inviteSuccess', { email });
     showInviteDialog.value = false;
     inviteEmail.value = '';
+    await Promise.all([loadMembers(), loadPendingInvites()]);
   } catch (err) {
     const error = err as Error;
     errorMsg.value = error.message || t('workspace.members.messages.inviteFailed');
   } finally {
     submittingInvite.value = false;
+  }
+};
+
+const handleCancelInvite = async (invite: PendingInviteRow) => {
+  if (!tenantStore.activeTenant) return;
+  errorMsg.value = '';
+  successMsg.value = '';
+  try {
+    await cancelInvitation(tenantStore.activeTenant.id, invite.id);
+    successMsg.value = t('workspace.members.messages.cancelInviteSuccess', {
+      email: invite.email,
+    });
+    await loadPendingInvites();
+  } catch (err) {
+    const error = err as Error;
+    errorMsg.value = error.message || t('workspace.members.messages.cancelInviteFailed');
   }
 };
 
@@ -1573,6 +1720,7 @@ async function handleDeleteRole() {
 
 onMounted(() => {
   void loadMembers();
+  void loadPendingInvites();
   void loadRoles();
   void loadStaff();
   void loadStaffRoles();

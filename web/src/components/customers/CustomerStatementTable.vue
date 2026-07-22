@@ -164,9 +164,10 @@ interface CollectionItem {
 }
 
 const props = defineProps<{
-  attendance: AttendanceItem[];
-  baki: BakiItem[];
-  collections: CollectionItem[];
+  attendance?: AttendanceItem[];
+  baki?: BakiItem[];
+  collections?: CollectionItem[];
+  statement?: TimelineEvent[];
   loading?: boolean;
 }>();
 
@@ -184,42 +185,61 @@ interface TimelineEvent {
 }
 
 const sortedTimeline = computed<TimelineEvent[]>(() => {
+  if (props.statement) {
+    return props.statement.map((s) => ({
+      ...s,
+      // Translate description if it is exactly one of standard types
+      description:
+        s.description === 'Daily contract charge'
+          ? t('customers.detail.types.attendance')
+          : s.description === 'Collection'
+            ? t('customers.detail.types.collection')
+            : s.description,
+    }));
+  }
+
   const list: TimelineEvent[] = [];
 
-  props.attendance.forEach((a) => {
-    list.push({
-      uniqueId: `att-${a.id}`,
-      date: a.business_date,
-      type: 'attendance',
-      description: `${t('customers.detail.types.attendance')} (${a.attended_shifts.join(', ')})`,
-      amount: Number(a.rate_applied),
-      session_id: a.session_id,
+  if (props.attendance) {
+    props.attendance.forEach((a) => {
+      list.push({
+        uniqueId: `att-${a.id}`,
+        date: a.business_date,
+        type: 'attendance',
+        description: `${t('customers.detail.types.attendance')} (${a.attended_shifts.join(', ')})`,
+        amount: Number(a.rate_applied),
+        session_id: a.session_id,
+      });
     });
-  });
+  }
 
-  props.baki.forEach((b) => {
-    list.push({
-      uniqueId: `baki-${b.id}`,
-      date: b.business_date,
-      type: 'baki',
-      description: b.items_description,
-      amount: Number(b.amount),
-      session_id: b.session_id,
+  if (props.baki) {
+    props.baki.forEach((b) => {
+      list.push({
+        uniqueId: `baki-${b.id}`,
+        date: b.business_date,
+        type: 'baki',
+        description: b.items_description,
+        amount: Number(b.amount),
+        session_id: b.session_id,
+      });
     });
-  });
+  }
 
-  props.collections.forEach((c) => {
-    list.push({
-      uniqueId: `col-${c.id}`,
-      date: c.collected_at,
-      type: 'collection',
-      description: t('customers.detail.types.collection'),
-      amount: Number(c.amount),
-      method: c.payment_method,
-      notes: c.notes || undefined,
-      session_id: c.session_id,
+  if (props.collections) {
+    props.collections.forEach((c) => {
+      list.push({
+        uniqueId: `col-${c.id}`,
+        date: c.collected_at,
+        type: 'collection',
+        description: t('customers.detail.types.collection'),
+        amount: Number(c.amount),
+        method: c.payment_method,
+        notes: c.notes || undefined,
+        session_id: c.session_id,
+      });
     });
-  });
+  }
 
   // Sort descending
   return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

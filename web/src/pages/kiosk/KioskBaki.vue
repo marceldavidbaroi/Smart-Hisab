@@ -15,10 +15,10 @@
         />
         <div>
           <h1 class="text-h5 text-weight-bold text-slate-800 q-ma-none">
-            {{ $t('customers.advancePayment.title') }}
+            {{ $t('customers.baki.title') }}
           </h1>
           <p class="text-caption text-grey-7 q-ma-none q-mt-xs">
-            {{ $t('customers.advancePayment.subtitle') }}
+            {{ $t('customers.baki.subtitle') }}
           </p>
         </div>
       </div>
@@ -34,7 +34,7 @@
           outlined
           bg-color="white"
           clearable
-          :placeholder="$t('customers.advancePayment.searchPlaceholder')"
+          :placeholder="$t('customers.baki.searchPlaceholder')"
           style="min-height: 48px"
         >
           <template v-slot:prepend>
@@ -44,14 +44,14 @@
       </div>
     </div>
 
-    <!-- Session Warning Banner (Cash advances disabled without session) -->
-    <div v-if="!hasActiveSession" class="q-mb-md">
+    <!-- Session Warning Banner (Write Blocked) -->
+    <div v-if="isWriteBlocked" class="q-mb-md">
       <q-banner class="bg-amber-1 text-amber-9 border-all rounded-borders q-pa-sm">
         <template v-slot:avatar>
           <q-icon name="warning" color="warning" size="sm" />
         </template>
         <span class="text-caption text-weight-medium">
-          {{ $t('customers.advancePayment.noSessionWarning') }}
+          {{ $t('customers.baki.noSessionWarning') }}
         </span>
       </q-banner>
     </div>
@@ -61,7 +61,7 @@
       <q-spinner color="primary" size="32px" />
     </div>
 
-    <!-- Active Customers List -->
+    <!-- Walk-in Baki Customer Cards List -->
     <div v-else>
       <div v-if="filteredCustomers.length > 0" class="row q-col-gutter-md">
         <div
@@ -84,7 +84,7 @@
                     <q-icon name="business" size="14px" class="q-mr-xs text-grey-6" />
                     <span class="ellipsis">{{ customer.factory_unit || 'No Institution' }}</span>
                   </div>
-                  <!-- Outstanding/Prepaid balance chip -->
+                  <!-- Outstanding balance chip -->
                   <div class="q-mt-sm">
                     <OutstandingBalanceChip :balance="customer.outstanding_balance" />
                   </div>
@@ -92,17 +92,17 @@
               </div>
             </q-card-section>
 
-            <q-card-actions class="q-px-md q-pb-md q-pt-none border-top row">
+            <q-card-actions class="q-px-md q-pb-md q-pt-none border-top">
               <q-btn
                 unelevated
                 no-caps
                 color="primary"
-                icon="payment"
-                :label="$t('customers.advancePayment.recordAdvanceBtn')"
-                class="col-12 text-weight-bold cursor-pointer"
+                icon="add"
+                :label="$t('customers.baki.addBakiBtn')"
+                class="full-width text-weight-bold cursor-pointer"
                 style="min-height: 48px"
                 :disable="isWriteBlocked"
-                @click="openAdvanceDialog(customer)"
+                @click="openAddBaki(customer)"
               />
             </q-card-actions>
           </q-card>
@@ -111,20 +111,20 @@
 
       <!-- Empty State -->
       <div v-else class="text-center text-grey-6 q-py-xl text-subtitle2">
-        {{ $t('customers.advancePayment.empty') }}
+        {{ $t('customers.baki.empty') }}
       </div>
     </div>
 
-    <!-- Advance Payment Form Dialog -->
-    <AdvancePaymentDialog
-      v-if="showAdvanceDialog && selectedCustomer"
-      v-model="showAdvanceDialog"
+    <BakiEntryDialog
+      v-if="showEntryDialog && selectedCustomer"
+      v-model="showEntryDialog"
       :customer="selectedCustomer"
       :session-id="sessionId"
       :business-date="businessDate"
+      :session-shift-name="sessionStore.activeSession?.shifts?.name ?? null"
       :device-token="kioskStore.deviceToken ?? null"
       :staff-id="kioskStore.currentStaff?.id ?? null"
-      @saved="onAdvanceSaved"
+      @saved="onBakiSaved"
     />
   </q-page>
 </template>
@@ -139,7 +139,7 @@ import { useCustomersStore } from '../../stores/customers';
 import type { Customer } from '../../stores/customers';
 import { useFeedback } from '../../composables/useFeedback';
 import OutstandingBalanceChip from '../../components/customers/OutstandingBalanceChip.vue';
-import AdvancePaymentDialog from '../../components/customers/AdvancePaymentDialog.vue';
+import BakiEntryDialog from '../../components/customers/BakiEntryDialog.vue';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -153,25 +153,23 @@ const searchQuery = ref('');
 const loading = ref(false);
 
 // Dialog States
-const showAdvanceDialog = ref(false);
+const showEntryDialog = ref(false);
 const selectedCustomer = ref<Customer | null>(null);
 
 // Computed Gates & Permissions
-const canWriteCollection = computed(() =>
-  kioskStore.hasStaffPermission('meal_management', 'collections_write'),
-);
+const canWriteBaki = computed(() => kioskStore.hasStaffPermission('meal_management', 'baki_write'));
 const hasActiveSession = computed(() => !!sessionStore.activeSession);
-const isWriteBlocked = computed(() => !canWriteCollection.value);
+const isWriteBlocked = computed(() => !hasActiveSession.value || !canWriteBaki.value);
 
 const sessionId = computed(() => sessionStore.activeSession?.id || '');
 const businessDate = computed(() => sessionStore.activeSession?.business_date || '');
 
-// Filtered Active Customers (both contract workers and walk-in baki)
+// Filtered Walk-in Baki Customers
 const filteredCustomers = computed(() => {
   const q = (searchQuery.value || '').toLowerCase().trim();
-  const rawCustomers = customersStore.customers;
-  if (!q) return rawCustomers;
-  return rawCustomers.filter(
+  const rawBakiCustomers = customersStore.customers.filter((c) => c.category === 'walk_in_baki');
+  if (!q) return rawBakiCustomers;
+  return rawBakiCustomers.filter(
     (c) => c.full_name.toLowerCase().includes(q) || (c.phone && c.phone.toLowerCase().includes(q)),
   );
 });
@@ -180,19 +178,12 @@ function goBack() {
   void router.push({ name: 'kiosk-workspace' });
 }
 
-function openAdvanceDialog(customer: Customer) {
+function openAddBaki(customer: Customer) {
   selectedCustomer.value = customer;
-  showAdvanceDialog.value = true;
+  showEntryDialog.value = true;
 }
 
-async function onAdvanceSaved(newBalance: number) {
-  if (selectedCustomer.value) {
-    const row = customersStore.customers.find((c) => c.id === selectedCustomer.value?.id);
-    if (row) {
-      row.outstanding_balance = newBalance;
-    }
-  }
-  // Refresh data list as fallback to sync all balances
+async function onBakiSaved() {
   await fetchData();
 }
 
@@ -205,12 +196,13 @@ async function fetchData() {
     // 1. Fetch active session
     await sessionStore.fetchActiveSession();
 
-    // 2. Fetch active customers (all)
+    // 2. Fetch active walk-in baki customers
     await customersStore.fetchCustomers({
       activeOnly: true,
+      category: 'walk_in_baki',
     });
   } catch (err) {
-    void feedback.showApiError(err, t('customers.advancePayment.errors.loadFailed'));
+    void feedback.showApiError(err, t('customers.baki.errors.loadFailed'));
   } finally {
     loading.value = false;
   }

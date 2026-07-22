@@ -38,6 +38,17 @@ function resolveTenantId(): string | null {
 export const useCustomersStore = defineStore('customers', () => {
   const customers = ref<Customer[]>([]);
   const attendanceToday = ref<DailyAttendance[]>([]);
+  const sessionBakiTransactions = ref<
+    {
+      id: string;
+      customer_id: string;
+      customer_name: string;
+      items_description: string;
+      amount: number;
+      created_at: string;
+      staff_name: string | null;
+    }[]
+  >([]);
   const loading = ref(false);
   const lastError = ref<string | null>(null);
 
@@ -123,19 +134,32 @@ export const useCustomersStore = defineStore('customers', () => {
   async function fetchAttendanceForDate(businessDate: string) {
     const tenantId = resolveTenantId();
     if (!tenantId) return;
-    const { data, error } = await supabase
-      .from('customer_daily_attendance')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .eq('business_date', businessDate);
-    if (error) throw error;
-    attendanceToday.value = (data ?? []) as DailyAttendance[];
+    const kiosk = useKioskStore();
+    if (kiosk.deviceToken && kiosk.currentStaff?.id) {
+      const { data, error } = await supabase.rpc('list_attendance_for_date', {
+        p_tenant_id: tenantId,
+        p_device_token: kiosk.deviceToken,
+        p_staff_id: kiosk.currentStaff.id,
+        p_business_date: businessDate,
+      });
+      if (error) throw error;
+      attendanceToday.value = (data ?? []) as DailyAttendance[];
+    } else {
+      const { data, error } = await supabase
+        .from('customer_daily_attendance')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('business_date', businessDate);
+      if (error) throw error;
+      attendanceToday.value = (data ?? []) as DailyAttendance[];
+    }
   }
 
   async function toggleAttendance(params: {
     customerId: string;
     sessionId: string;
     shiftName: string;
+    businessDate: string;
     deviceToken?: string | null | undefined;
     staffId?: string | null | undefined;
   }) {
@@ -151,7 +175,10 @@ export const useCustomersStore = defineStore('customers', () => {
     });
     if (error) throw error;
 
-    const res = data as unknown as { action_taken: string; new_balance: number };
+    const res = (Array.isArray(data) ? data[0] : data) as unknown as {
+      action_taken: string;
+      new_balance: number;
+    };
 
     // Update customer balance locally
     const customer = customers.value.find((c) => c.id === params.customerId);
@@ -167,7 +194,7 @@ export const useCustomersStore = defineStore('customers', () => {
         id: Math.random().toString(36).substring(7),
         customer_id: params.customerId,
         session_id: params.sessionId,
-        business_date: new Date().toISOString().split('T')[0] || '',
+        business_date: params.businessDate,
         attended_shifts: [params.shiftName],
         rate_applied: dailyRate,
       });
@@ -193,6 +220,7 @@ export const useCustomersStore = defineStore('customers', () => {
     amount: number;
     deviceToken?: string | null | undefined;
     staffId?: string | null | undefined;
+    businessDate?: string | null | undefined;
   }) {
     const tenantId = resolveTenantId();
     if (!tenantId) throw new Error('No active tenant');
@@ -204,6 +232,7 @@ export const useCustomersStore = defineStore('customers', () => {
       p_amount: params.amount,
       p_device_token: params.deviceToken ?? null,
       p_staff_id: params.staffId ?? null,
+      p_business_date: params.businessDate ?? null,
     });
     if (error) throw error;
     return data as number;
@@ -217,6 +246,7 @@ export const useCustomersStore = defineStore('customers', () => {
     notes?: string | undefined;
     deviceToken?: string | null | undefined;
     staffId?: string | null | undefined;
+    collectedAt?: string | null | undefined;
   }) {
     const tenantId = resolveTenantId();
     if (!tenantId) throw new Error('No active tenant');
@@ -229,24 +259,61 @@ export const useCustomersStore = defineStore('customers', () => {
       p_notes: params.notes ?? null,
       p_device_token: params.deviceToken ?? null,
       p_staff_id: params.staffId ?? null,
+      p_collected_at: params.collectedAt ?? null,
     });
     if (error) throw error;
     return data as number;
   }
 
+  async function fetchSessionBakiTransactions(sessionId: string) {
+    const tenantId = resolveTenantId();
+    if (!tenantId) return;
+    const kiosk = useKioskStore();
+    if (kiosk.deviceToken && kiosk.currentStaff?.id) {
+      const { data, error } = await supabase.rpc('list_session_baki_transactions', {
+        p_tenant_id: tenantId,
+        p_device_token: kiosk.deviceToken,
+        p_staff_id: kiosk.currentStaff.id,
+        p_session_id: sessionId,
+      });
+      if (error) throw error;
+      sessionBakiTransactions.value = data ?? [];
+    } else {
+      const { data, error } = await supabase
+        .from('baki_transactions')
+        .select('*, customers(full_name)')
+        .eq('tenant_id', tenantId)
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      sessionBakiTransactions.value = (data ?? []).map((b) => ({
+        id: b.id,
+        customer_id: b.customer_id,
+        customer_name: b.customers?.full_name || 'Unknown',
+        items_description: b.items_description,
+        amount: b.amount,
+        created_at: b.created_at,
+        staff_name: null,
+      }));
+    }
+  }
+
   function clearCustomers() {
     customers.value = [];
     attendanceToday.value = [];
+    sessionBakiTransactions.value = [];
     lastError.value = null;
   }
 
   function clearAttendanceToday() {
     attendanceToday.value = [];
+    sessionBakiTransactions.value = [];
   }
 
   return {
     customers,
     attendanceToday,
+    sessionBakiTransactions,
     loading,
     lastError,
     fetchCustomers,
@@ -255,6 +322,7 @@ export const useCustomersStore = defineStore('customers', () => {
     toggleAttendance,
     recordBaki,
     recordCollection,
+    fetchSessionBakiTransactions,
     clearCustomers,
     clearAttendanceToday,
   };

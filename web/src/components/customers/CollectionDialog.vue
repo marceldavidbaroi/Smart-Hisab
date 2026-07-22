@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useCustomersStore } from '../../stores/customers';
 import { useFeedback } from '../../composables/useFeedback';
@@ -114,6 +114,14 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const customersStore = useCustomersStore();
 const feedback = useFeedback();
+
+onMounted(async () => {
+  try {
+    await customersStore.fetchCustomers({ activeOnly: true });
+  } catch (e) {
+    console.error('Failed to load customers in CollectionDialog:', e);
+  }
+});
 
 const isOpen = computed({
   get: () => props.modelValue,

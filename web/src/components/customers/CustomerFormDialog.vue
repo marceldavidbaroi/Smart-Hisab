@@ -130,6 +130,7 @@ const props = defineProps<{
   customer?: Customer | null;
   deviceToken?: string | null;
   staffId?: string | null;
+  defaultCategory?: CustomerCategory | null;
 }>();
 
 const emit = defineEmits<{
@@ -177,30 +178,34 @@ const categoryOptions = computed(() => [
   { label: t('customers.form.categories.walk_in_baki'), value: 'walk_in_baki' },
 ]);
 
+function resetForm() {
+  if (props.customer) {
+    form.value = {
+      full_name: props.customer.full_name,
+      category: props.customer.category,
+      phone: props.customer.phone || '',
+      contract_daily_rate: props.customer.contract_daily_rate,
+      contract_shifts: props.customer.contract_shifts || [],
+      factory_unit: props.customer.factory_unit || '',
+      is_active: props.customer.is_active,
+    };
+  } else {
+    form.value = {
+      full_name: '',
+      category: props.defaultCategory || 'contract_worker',
+      phone: '',
+      contract_daily_rate: null,
+      contract_shifts: [],
+      factory_unit: '',
+      is_active: true,
+    };
+  }
+}
+
 watch(
   () => props.customer,
-  (newCust) => {
-    if (newCust) {
-      form.value = {
-        full_name: newCust.full_name,
-        category: newCust.category,
-        phone: newCust.phone || '',
-        contract_daily_rate: newCust.contract_daily_rate,
-        contract_shifts: newCust.contract_shifts || [],
-        factory_unit: newCust.factory_unit || '',
-        is_active: newCust.is_active,
-      };
-    } else {
-      form.value = {
-        full_name: '',
-        category: 'contract_worker',
-        phone: '',
-        contract_daily_rate: null,
-        contract_shifts: [],
-        factory_unit: '',
-        is_active: true,
-      };
-    }
+  () => {
+    resetForm();
   },
   { immediate: true },
 );
@@ -246,7 +251,10 @@ async function fetchShifts() {
 
 watch(isOpen, (newVal) => {
   if (newVal) {
+    resetForm();
     void fetchShifts();
+  } else {
+    resetForm();
   }
 });
 

@@ -143,6 +143,12 @@ export const useTenantStore = defineStore('tenant', () => {
         userProfile.value = profile;
       }
 
+      // Claim email-based invites so pending tenants appear in the selector
+      const { error: claimErr } = await supabase.rpc('claim_pending_invitations');
+      if (claimErr) {
+        console.error('Error claiming pending invitations:', claimErr.message);
+      }
+
       // Load tenants user is member of
       const memberships = await getUserTenants(user.value.id);
       myTenants.value = ((memberships || []) as unknown as TenantMembership[]).map((m) => {
