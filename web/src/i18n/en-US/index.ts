@@ -387,8 +387,8 @@ export default {
       },
       deleteDialog: {
         title: 'Delete Workspace',
-        desc: 'This will permanently delete {name}. Please type the workspace slug {slug} to confirm.',
-        placeholder: 'Type slug to confirm',
+        desc: 'This will permanently delete {name}. Please type DELETE_{name} to confirm.',
+        placeholder: 'DELETE_{name}',
         cancelBtn: 'Cancel',
         deleteBtn: 'Permanently Delete',
       },

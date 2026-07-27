@@ -532,14 +532,26 @@ const handleToggleStatus = async (tenantRow: Tenant) => {
 
 const handleDeleteTenant = (tenantRow: Tenant) => {
   $q.dialog({
-    title: 'Confirm Tenant Deletion',
+    title: `<div class="row items-center">
+      <div class="q-pa-xs rounded-borders bg-red-1 text-red-9 flex flex-center q-mr-sm" style="width: 36px; height: 36px; border-radius: 50%;">
+        <i class="q-icon material-icons" style="font-size: 20px;">delete_forever</i>
+      </div>
+      <span class="text-weight-bold text-subtitle1 text-grey-9">Confirm Tenant Deletion</span>
+    </div>`,
     message: `Are you sure you want to permanently delete the tenant "${tenantRow.name}"? This will permanently delete all related workspaces, settings, members, ledger, and customer records. This action cannot be undone.`,
-    cancel: true,
+    html: true,
+    cancel: {
+      label: 'Cancel',
+      flat: true,
+      color: 'grey-7',
+      class: 'cursor-pointer',
+    },
     persistent: true,
     ok: {
       color: 'negative',
       label: 'Delete Permanently',
       unelevated: true,
+      class: 'q-px-md cursor-pointer text-weight-bold rounded-borders',
     },
   }).onOk(() => {
     void (async () => {

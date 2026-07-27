@@ -5,7 +5,7 @@ import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'group flex row items-center justify-center rounded-md web:ring-offset-background web:transition-colors web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2',
+  'group flex flex-row items-center justify-center rounded-md web:ring-offset-background web:transition-colors web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
@@ -32,7 +32,7 @@ const buttonVariants = cva(
 );
 
 const buttonTextVariants = cva(
-  'web:whitespace-nowrap text-sm font-medium text-foreground web:transition-colors',
+  'text-center font-medium text-foreground web:whitespace-nowrap web:transition-colors',
   {
     variants: {
       variant: {
@@ -44,9 +44,9 @@ const buttonTextVariants = cva(
         link: 'text-primary underline-offset-4',
       },
       size: {
-        default: 'text-base',
+        default: 'text-sm',
         sm: 'text-xs',
-        lg: 'text-lg',
+        lg: 'text-base',
         icon: '',
       },
     },
@@ -64,10 +64,7 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
   ({ className, variant, size, children, ...props }, ref) => {
     return (
       <TextClassContext.Provider
-        value={cn(
-          buttonTextVariants({ variant, size }),
-          className
-        )}
+        value={buttonTextVariants({ variant, size })}
       >
         <Pressable
           className={cn(

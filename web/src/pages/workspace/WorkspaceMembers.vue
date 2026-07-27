@@ -475,15 +475,15 @@
 
     <!-- 3. Confirm Remove Member Dialog -->
     <q-dialog v-model="showConfirmRemove" persistent>
-      <q-card class="bg-slate-950 text-slate-800 border-all rounded-borders q-pa-md">
-        <q-card-section class="row items-center">
-          <q-avatar icon="warning" color="red-9" text-color="white" class="q-mr-md" />
-          <span class="text-h6 text-bold text-slate-800">{{
+      <q-card class="bg-white text-dark border-all rounded-borders q-pa-md" style="width: 420px; max-width: 90vw;">
+        <q-card-section class="row items-center q-pb-none">
+          <q-avatar icon="person_remove" color="red-1" text-color="red-9" size="40px" class="q-mr-sm" />
+          <span class="text-h6 text-weight-bold text-grey-9">{{
             $t('workspace.members.removeDialog.title')
           }}</span>
         </q-card-section>
 
-        <q-card-section class="q-py-md text-slate-600">
+        <q-card-section class="q-py-md text-grey-7">
           {{
             $t('workspace.members.removeDialog.message', {
               name: selectedMember?.user_profile?.full_name || '',
@@ -491,12 +491,13 @@
           }}
         </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn flat :label="$t('common.cancel')" v-close-popup color="grey-7" />
+        <q-card-actions align="right" class="q-gutter-xs">
+          <q-btn flat :label="$t('common.cancel')" v-close-popup color="grey-7" class="cursor-pointer" />
           <q-btn
-            flat
+            unelevated
             :label="$t('workspace.members.removeDialog.confirmBtn')"
             color="negative"
+            class="q-px-md cursor-pointer text-weight-bold rounded-borders"
             @click="handleRemove"
             :loading="removingMember"
           />
@@ -932,10 +933,10 @@
 
     <!-- Confirm Delete Role Dialog -->
     <q-dialog v-model="showConfirmDeleteRole" persistent>
-      <q-card class="bg-white text-dark border-all rounded-borders q-pa-md">
-        <q-card-section class="row items-center">
-          <q-avatar icon="delete" color="red-1" text-color="red-9" class="q-mr-md" />
-          <span class="text-h6 text-weight-bold">{{
+      <q-card class="bg-white text-dark border-all rounded-borders q-pa-md" style="width: 420px; max-width: 90vw;">
+        <q-card-section class="row items-center q-pb-none">
+          <q-avatar icon="delete_forever" color="red-1" text-color="red-9" size="40px" class="q-mr-sm" />
+          <span class="text-h6 text-weight-bold text-grey-9">{{
             $t('workspace.members.deleteRoleDialog.title')
           }}</span>
         </q-card-section>
@@ -944,21 +945,22 @@
           {{ $t('workspace.members.deleteRoleDialog.message', { name: roleToDelete?.name || '' }) }}
         </q-card-section>
 
-        <q-card-actions align="right">
+        <q-card-actions align="right" class="q-gutter-xs">
           <q-btn
             flat
             :label="$t('common.cancel')"
             v-close-popup
             color="grey-7"
+            class="cursor-pointer"
             :disable="deletingRole"
           />
           <q-btn
-            flat
+            unelevated
             :label="$t('common.delete')"
-            color="red-5"
+            color="negative"
             @click="handleDeleteRole"
             :loading="deletingRole"
-            class="text-weight-bold"
+            class="q-px-md cursor-pointer text-weight-bold rounded-borders"
           />
         </q-card-actions>
       </q-card>

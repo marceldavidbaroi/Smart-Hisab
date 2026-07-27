@@ -109,14 +109,26 @@ async function loadSessions() {
 
 function handleReopen(sessionId: string) {
   $q.dialog({
-    title: t('workspace.sessions.reopenDialogTitle'),
+    title: `<div class="row items-center">
+      <div class="q-pa-xs rounded-borders bg-amber-1 text-warning flex flex-center q-mr-sm" style="width: 36px; height: 36px; border-radius: 50%;">
+        <i class="q-icon material-icons" style="font-size: 20px;">lock_open</i>
+      </div>
+      <span class="text-weight-bold text-subtitle1 text-grey-9">${t('workspace.sessions.reopenDialogTitle')}</span>
+    </div>`,
     message: t('workspace.sessions.reopenDialogMsg'),
-    cancel: true,
+    html: true,
+    cancel: {
+      label: t('common.cancel'),
+      flat: true,
+      color: 'grey-7',
+      class: 'cursor-pointer',
+    },
     persistent: true,
     ok: {
       label: t('workspace.sessions.reopenBtn'),
       color: 'warning',
-      flat: true,
+      unelevated: true,
+      class: 'q-px-md cursor-pointer text-weight-bold text-white rounded-borders',
     },
   }).onOk(() => {
     void (async () => {

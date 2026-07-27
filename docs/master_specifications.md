@@ -7,7 +7,7 @@ This document outlines the decoupled, multi-tenant modular architecture of the C
 ## Table of Contents
 * [1. System-Wide Decoupling & Integration Strategy](#decoupling-strategy)
 * [2. Phase-Based Implementation Roadmap (MVP & Spinoff Order)](#roadmap)
-* [3. Core Module: Operational Shifts & Sessions (`shift-sessions`)](#shift-sessions)
+* [3. Core Module: Day Tracking & Automated Shifts (`day-tracking`)](#day-tracking)
 * [4. Module: Staff Attendance & Payroll (`staff-payroll`)](#staff-payroll)
 * [5. Module: Meal & Customer Management (`meal-management`)](#meal-management)
 * [6. Module: Procurement & Supplier Management (`procurement`)](#procurement)
@@ -24,7 +24,7 @@ To allow each module (and its submodules) to be split into separate microservice
 *   **Decoupled Schema Reference Map:**
     ```
     ┌──────────────────────────┐          ┌──────────────────────────┐
-    │  Shift & Session Module  │◄─────────┤ Staff & Payroll Module   │
+    │   Day Tracking Module    │◄─────────┤ Staff & Payroll Module   │
     │  (Temporal Context)      │◄─────────┤ (attendance, payroll)    │
     └──────────────▲───────────┘          └──────────────────────────┘
                    │
@@ -47,7 +47,7 @@ To construct this system systematically while remaining adaptable for spinoff se
 
 ```mermaid
 graph TD
-    P1["Phase 1: Login, Device Pairing & Scope Routing [MVP]"] --> P2["Phase 2: Foundation & Operational Session Context [MVP]"]
+    P1["Phase 1: Login, Device Pairing & Scope Routing [MVP]"] --> P2["Phase 2: Foundation & Day Tracking Context [MVP]"]
     P2 --> P3["Phase 3: Immutable Ledger & Cash Drawer [MVP]"]
     P3 --> P4["Phase 4: Core Canteen & Customer Operations [MVP]"]
     P4 --> P5["Phase 5: Staff Management & Payroll [Spinoff Module]"]
@@ -60,10 +60,10 @@ graph TD
     *   Tenant/Role setup & guards: [Multi-Tenant Architecture Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/multi_tenant_architecture.md)
     *   Kiosk pairing & staff PINs: [Device Pairing & PIN Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/device_pairing_and_pin_auth.md)
 
-### Phase 2: Foundation & Operational Session Context [MVP]
-*   **Objective:** Establish workspace scopes and temporal operational limits.
-*   **Detailed specs:** 
-    *   Shift drawers: [Operational Shifts & Sessions Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/operational_shifts_sessions.md) (refer to [Section 3: Operational Shifts & Sessions](#shift-sessions))
+### Phase 2: Foundation & Day Tracking Context [MVP]
+*   **Goal:** Build the essential daily business day lifecycle, cash flow tracking, and the core meal recording structures required to run a day.
+*   **Deliverables:**
+    *   Day Tracking: [Day Tracking Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/tasks/day_tracking_automated_shifts.md) (refer to [Section 3: Day Tracking & Automated Shifts](#day-tracking))
 
 ### Phase 3: Ledger & Cash Register [MVP]
 *   **Objective:** Build append-only audit ledger and dynamic dashboards.
@@ -89,26 +89,27 @@ graph TD
 
 ---
 
-## 3. Core Module: Operational Shifts & Sessions (`shift-sessions`) <a id="shift-sessions"></a>
+## 3. Core Module: Day Tracking & Automated Shifts (`day-tracking`) <a id="day-tracking"></a>
 
 > [!NOTE]
-> For the complete data models, security controls, database triggers, and API flows of this module, refer to the [Operational Shifts & Sessions Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/operational_shifts_sessions.md).
+> For the complete data models, security controls, database triggers, and API flows of this module, refer to the [Day Tracking Specifications](file:///Users/daviditc/Documents/Personal%20Project/smart-hisab/docs/tasks/day_tracking_automated_shifts.md).
 
-This module manages the temporal and physical cash drawer context for all operations. Instead of treating "date and shift" as mere attributes on transactions, the system models them as a formal **Operational Session**. Almost all records generated in other modules refer back to an active `session_id`.
+This module manages the temporal and physical cash drawer context for all operations. Instead of treating "date and shift" as mere attributes on transactions, the system models them as a formal **Business Day**. Almost all records generated in other modules refer back to an active `business_day_id` and auto-selected `shift_id`.
 
 ### Submodules
-1.  **Shift Configuration:**
-    *   Defines recurring operational shifts (e.g., Breakfast, Lunch, Afternoon Snacks, Dinner).
-    *   Tracks shift window rules (start/end target times).
-2.  **Session Lifecycle Controller:**
-    *   **Open Session:** Manager clocks in, selects the active shift, and inputs the **Opening Drawer Cash** amount.
-    *   **Active Session Monitoring:** Serves as the system-wide active context. Any log created during this time (POS sale, bazar purchase, staff advance) automatically links to this `session_id` and the current business `date`.
-    *   **Close Session:** Manager may optionally log bulk counter money (Category: `POS`, cash and/or online) if not already entered per sale during the shift, counts physical drawer cash, enters the **Closing Drawer Cash** amount, and closes the session.
+1.  **Shift Master Data:**
+    *   Tenant-configurable `shifts` (e.g., Breakfast, Lunch, Dinner).
+    *   Used to associate meal plans to contract workers and accurately track which meal period an attendance record belongs to (auto-resolved based on current time).
+2.  **Day Lifecycle Controller:**
+    *   **Start Day:** Manager enters the **Opening Drawer Cash** amount.
+    *   **Active Day Monitoring:** Serves as the system-wide active context. Any log created during this time (POS sale, bazar purchase, staff advance) automatically links to this `business_day_id`, auto-resolved `shift_id`, and the current business `date`.
+    *   **End Day:** Manager counts physical drawer cash, enters the **Closing Drawer Cash** amount, and closes the day.
+    *   **Resume Day:** A closed day can be re-opened if it's the same calendar date.
 3.  **Shift Reconciliation Engine:**
-    *   Aggregates expected figures from all modules linked to the active `session_id`:
+    *   Aggregates expected figures from all modules linked to the active `business_day_id`:
         *   `Expected Cash = Opening Cash + Cash POS Sales (Counter Sales Entry) + Cash Customer Collections - Cash Bazar Expenses - Cash Staff Advances - Cash Vendor Payments`
     *   Compares `Expected Cash` against the entered `Closing Drawer Cash` to log the variance.
-    *   Locks all transactions linked to the session once closed (read-only enforcement).
+    *   Locks all transactions linked to the day once closed (read-only enforcement).
 
 ---
 
@@ -126,10 +127,10 @@ Handles employee registry, attendance logs, mid-month cash advances, and periodi
     *   Pay rates configuration (hourly rates, fixed daily rates, weekly wages, or monthly salary structures).
 2.  **Staff Attendance Tracker:**
     *   Daily shift-based attendance logging (Present / Absent / Half-day).
-    *   References the current active `session_id`.
-3.  **Cash Advance Registry:**
-    *   Records early payouts/advances requested by employees during a shift.
-    *   Requires Employee ID, cash amount, reason, date, and active `session_id`.
+    *   References the current active `business_day_id`.
+3.  **Staff Cash Advances:**
+    *   Ad-hoc cash given to staff.
+    *   Requires Employee ID, cash amount, reason, date, and active `business_day_id`.
 4.  **Payroll Settlement Engine:**
     *   Compiles monthly/weekly base pay, adds calculated daily/hourly attendance earnings, and subtracts accumulated cash advances.
     *   Generates payroll summary records showing net wages due.
@@ -162,7 +163,7 @@ Manages flat-rate contract workers (charged a fixed daily rate if present for an
     *   Kiosk **Baki** tile → dedicated page (`kiosk-baki`).
     *   Searchable `walk_in_baki` cards → **Add Baki** dialog (shift, multi-line note + amount, live total).
     *   Extra charges above the daily rate for contract workers remain on the Attendance dialog.
-    *   Links to active `session_id` for audits.
+    *   Links to active `business_day_id` for audits.
     *   Implementation task: [baki_charge_page.md](./tasks/baki_charge_page.md).
 4.  **Customer Collections (Receivables):**
     *   Kiosk **Baki Payment** tile → dedicated page (`kiosk-baki-payment`).
@@ -187,7 +188,7 @@ Manages vendor ledgers, daily market expense lists, and payment tracking.
     *   Draft checklist for morning raw ingredient shopping, specifying quantities and estimates.
 3.  **Bazar Expense Logger:**
     *   Log actual purchases (item name, quantity, category, unit price, total price).
-    *   Links to active `session_id`.
+    *   Links to active `business_day_id`.
     *   **Payment Routing Toggle:** Select either `Cash Purchase` (deducted directly from the active shift cash drawer) or `Vendor Baki` (added to supplier outstanding ledger balance).
 4.  **Vendor Payout Tracker:**
     *   Records payments made to suppliers to clear accumulated vendor dues.
@@ -204,11 +205,10 @@ A clean, high-performance financial register acting as the tenant's single bookk
 ### Submodules
 1.  **Unified Cash Register:**
     *   Tracks physical cash changes inside the drawer.
-    *   Receives entries from other modules (Procurement, Customer Collections, Staff Payroll, Vendor Payments) associated with a `session_id`.
-2.  **Transaction Audit Log:**
-    *   An append-only transaction ledger (POS rows may be edited in-place within a tenant-configured grace window while the session is open).
-    *   Fields: `id`, `tenant_id`, `session_id`, `type` (Inflow / Outflow), `category` (POS, Debt Collection, Raw Materials, Payroll, Supplier Payout), `amount`, `payment_method` (Cash, Mobile Wallet, Bank Transfer), `operator_id`, and `created_at`.
-    *   Daily Transaction (POS) is a core tracked inflow: per-sale or bulk, Cash/Online; feeds financial summary, daily breakdown, and session cash math.
+    *   Receives entries from other modules (Procurement, Customer Collections, Staff Payroll, Vendor Payments) associated with a `business_day_id` and `shift_id`.
+    *   An append-only transaction ledger (POS rows may be edited in-place within a tenant-configured grace window while the business day is open).
+    *   Fields: `id`, `tenant_id`, `business_day_id`, `shift_id`, `type` (Inflow / Outflow), `category` (POS, Debt Collection, Raw Materials, Payroll, Supplier Payout), `amount`, `payment_method` (Cash, Mobile Wallet, Bank Transfer), `operator_id`, and `created_at`.
+    *   Daily Transaction (POS) is a core tracked inflow: per-sale or bulk, Cash/Online; feeds financial summary, daily breakdown, and day cash math.
 3.  **Tenant Financial Dashboard:**
     *   Aggregated reports: Net Profit/Loss, Outstanding Receivables (Customer Credit), Outstanding Payables (Supplier Credit), and Total Expenses.
 

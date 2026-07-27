@@ -12,7 +12,12 @@ const Text = React.forwardRef<TextRef, SlottableTextProps>(
     const Component = asChild ? Slot.Text : RNText;
     return (
       <Component
-        className={cn('text-base text-foreground web:select-text', textClass, className)}
+        className={cn(
+          // If a textClass context is provided (e.g. from Button), do not apply default text-base so buttonTextVariants controls size & alignment strictly
+          textClass ? textClass : 'text-base text-foreground',
+          'web:select-text',
+          className
+        )}
         ref={ref}
         {...props}
       />

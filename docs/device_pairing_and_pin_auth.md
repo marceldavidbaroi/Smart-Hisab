@@ -81,8 +81,10 @@ Stores the persistent device tokens after successful verification of the pairing
 | :--- | :--- | :--- | :--- |
 | `id` | `uuid` | Primary Key, `default gen_random_uuid()` | Unique device entry identifier. |
 | `tenant_id` | `uuid` | FK -> `tenants.id`, `not null`, `on delete cascade` | Scopes device to specific tenant. |
+| `device_sl` | `integer` | `not null` | Auto-incrementing Serial Number scoped per tenant. |
 | `device_name` | `text` | `not null` | Human-readable identifier (e.g. "Counter Tablet A"). |
 | `device_token` | `text` | `not null`, `unique` | Persistent SHA-256 hashed device access token. |
+| `unpair_code` | `text` | `not null` | Fixed 6-digit PIN required on device to unpair (Admin-only view). |
 | `is_active` | `boolean` | `not null`, `default true` | Admin switch to block a stolen/lost device. |
 | `failed_attempts` | `integer` | `not null`, `default 0` | Counter for successive invalid PIN entries. |
 | `locked_until` | `timestamptz` | Nullable | Block timestamp for brute-force protection. |
@@ -93,8 +95,10 @@ Stores the persistent device tokens after successful verification of the pairing
 create table public.paired_devices (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
+  device_sl integer not null,
   device_name text not null,
   device_token text not null unique,
+  unpair_code text not null,
   is_active boolean not null default true,
   failed_attempts integer not null default 0,
   locked_until timestamp with time zone,

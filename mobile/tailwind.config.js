@@ -9,11 +9,15 @@ module.exports = {
     extend: {
       colors: {
         // Custom Brand Palette Colors
-        'air-force-blue': 'hsl(var(--air-force-blue))',
-        'dusty-taupe': 'hsl(var(--dusty-taupe))',
-        'vanilla-custard': 'hsl(var(--vanilla-custard))',
-        'sunlit-clay': 'hsl(var(--sunlit-clay))',
-        'light-bronze': 'hsl(var(--light-bronze))',
+        'steel-teal': 'hsl(var(--steel-teal))',
+        'muted-taupe': 'hsl(var(--muted-taupe))',
+        'soft-cream': 'hsl(var(--soft-cream))',
+        'warm-amber': 'hsl(var(--warm-amber))',
+        'muted-copper': 'hsl(var(--muted-copper))',
+
+        // Backward compatibility alias helpers
+        'air-force-blue': 'hsl(var(--steel-teal))',
+        'sunlit-clay': 'hsl(var(--warm-amber))',
 
         // Theme Design Tokens
         border: 'hsl(var(--border))',

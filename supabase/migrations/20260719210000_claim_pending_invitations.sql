@@ -148,6 +148,7 @@ grant execute on function public.claim_pending_invitations() to authenticated;
 
 -- Allow Admin (not only Owner) to manage invitation rows from the client
 drop policy if exists "Owners and superadmins can manage invitations" on public.tenant_invitations;
+drop policy if exists "Owners admins and superadmins can manage invitations" on public.tenant_invitations;
 
 create policy "Owners admins and superadmins can manage invitations"
   on public.tenant_invitations

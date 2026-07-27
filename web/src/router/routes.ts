@@ -13,7 +13,8 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'signup',
-        redirect: { name: 'login' },
+        name: 'signup',
+        component: () => import('@/pages/auth/SignupPage.vue'),
       },
       {
         path: 'no-tenant',
@@ -34,6 +35,11 @@ const routes: RouteRecordRaw[] = [
         path: 'counter-login',
         name: 'counter-login',
         component: () => import('@/pages/auth/CounterLoginPage.vue'),
+      },
+      {
+        path: 'reset-password',
+        name: 'reset-password',
+        component: () => import('@/pages/auth/ResetPasswordPage.vue'),
       },
     ],
   },

@@ -4,73 +4,83 @@
 
 @layer base {
   :root {
-    /* Brand Color Palette Variables */
-    --air-force-blue: 201 21% 48%;
-    --dusty-taupe: 31 11% 54%;
-    --vanilla-custard: 50 48% 76%;
-    --sunlit-clay: 36 61% 64%;
-    --light-bronze: 31 54% 59%;
+    /* Updated Brand Color Palette Variables */
+    /* Primary: #628395 (Steel Teal/Slate Blue) */
+    --steel-teal: 202 21% 48%;       /* Primary #628395 */
+    /* Muted Taupe: #96897b */
+    --muted-taupe: 32 11% 53%;       /* Muted Taupe #96897b */
+    /* Soft Cream: #dfd5a5 */
+    --soft-cream: 50 49% 76%;        /* Soft Cream #dfd5a5 */
+    /* Warm Amber: #dbad6a */
+    --warm-amber: 35 60% 64%;        /* Warm Amber #dbad6a */
+    /* Muted Copper: #cf995f */
+    --muted-copper: 31 54% 59%;      /* Muted Copper #cf995f */
 
     /* Shadcn Theme Design Tokens (Light Mode) */
-    --background: 50 20% 98%;
-    --foreground: 201 25% 15%;
+    --background: 0 0% 100%;
+    --foreground: 202 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 201 25% 15%;
+    --card-foreground: 202 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 201 25% 15%;
+    --popover-foreground: 202 25% 15%;
 
-    --primary: 201 21% 48%; /* Air Force Blue */
+    /* Primary is #628395 */
+    --primary: 202 21% 48%; 
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 50 48% 76%; /* Vanilla Custard */
-    --secondary-foreground: 201 25% 15%;
+    /* Secondary is #dfd5a5 */
+    --secondary: 50 49% 76%; 
+    --secondary-foreground: 202 25% 15%;
 
-    --muted: 31 11% 93%;
-    --muted-foreground: 31 11% 42%; /* Dusty Taupe */
+    --muted: 50 25% 94%;
+    --muted-foreground: 32 11% 45%;
 
-    --accent: 36 61% 64%; /* Sunlit Clay */
-    --accent-foreground: 0 0% 100%;
+    /* Accent is #dbad6a */
+    --accent: 35 60% 64%; 
+    --accent-foreground: 202 25% 15%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: 31 11% 85%;
-    --input: 31 11% 85%;
-    --ring: 201 21% 48%;
+    --border: 50 20% 88%;
+    --input: 50 20% 88%;
+    --ring: 202 21% 48%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
     /* Shadcn Theme Design Tokens (Dark Mode) */
-    --background: 201 25% 10%;
-    --foreground: 50 48% 95%;
+    --background: 202 25% 10%;
+    --foreground: 50 49% 95%;
 
-    --card: 201 25% 14%;
-    --card-foreground: 50 48% 95%;
+    --card: 202 25% 14%;
+    --card-foreground: 50 49% 95%;
 
-    --popover: 201 25% 14%;
-    --popover-foreground: 50 48% 95%;
+    --popover: 202 25% 14%;
+    --popover-foreground: 50 49% 95%;
 
-    --primary: 36 61% 64%; /* Sunlit Clay */
-    --primary-foreground: 201 25% 10%;
+    /* Primary in Dark Mode remains crisp #628395 or brightened HSL */
+    --primary: 202 25% 52%; 
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 31 54% 59%; /* Light Bronze */
+    /* Secondary in Dark Mode: #cf995f */
+    --secondary: 31 54% 59%; 
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 201 20% 20%;
-    --muted-foreground: 31 11% 68%;
+    --muted: 202 20% 20%;
+    --muted-foreground: 32 11% 68%;
 
-    --accent: 201 21% 48%; /* Air Force Blue */
+    --accent: 35 60% 64%; 
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: 201 20% 22%;
-    --input: 201 20% 22%;
-    --ring: 36 61% 64%;
+    --border: 202 20% 22%;
+    --input: 202 20% 22%;
+    --ring: 202 25% 52%;
   }
 }

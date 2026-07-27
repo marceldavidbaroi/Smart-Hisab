@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { View, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, ScrollView, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import {
   Moon,
   Sun,
-  RefreshCw,
-  TrendingUp,
+  ArrowsClockwise,
+  TrendUp,
   Package,
   ShieldCheck,
-  Search,
+  MagnifyingGlass,
   Bell,
   UserCheck,
   Palette,
-} from 'lucide-react-native';
+  SignOut,
+} from 'phosphor-react-native';
 
 import { queryClient } from '@/lib/query-client';
 import { useAppStore } from '@/store/useAppStore';
@@ -28,9 +30,11 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
+import { LoginScreen } from '@/components/LoginScreen';
+
 function DashboardScreen() {
   const { colorScheme, toggleColorScheme } = useAppStore();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const { data: metrics, isLoading, isRefetching, refetch } = useDashboardData();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -65,19 +69,31 @@ function DashboardScreen() {
               </View>
             </View>
 
-            {/* Dark Mode Toggle Button */}
-            <Button
-              variant="outline"
-              size="icon"
-              onPress={toggleColorScheme}
-              className="rounded-full h-10 w-10 border-border"
-            >
-              {isDark ? (
-                <Sun size={20} color="#dbad6a" />
-              ) : (
-                <Moon size={20} color="#628395" />
-              )}
-            </Button>
+            <View className="flex-row items-center space-x-2">
+              {/* Logout Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                onPress={logout}
+                className="rounded-full h-10 w-10 border-border"
+              >
+                <SignOut size={18} color={isDark ? '#f87171' : '#ef4444'} />
+              </Button>
+
+              {/* Dark Mode Toggle Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                onPress={toggleColorScheme}
+                className="rounded-full h-10 w-10 border-border"
+              >
+                {isDark ? (
+                  <Sun size={20} color="#dbad6a" />
+                ) : (
+                  <Moon size={20} color="#628395" />
+                )}
+              </Button>
+            </View>
           </View>
 
           {/* Color Palette Swatches Preview */}
@@ -126,7 +142,7 @@ function DashboardScreen() {
                 className="pl-10 pr-4 bg-card border-border"
               />
               <View className="absolute left-3 top-3">
-                <Search size={18} color="#96897b" />
+                <MagnifyingGlass size={18} color="#96897b" />
               </View>
             </View>
           </View>
@@ -149,7 +165,7 @@ function DashboardScreen() {
                 {isRefetching ? (
                   <ActivityIndicator size="small" color={isDark ? '#dbad6a' : '#628395'} />
                 ) : (
-                  <RefreshCw size={16} color={isDark ? '#dbad6a' : '#628395'} />
+                  <ArrowsClockwise size={16} color={isDark ? '#dbad6a' : '#628395'} />
                 )}
               </Button>
             </CardHeader>
@@ -189,7 +205,7 @@ function DashboardScreen() {
                   <Text className="text-xs font-semibold text-muted-foreground uppercase">
                     Sales Today
                   </Text>
-                  <TrendingUp size={16} color="#628395" />
+                  <TrendUp size={16} color="#628395" />
                 </View>
               </CardHeader>
               <CardContent className="p-4 pt-0">
@@ -273,10 +289,20 @@ function DashboardScreen() {
   );
 }
 
+function MainNavigator() {
+  const { isAuthenticated } = useAuthStore();
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  return <DashboardScreen />;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <DashboardScreen />
+      <MainNavigator />
     </QueryClientProvider>
   );
 }

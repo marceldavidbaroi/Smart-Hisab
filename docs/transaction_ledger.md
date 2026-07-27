@@ -5,8 +5,8 @@ This document is the Technical Specification (RFC) for the **Transaction Ledger*
 ### Key Objectives
 * **Central Bookkeeping Ledger:** Maintain a single consolidated register (`transaction_ledger`) for all inflows and outflows across the tenant workspace.
 * **Automated Double-Entry Integration:** Receive postings from Meal & Customer (`POS`, `Debt Collection`), Procurement (`Raw Materials`, `Supplier Payout`), and Staff Attendance & Payroll (`Payroll`, `Staff Advance`), plus session close discrepancies (`Bazar Discrepancy` / `Bazar Surplus`).
-* **Temporal & Session Isolation:** Optionally link rows to `session_id` so shift cash reconciliation and drawer expected-cash math work.
-* **Immutable Audit Log:** Block `UPDATE` and `DELETE` at RLS and trigger level for all categories except **POS**, which may be edited in-place via `edit_pos_sale` only within a tenant-owner-configured grace window while the session is still open.
+* **Temporal & Business Day Isolation:** Optionally link rows to `business_day_id` and `shift_id` so daily cash reconciliation and drawer expected-cash math work.
+* **Immutable Audit Log:** Block `UPDATE` and `DELETE` at RLS and trigger level for all categories except **POS**, which may be edited in-place via `edit_pos_sale` only within a tenant-owner-configured grace window while the business day is still open.
 * **Financial Dashboard & Daily Breakdown:** Aggregate net P/L, expenses, receivables, payables, and per-day category cost breakdowns.
 * **Localization:** Format amounts with tenant currency (default BDT / `৳`) and locale (default `bn`) via `Intl.NumberFormat` at the presentation layer.
 
@@ -16,7 +16,7 @@ This document is the Technical Specification (RFC) for the **Transaction Ledger*
 | Feature flag `financial-ledger` | Seeded; admin / tenant toggles exist |
 | DB table / RPCs / RLS / immutability triggers | Not migrated |
 | Pinia / routes / UI | Not built |
-| Upstream `sessions` + `enforce_closed_session_lock` | Specced in [operational_shifts_sessions.md](./operational_shifts_sessions.md); lock **trigger** attaches in this module’s migration |
+| Upstream `business_days` + `enforce_closed_day_lock` | Specced in [day_tracking_automated_shifts.md](./operational_shifts_sessions.md); lock **trigger** attaches in this module’s migration |
 | Downstream auto-posting modules | Spec-only; call internal `post_ledger_entry` when those modules ship |
 
 ---
@@ -34,8 +34,8 @@ This document is the Technical Specification (RFC) for the **Transaction Ledger*
 6. **As a** Canteen Owner, **I want to** set how long staff may edit Daily Transaction (POS) entries (minutes, hours, or days), **so that** typos can be fixed without leaving the ledger permanently mutable.
 
 #### Persona B: Shift Manager (Kiosk Staff — Manager Role)
-1. **As a** Shift Manager, **I want to** view transactions linked to my active session, **so that** I can verify collections and expenses before closing the drawer.
-2. **As a** Shift Manager, **I want to** see the running cash balance for the active session, **so that** I know how much physical cash should be in the register.
+1. **As a** Shift Manager, **I want to** view transactions linked to my active business day, **so that** I can verify collections and expenses before closing the drawer.
+2. **As a** Shift Manager, **I want to** see the running cash balance for the active day, **so that** I know how much physical cash should be in the register.
 
 ### B. Identity & Role Planes (conjunct, not conflated)
 
@@ -121,7 +121,7 @@ Module key: `financial_ledger`. Feature gate: `enabled_features['financial-ledge
 
 | Operation | Manager (default) | Cashier (default) | Staff (generic) |
 | :--- | :--- | :--- | :--- |
-| Session ledger read (active session rows) | true | true | false |
+| Session ledger read (active day rows) | true | true | false |
 | Cash register running balance | true | true | false |
 
 **Feature gate:** Workspace routes use `requiredFeature: 'financial-ledger'`. Kiosk UI for session ledger / cash balance also requires the feature flag.
@@ -142,7 +142,8 @@ Module key: `financial_ledger`. Feature gate: `enabled_features['financial-ledge
 ```mermaid
 erDiagram
     tenants ||--o{ transaction_ledger : owns
-    sessions ||--o{ transaction_ledger : "contextualizes optional"
+    business_days ||--o{ transaction_ledger : "contextualizes day"
+    shifts ||--o{ transaction_ledger : "contextualizes shift"
     auth_users ||--o{ transaction_ledger : "operator_user_id"
     staff_members ||--o{ transaction_ledger : "operator_staff_id"
 
@@ -161,7 +162,8 @@ Append-only financial ledger for the tenant.
 | :--- | :--- | :--- | :--- |
 | `id` | `uuid` | PK, `default gen_random_uuid()` | Ledger entry id |
 | `tenant_id` | `uuid` | FK → `tenants.id`, `not null` | Tenant scope |
-| `session_id` | `uuid` | FK → `sessions.id`, nullable | Operational session; null for off-shift events (e.g. bank payouts) |
+| `business_day_id` | `uuid` | FK → `business_days.id`, nullable | Operational day; null for off-shift events (e.g. bank payouts) |
+| `shift_id` | `uuid` | FK → `shifts.id`, nullable | Auto-resolved shift based on time |
 | `type` | `text` | `not null`, `check (type in ('inflow', 'outflow'))` | Fund direction |
 | `category` | `text` | `not null`, see allowed set below | Classification |
 | `amount` | `numeric(12, 2)` | `not null`, `check (amount >= 0)` | Absolute amount (sign via `type`) |
@@ -196,8 +198,11 @@ At least one of `operator_user_id` / `operator_staff_id` should be set for human
 create index idx_transaction_ledger_tenant_id
   on public.transaction_ledger (tenant_id);
 
-create index idx_transaction_ledger_session_id
-  on public.transaction_ledger (session_id);
+create index idx_transaction_ledger_business_day_id
+  on public.transaction_ledger (business_day_id);
+
+create index idx_transaction_ledger_shift_id
+  on public.transaction_ledger (shift_id);
 
 create index idx_transaction_ledger_operator_user_id
   on public.transaction_ledger (operator_user_id);
@@ -217,11 +222,11 @@ create index idx_transaction_ledger_tenant_created
 
 ### B. Database Integration
 
-1. **Migration:** `supabase/migrations/YYYYMMDDHHMMSS_transaction_ledger.sql` (after shifts/sessions migration so `sessions` + `enforce_closed_session_lock` exist).
-2. **Contents:** table, indexes, category check, RLS policies, helpers, RPCs, immutability trigger, **attach** `check_transaction_session_lock` → `enforce_closed_session_lock`.
+1. **Migration:** `supabase/migrations/YYYYMMDDHHMMSS_transaction_ledger.sql` (after day tracking migration so `business_days` + `enforce_closed_day_lock` exist).
+2. **Contents:** table, indexes, category check, RLS policies, helpers, RPCs, immutability trigger, **attach** `check_transaction_day_lock` → `enforce_closed_day_lock`.
 3. **Role JSONB seed:** Update default Admin / custom role templates with `modules.financial_ledger` keys; update Manager / Cashier `staff_roles` with kiosk keys.
 4. **Types:** Regenerate `web/src/types/supabase.ts` after migrate.
-5. **Existing data:** Table is greenfield; no backfill. Close-session expected cash in sessions module already tolerates missing ledger until this ships.
+5. **Existing data:** Table is greenfield; no backfill. Close-day expected cash in day tracking module already tolerates missing ledger until this ships.
 
 ### C. API Surface & Design
 
@@ -239,7 +244,8 @@ No separate REST server. Client uses Supabase JS (`supabase.from` / `supabase.rp
 {
   "id": "uuid",
   "tenant_id": "uuid",
-  "session_id": "uuid",
+  "business_day_id": "uuid",
+  "shift_id": "uuid",
   "type": "inflow",
   "category": "POS",
   "amount": 12500.50,
@@ -258,7 +264,6 @@ No separate REST server. Client uses Supabase JS (`supabase.from` / `supabase.rp
 ```json
 {
   "p_tenant_id": "uuid",
-  "p_session_id": null,
   "p_type": "outflow",
   "p_category": "Overhead",
   "p_amount": 3500.00,
@@ -279,7 +284,6 @@ No separate REST server. Client uses Supabase JS (`supabase.from` / `supabase.rp
   "p_tenant_id": "uuid",
   "p_device_token": "…",
   "p_staff_id": "uuid",
-  "p_session_id": "uuid",
   "p_amount": 150.00,
   "p_payment_method": "cash",
   "p_notes": "Walk-in meal"
@@ -291,7 +295,7 @@ Posts `inflow` / `POS` via `post_ledger_entry`. `p_payment_method` ∈ `cash` | 
 #### 2c. `rpc('edit_pos_sale')` — kiosk POS edit window
 
 Updates amount / payment_method / notes on an existing `POS` row when:
-1. Session is still **open**
+1. Business day is still **open**
 2. `now() < created_at + tenant pos_edit_window` (default 24 hours)
 
 Tenant preference (`tenant_settings.preferences`):
@@ -346,19 +350,19 @@ Requires `dashboard_read`. Receivables/payables come from `customers` / `supplie
 ```json
 {
   "p_tenant_id": "uuid",
-  "p_session_id": "uuid"
+  "p_day_id": "uuid"
 }
 ```
 
 **Success response:** `numeric` (expected physical cash).
 
-Formula: `opening_cash + cash inflows − cash outflows` for that session. Used by session close and kiosk banner.
+Formula: `opening_cash + cash inflows − cash outflows` for that day. Used by day close and kiosk banner.
 
-Kiosk clients: grant execute to `anon` + `authenticated`; authorize inside RPC (device/staff path optional Phase 4 — MVP may require Auth-linked staff or call from `security definer` close_session only). MVP: callable by authenticated workspace users with `dashboard_read` or `ledger_read`, and by kiosk via staff-permission check when `p_device_token` + `p_staff_id` overload is added. **Ship single signature first** (tenant + session); kiosk uses it after PIN session with authenticated staff JWT if available, else Phase 4 overload.
+Kiosk clients: grant execute to `anon` + `authenticated`; authorize inside RPC (device/staff path optional Phase 4 — MVP may require Auth-linked staff or call from `security definer` close_day only). MVP: callable by authenticated workspace users with `dashboard_read` or `ledger_read`, and by kiosk via staff-permission check when `p_device_token` + `p_staff_id` overload is added. **Ship single signature first** (tenant + day_id); kiosk uses it after PIN login with authenticated staff JWT if available, else Phase 4 overload.
 
 #### 6. Internal: `post_ledger_entry` — not a public client RPC
 
-Called only from other modules’ `security definer` functions. Inserts one ledger row with validation + closed-session lock trigger. Do **not** `grant execute` to `anon` / `authenticated` (or grant only to roles used by definer functions).
+Called only from other modules’ `security definer` functions. Inserts one ledger row with validation + closed-day lock trigger. Do **not** `grant execute` to `anon` / `authenticated` (or grant only to roles used by definer functions).
 
 ### D. API Flow
 
@@ -488,14 +492,15 @@ create policy "Ledger entries cannot be deleted"
 ```sql
 create or replace function public.post_ledger_entry(
   p_tenant_id uuid,
-  p_session_id uuid,
+  p_business_day_id uuid,
   p_type text,
   p_category text,
   p_amount numeric,
   p_payment_method text,
   p_operator_user_id uuid default null,
   p_operator_staff_id uuid default null,
-  p_notes text default null
+  p_notes text default null,
+  p_shift_id uuid default null
 )
 returns uuid
 security definer
@@ -526,11 +531,11 @@ begin
   end if;
 
   insert into public.transaction_ledger (
-    tenant_id, session_id, type, category, amount, payment_method,
+    tenant_id, business_day_id, shift_id, type, category, amount, payment_method,
     operator_user_id, operator_staff_id, notes
   )
   values (
-    p_tenant_id, p_session_id, p_type, p_category, p_amount, p_payment_method,
+    p_tenant_id, p_business_day_id, p_shift_id, p_type, p_category, p_amount, p_payment_method,
     p_operator_user_id, p_operator_staff_id, p_notes
   )
   returning id into v_id;
@@ -545,7 +550,6 @@ $$;
 ```sql
 create or replace function public.log_manual_ledger_entry(
   p_tenant_id uuid,
-  p_session_id uuid,
   p_type text,
   p_category text,
   p_amount numeric,
@@ -580,15 +584,15 @@ begin
   end if;
 
   return public.post_ledger_entry(
-    p_tenant_id,
-    p_session_id,
-    p_type,
-    p_category,
-    p_amount,
-    p_payment_method,
-    auth.uid(),
-    null,
-    p_notes
+    p_tenant_id := p_tenant_id,
+    p_business_day_id := null,
+    p_type := p_type,
+    p_category := p_category,
+    p_amount := p_amount,
+    p_payment_method := p_payment_method,
+    p_operator_user_id := auth.uid(),
+    p_operator_staff_id := null,
+    p_notes := p_notes
   );
 end;
 $$;
@@ -675,7 +679,7 @@ $$;
 ```sql
 create or replace function public.get_cash_register_running_balance(
   p_tenant_id uuid,
-  p_session_id uuid
+  p_day_id uuid
 )
 returns numeric(12, 2)
 security definer
@@ -689,24 +693,24 @@ declare
   v_outflow numeric(12, 2) := 0;
 begin
   select coalesce(opening_cash, 0) into v_opening
-  from public.sessions
-  where id = p_session_id and tenant_id = p_tenant_id;
+  from public.business_days
+  where id = p_day_id and tenant_id = p_tenant_id;
 
   if not found then
-    raise exception 'Session not found.' using errcode = 'P0002';
+    raise exception 'Business day not found.' using errcode = 'P0002';
   end if;
 
   select coalesce(sum(amount), 0) into v_inflow
   from public.transaction_ledger
   where tenant_id = p_tenant_id
-    and session_id = p_session_id
+    and business_day_id = p_day_id
     and type = 'inflow'
     and payment_method = 'cash';
 
   select coalesce(sum(amount), 0) into v_outflow
   from public.transaction_ledger
   where tenant_id = p_tenant_id
-    and session_id = p_session_id
+    and business_day_id = p_day_id
     and type = 'outflow'
     and payment_method = 'cash';
 

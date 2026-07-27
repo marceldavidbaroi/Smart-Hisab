@@ -10,7 +10,7 @@ This document is the Technical Specification (RFC) for the **Meal & Customer Man
 * **Advance Payment (kiosk page):** Searchable **all active** customers → **Record Advance** dialog (balance chip + amount + method). Same RPC `record_customer_collection`; overpay / pay-when-zero → prepaid (`outstanding_balance < 0`). Stub `KioskAdvancePayment` → full page — see [advance_payment_page.md](./tasks/advance_payment_page.md). Non-cash must work without an open session (do not session-block the tile).
 * **Cached Balance:** `customers.outstanding_balance` maintained by DB triggers (`attendance` / `baki` increase; `collections` decrease). Counter “how much do they owe?” uses this field only. Negative = prepaid credit.
 * **Ledger Integration:** On collection insert, call internal `post_ledger_entry` (`inflow`, category `Debt Collection`). Customer owed explanation uses attendance / baki / collections — **not** `transaction_ledger`.
-* **Closed-Session Lock:** No mutate of attendance / baki / session-linked collections once the operational session is closed.
+* **Closed-Day Lock:** No mutate of attendance / baki / day-linked collections once the operational day is closed.
 * **Localization:** UI strings in **English (`en-US`)** and **Bangla (`bn`)**; amounts via `formatMoney` (default BDT / `bn`).
 
 ### Implementation Status (as of this RFC)
@@ -24,7 +24,7 @@ This document is the Technical Specification (RFC) for the **Meal & Customer Man
 | Kiosk Baki Payment page | **New** — replace inline `CollectionDialog`; **Pay** + **Why owed?** recent breakdown — see [baki_payment_page.md](./tasks/baki_payment_page.md) |
 | Kiosk Advance Payment page | **Rewrite stub** — all active customers + prepaid framing; same `record_customer_collection` — see [advance_payment_page.md](./tasks/advance_payment_page.md) |
 | Kiosk Manager customer CRUD UI | **Gap** — see [temp_restructure.md](./temp_restructure.md) |
-| Upstream `sessions` + `enforce_closed_session_lock` | Migrated ([operational_shifts_sessions.md](./operational_shifts_sessions.md)) |
+| Upstream `business_days` + `enforce_closed_day_lock` | Migrated ([day_tracking_automated_shifts.md](./tasks/day_tracking_automated_shifts.md)) |
 | Upstream `post_ledger_entry` | Migrated ([transaction_ledger.md](./transaction_ledger.md)) |
 
 **Product correction:** Terminal Manager is the primary operator for customer/meal enrollment and cashier money flow. Workspace Owner/Admin retain full access for reports and oversight but are not the expected enrollment path. Tracking: [temp_restructure.md](./temp_restructure.md).
@@ -39,18 +39,18 @@ This document is the Technical Specification (RFC) for the **Meal & Customer Man
 **Manager ⊃ Cashier:** a Manager can perform every cashier money action, plus session open/close and customer / meal-rate master data.
 
 1. **As a** Shift Manager, **I want to** register customers on the terminal (Contract Worker or Walk-in Baki), set `contract_daily_rate` and contracted shifts (“meal plan” fields), **so that** enrollment happens at the counter without Owner login.
-2. **As a** Shift Manager, **I want to** open and close the operational session and manage drawer money flow (POS, expense, advance as permitted), **so that** the day runs entirely from the terminal.
+2. **As a** Shift Manager, **I want to** start and end the operational day and manage drawer money flow (POS, expense, advance as permitted), **so that** the day runs entirely from the terminal.
 3. **As a** Shift Manager, **I want** a Customer Attendance page (searchable cards + Add Attendance dialog), **so that** I can log a shift (and optional extras) for a worker during service without a dense toggle grid.
 4. **As a** Shift Manager, **I want to** log walk-in baki / extras and record collections, **so that** balances and cash stay correct during the shift.
 
 #### Persona B: Cashier (Kiosk — money ops only)
-1. **As a** Cashier, **I want to** log baki, collections, attendance, and POS/expense (as permitted), **so that** I can run the counter under an already-open session.
-2. **As a** Cashier, **I do not** open/close sessions or create/edit customer master data.
+1. **As a** Cashier, **I want to** log baki, collections, attendance, and POS/expense (as permitted), **so that** I can run the counter under an already-started day.
+2. **As a** Cashier, **I do not** start/end days or create/edit customer master data.
 
 #### Persona C: Owner / Tenant Admin (Workspace — oversight + reports)
 1. **As an** Owner or Admin, **I want to** see customer balances, statements, and reports, **so that** receivables and billing are transparent without standing at the counter.
 2. **As an** Owner or Admin, **I can** also create/edit customers and (with permission) perform writes, **but** daily enrollment and cashier work are expected on the terminal Manager.
-3. **As an** Owner, **I want** meal logs and collections locked when a session is closed, **so that** staff cannot retroactively hide consumption or cash receipts.
+3. **As an** Owner, **I want** meal logs and collections locked when a day is ended, **so that** staff cannot retroactively hide consumption or cash receipts.
 
 ### B. Identity & Role Planes (conjunct, not conflated)
 
@@ -183,7 +183,7 @@ Module key: `meal_management`. Feature gate: `enabled_features['meal-management'
 1. **Kiosk (Manager / Cashier — primary ops):** Device token + PIN. Attendance / baki / collection / **customer upsert** RPCs take `p_device_token` + `p_staff_id`. Capabilities from `has_staff_permission(staff_id, 'meal_management', …)`.
 2. **Workspace (Owner / office — oversight + reports):** Supabase Auth + `tenant_members`. Customer directory, statements, optional CRUD via RLS `has_module_permission`.
 3. **Route guards:** Workspace — `requiredFeature` + `requiredModulePermission`. Kiosk — pairing + staff PIN; hide tiles unless staff role grants the action.
-4. **Database:** RLS on all meal tables for Auth paths. Kiosk mutations (including customer upsert) go through `security definer` RPCs. Closed-session lock triggers block retroactive floor edits.
+4. **Database:** RLS on all meal tables for Auth paths. Kiosk mutations (including customer upsert) go through `security definer` RPCs. Closed-day lock triggers block retroactive floor edits.
 
 ---
 
@@ -227,7 +227,7 @@ erDiagram
 | `id` | `uuid` | PK | Row id |
 | `tenant_id` | `uuid` | FK → `tenants`, `not null` | Scope |
 | `customer_id` | `uuid` | FK → `customers`, `not null` | Contract worker |
-| `session_id` | `uuid` | FK → `sessions`, `not null` | Session that first/last mutated |
+| `business_day_id` | `uuid` | FK → `business_days`, `not null` | Day that first/last mutated |
 | `business_date` | `date` | `not null` | Attendance day |
 | `attended_shifts` | `text[]` | `not null` | Shifts present that day |
 | `rate_applied` | `numeric(12,2)` | `not null`, `check >= 0` | Daily rate snapshotted on first present |
@@ -241,7 +241,7 @@ erDiagram
 | `id` | `uuid` | PK | Row id |
 | `tenant_id` | `uuid` | FK → `tenants`, `not null` | Scope |
 | `customer_id` | `uuid` | FK → `customers`, `not null` | Debtor |
-| `session_id` | `uuid` | FK → `sessions`, `not null` | Open session context |
+| `business_day_id` | `uuid` | FK → `business_days`, `not null` | Open day context |
 | `business_date` | `date` | `not null` | Credit date |
 | `items_description` | `text` | `not null` | What was consumed |
 | `amount` | `numeric(12,2)` | `not null`, `check (amount > 0)` | Credit amount |
@@ -257,7 +257,7 @@ erDiagram
 | `id` | `uuid` | PK | Row id |
 | `tenant_id` | `uuid` | FK → `tenants`, `not null` | Scope |
 | `customer_id` | `uuid` | FK → `customers`, `not null` | Payer |
-| `session_id` | `uuid` | FK → `sessions`, nullable | Required when `payment_method = 'cash'` |
+| `business_day_id` | `uuid` | FK → `business_days`, nullable | Required when `payment_method = 'cash'` |
 | `amount` | `numeric(12,2)` | `not null`, `check (amount > 0)` | Paid amount |
 | `payment_method` | `text` | `not null`, `check in ('cash','mobile_wallet','bank_transfer')` | Mode |
 | `collected_by_user_id` | `uuid` | FK → `auth.users`, nullable | Workspace collector |
@@ -346,7 +346,6 @@ Optional RPC `get_customer_statement(p_tenant_id, p_customer_id, p_start, p_end)
 {
   "p_tenant_id": "uuid",
   "p_customer_id": "uuid",
-  "p_session_id": "uuid",
   "p_shift_name": "Lunch",
   "p_device_token": "string",
   "p_staff_id": "uuid"
@@ -367,7 +366,6 @@ Optional RPC `get_customer_statement(p_tenant_id, p_customer_id, p_start, p_end)
 {
   "p_tenant_id": "uuid",
   "p_customer_id": "uuid",
-  "p_session_id": "uuid",
   "p_items_description": "Special Beef Curry + 3 Parathas",
   "p_amount": 350.00,
   "p_device_token": "string",
@@ -384,7 +382,7 @@ Optional RPC `get_customer_statement(p_tenant_id, p_customer_id, p_start, p_end)
 {
   "p_tenant_id": "uuid",
   "p_customer_id": "uuid",
-  "p_session_id": "uuid-or-null",
+  "p_business_day_id": "uuid-or-null",
   "p_amount": 500.00,
   "p_payment_method": "cash",
   "p_notes": "Partial clear",

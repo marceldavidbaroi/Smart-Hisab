@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { colorScheme as nativewindColorScheme } from 'nativewind';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -16,11 +17,17 @@ export const useAppStore = create<AppState>((set) => ({
   colorScheme: 'light',
   notificationsEnabled: true,
   activeTab: 'dashboard',
-  setColorScheme: (colorScheme) => set({ colorScheme }),
+  setColorScheme: (colorScheme) => {
+    nativewindColorScheme.set(colorScheme);
+    set({ colorScheme });
+  },
   toggleColorScheme: () =>
-    set((state) => ({
-      colorScheme: state.colorScheme === 'light' ? 'dark' : 'light',
-    })),
+    set((state) => {
+      const nextScheme = state.colorScheme === 'light' ? 'dark' : 'light';
+      nativewindColorScheme.set(nextScheme);
+      return { colorScheme: nextScheme };
+    }),
   setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
   setActiveTab: (activeTab) => set({ activeTab }),
 }));
+
