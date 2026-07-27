@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand Color Palette Variables */
+    --air-force-blue: 201 21% 48%;
+    --dusty-taupe: 31 11% 54%;
+    --vanilla-custard: 50 48% 76%;
+    --sunlit-clay: 36 61% 64%;
+    --light-bronze: 31 54% 59%;
+
+    /* Shadcn Theme Design Tokens (Light Mode) */
+    --background: 50 20% 98%;
+    --foreground: 201 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 201 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 201 25% 15%;
+
+    --primary: 201 21% 48%; /* Air Force Blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 50 48% 76%; /* Vanilla Custard */
+    --secondary-foreground: 201 25% 15%;
+
+    --muted: 31 11% 93%;
+    --muted-foreground: 31 11% 42%; /* Dusty Taupe */
+
+    --accent: 36 61% 64%; /* Sunlit Clay */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 31 11% 85%;
+    --input: 31 11% 85%;
+    --ring: 201 21% 48%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Shadcn Theme Design Tokens (Dark Mode) */
+    --background: 201 25% 10%;
+    --foreground: 50 48% 95%;
+
+    --card: 201 25% 14%;
+    --card-foreground: 50 48% 95%;
+
+    --popover: 201 25% 14%;
+    --popover-foreground: 50 48% 95%;
+
+    --primary: 36 61% 64%; /* Sunlit Clay */
+    --primary-foreground: 201 25% 10%;
+
+    --secondary: 31 54% 59%; /* Light Bronze */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 201 20% 20%;
+    --muted-foreground: 31 11% 68%;
+
+    --accent: 201 21% 48%; /* Air Force Blue */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 201 20% 22%;
+    --input: 201 20% 22%;
+    --ring: 36 61% 64%;
+  }
+}
