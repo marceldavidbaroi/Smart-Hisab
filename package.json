@@ -7,6 +7,7 @@
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "lint": "pnpm --filter web lint",
+    "app": "bash ./scripts/open-mobile-android.sh",
     "backend:init": "npx supabase init",
     "backend:login": "npx supabase login",
     "backend:link": "npx supabase link --project-ref \"$SUPABASE_PROJECT_REF\"",
