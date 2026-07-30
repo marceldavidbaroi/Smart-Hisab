@@ -4,25 +4,28 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Switch,
   Alert,
   RefreshControl,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
   UserPlus,
-  Key,
   Users,
   ShieldCheck,
+  Wallet,
   PencilSimple,
+  Trash,
+  Phone,
 } from 'phosphor-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { useTenantStore } from '@/store/useTenantStore';
 import {
   getStaffMembers,
   updateStaffMember,
+  deleteStaffMember,
   resetStaffPin,
   getStaffRoles,
   getDevicePairings,
@@ -31,6 +34,7 @@ import {
   DevicePairing,
 } from '@/services/staff';
 
+import { SwipeableRow } from '@/components/ui/SwipeableRow';
 import StaffAddEditModal from './components/StaffAddEditModal';
 import PinRevealModal from './components/PinRevealModal';
 import DevicePairingModal from './components/DevicePairingModal';
@@ -110,20 +114,49 @@ export default function StaffManagementScreen() {
     setStaffModalVisible(true);
   };
 
-  // Toggle terminal access directly from list
-  const handleToggleTerminal = async (staff: StaffMember) => {
-    try {
-      const updatedValue = !staff.allow_terminal_login;
-      setStaffList((prev) =>
-        prev.map((item) =>
-          item.id === staff.id ? { ...item, allow_terminal_login: updatedValue } : item
-        )
-      );
-      await updateStaffMember(staff.id, { allow_terminal_login: updatedValue });
-    } catch (err: any) {
-      Alert.alert('Error', 'Failed to update terminal access');
-      fetchData();
-    }
+  // Handle staff deletion with confirmation
+  const handleDeleteStaff = (staff: StaffMember) => {
+    Alert.alert(
+      'Delete Staff Member',
+      `Are you sure you want to delete ${staff.full_name}? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteStaffMember(staff.id);
+              setStaffList((prev) => prev.filter((item) => item.id !== staff.id));
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to delete staff member');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Open phone dialer app when tapping staff phone number
+  const handleMakeCall = (phone: string) => {
+    const url = `tel:${phone}`;
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          Alert.alert('Unable to Call', `Phone number ${phone} is not supported on this device.`);
+        }
+      })
+      .catch((err) => console.error('Error opening phone app:', err));
+  };
+
+  // Handle staff wallet click (placeholder for future wiring)
+  const handleOpenWallet = (staff: StaffMember) => {
+    Alert.alert(
+      'Staff Wallet',
+      `Wallet for ${staff.full_name}\nCurrent Balance: ৳${(staff.current_balance || 0).toFixed(2)}\n\n(Wallet transaction actions will be wired here)`
+    );
   };
 
   // Reset PIN for staff member
@@ -186,27 +219,27 @@ export default function StaffManagementScreen() {
         <View className="flex-row gap-3 mb-4">
           <View className="flex-1 bg-card border border-border rounded-xl p-3.5 shadow-xs flex-row items-center justify-between">
             <View>
-              <Text className="text-[10px] font-semibold text-muted-foreground uppercase">
+              <Text className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
                 Total Staff
               </Text>
-              <Text className="text-xl font-bold text-foreground mt-0.5">{staffList.length}</Text>
+              <Text className="text-2xl font-black text-foreground mt-0.5">{staffList.length}</Text>
             </View>
-            <View className="w-9 h-9 rounded-xl bg-primary/10 items-center justify-center border border-primary/20">
-              <Users size={20} color={accentColor} weight="bold" />
+            <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center border border-primary/20">
+              <Users size={22} color={accentColor} weight="bold" />
             </View>
           </View>
 
           <View className="flex-1 bg-card border border-border rounded-xl p-3.5 shadow-xs flex-row items-center justify-between">
             <View>
-              <Text className="text-[10px] font-semibold text-muted-foreground uppercase">
+              <Text className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
                 Terminal Access
               </Text>
-              <Text className="text-xl font-bold text-foreground mt-0.5">
+              <Text className="text-2xl font-black text-foreground mt-0.5">
                 {staffList.filter((s) => s.allow_terminal_login).length}
               </Text>
             </View>
-            <View className="w-9 h-9 rounded-xl bg-amber-500/10 items-center justify-center border border-amber-500/20">
-              <ShieldCheck size={20} color="#f59e0b" weight="bold" />
+            <View className="w-10 h-10 rounded-xl bg-amber-500/10 items-center justify-center border border-amber-500/20">
+              <ShieldCheck size={22} color="#f59e0b" weight="bold" />
             </View>
           </View>
         </View>
@@ -222,10 +255,10 @@ export default function StaffManagementScreen() {
                 <View className="w-12 h-12 rounded-full bg-primary/10 items-center justify-center border border-primary/20 mb-2">
                   <Users size={24} color={accentColor} weight="bold" />
                 </View>
-                <Text className="text-sm font-bold text-foreground mt-1">
+                <Text className="text-base font-bold text-foreground mt-1">
                   No Staff Members Found
                 </Text>
-                <Text className="text-xs text-muted-foreground text-center mt-1 mb-4">
+                <Text className="text-sm text-muted-foreground text-center mt-1 mb-4">
                   Add staff members to assign roles & terminal PIN access.
                 </Text>
                 <TouchableOpacity
@@ -238,90 +271,62 @@ export default function StaffManagementScreen() {
                 </TouchableOpacity>
               </View>
             ) : (
-              staffList.map((staff) => (
-                <View
+              staffList.map((staff, index) => (
+                <SwipeableRow
                   key={staff.id}
-                  className="bg-card border border-border rounded-2xl p-4 shadow-xs mb-3"
+                  shouldPeek={index === 0}
+                  onEdit={() => handleOpenEditStaff(staff)}
+                  onDelete={() => handleDeleteStaff(staff)}
+                  accentColor={accentColor}
                 >
-                  {/* Main Header Row - Tap to Edit */}
-                  <TouchableOpacity
-                    onPress={() => handleOpenEditStaff(staff)}
-                    activeOpacity={0.7}
-                    className="flex-row items-center justify-between mb-3 cursor-pointer"
-                  >
+                  <View className="bg-card border border-border rounded-2xl p-4 shadow-xs mb-3 flex-row items-center justify-between">
+                    {/* Left Side: Avatar, Name, Role, Phone */}
                     <View className="flex-row items-center gap-3 flex-1 mr-2">
-                      <View className="w-11 h-11 rounded-2xl bg-primary/15 items-center justify-center border border-primary/20">
-                        <Text className="text-sm font-bold text-primary">
+                      <View className="w-12 h-12 rounded-2xl bg-primary/15 items-center justify-center border border-primary/20">
+                        <Text className="text-base font-bold text-primary">
                           {staff.full_name.slice(0, 2).toUpperCase()}
                         </Text>
                       </View>
 
                       <View className="flex-1">
-                        <Text className="text-sm font-bold text-foreground" numberOfLines={1}>
+                        <Text className="text-base font-bold text-foreground" numberOfLines={1}>
                           {staff.full_name}
                         </Text>
-                        <View className="flex-row items-center gap-2 mt-1">
-                          <View className="bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
-                            <Text className="text-[10px] font-semibold text-primary">
+                        <View className="flex-row items-center gap-2 mt-1 flex-wrap">
+                          <View className="bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
+                            <Text className="text-xs font-semibold text-primary">
                               {staff.role}
                             </Text>
                           </View>
                           {staff.phone ? (
-                            <Text className="text-xs text-muted-foreground">
-                              {staff.phone}
-                            </Text>
+                            <TouchableOpacity
+                              onPress={() => handleMakeCall(staff.phone!)}
+                              activeOpacity={0.6}
+                              className="flex-row items-center gap-1 bg-muted px-2.5 py-1 rounded-md border border-border cursor-pointer min-h-[28px]"
+                            >
+                              <Phone size={13} color={accentColor} weight="bold" />
+                              <Text className="text-xs font-medium text-foreground">
+                                {staff.phone}
+                              </Text>
+                            </TouchableOpacity>
                           ) : null}
                         </View>
                       </View>
                     </View>
 
-                    {/* Active Status Badge & Edit Indicator */}
-                    <View className="flex-row items-center gap-2">
-                      <View
-                        className={`px-2.5 py-1 rounded-full border ${
-                          staff.is_active
-                            ? 'bg-emerald-500/10 border-emerald-500/20'
-                            : 'bg-muted border-border'
-                        }`}
-                      >
-                        <Text
-                          className={`text-[10px] font-bold ${
-                            staff.is_active
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-muted-foreground'
-                          }`}
-                        >
-                          {staff.is_active ? 'Active' : 'Inactive'}
-                        </Text>
-                      </View>
-                      <View className="w-7 h-7 rounded-lg bg-muted items-center justify-center border border-border">
-                        <PencilSimple size={14} color={accentColor} weight="bold" />
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-
-                  {/* Bottom Control Row - Independent Switch */}
-                  <View className="flex-row items-center justify-between pt-2.5 border-t border-border/60">
-                    <View className="flex-row items-center gap-1.5">
-                      <Text className="text-[11px] font-medium text-muted-foreground">Wallet Balance:</Text>
-                      <Text className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                        ৳{(staff.current_balance || 0).toFixed(2)}
+                    {/* Right Side: Wallet Icon Button (Wired later) */}
+                    <TouchableOpacity
+                      onPress={() => handleOpenWallet(staff)}
+                      activeOpacity={0.7}
+                      className="flex-row items-center gap-1.5 bg-emerald-500/10 px-3.5 py-2.5 rounded-xl border border-emerald-500/20 min-h-[44px]"
+                    >
+                      <Wallet size={18} color="#10b981" weight="bold" />
+                      <Text className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        ৳{(staff.current_balance || 0).toFixed(0)}
                       </Text>
-                    </View>
-
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-[11px] font-medium text-muted-foreground">
-                        Terminal POS Access
-                      </Text>
-                      <Switch
-                        value={staff.allow_terminal_login}
-                        onValueChange={() => handleToggleTerminal(staff)}
-                        trackColor={{ false: '#94a3b8', true: accentColor }}
-                        thumbColor="#ffffff"
-                      />
-                    </View>
+                    </TouchableOpacity>
                   </View>
-                </View>
+                </SwipeableRow>
               ))
             )}
           </View>

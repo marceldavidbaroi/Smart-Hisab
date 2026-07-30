@@ -223,6 +223,21 @@ export async function updateStaffMember(
 }
 
 /**
+ * Delete a staff member by ID
+ */
+export async function deleteStaffMember(staffId: string): Promise<void> {
+  const { error } = await supabase
+    .from('staff_members')
+    .delete()
+    .eq('id', staffId);
+
+  if (error) {
+    console.error('Error deleting staff member:', error.message);
+    throw error;
+  }
+}
+
+/**
  * Reset a staff member's terminal PIN (generates 4-digit temp PIN)
  */
 export async function resetStaffPin(staffId: string): Promise<string> {

@@ -64,3 +64,13 @@ This file outlines the core rules and constraints that the AI agent must adhere 
 ### 6. Empty States & Primary Actions
 * When a list or page is empty (`length === 0`), hide top header creation/action buttons and place the primary action button directly inside the empty state card/container. Show top header action buttons only when items exist in the list.
 
+### 7. Canteen/POS Typography & Touch Ergonomics
+* **Strict Constraint**: Do not use micro-fonts (`text-[9px]`, `text-[10px]`) on canteen/POS screens.
+* Main item/staff titles must be at least `text-base` (16px) font bold. Secondary metadata badges/labels must be at least `text-xs` (12px) to `text-sm` (14px) for high visibility at arm's length in high-speed canteen environments.
+
+### 8. Swipeable Row Actions & Peek Affordance
+* Prefer Swipeable rows (`SwipeableRow`) for item/entity list management (Edit & Delete actions) to keep list card surfaces clean and uncluttered.
+* Always incorporate an initial **Peek Nudge Animation** on the first list item upon screen load to visually signal swipeability to users.
+
+
+
