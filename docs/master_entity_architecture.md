@@ -111,6 +111,14 @@ Staff salary payment records.
 * `notes` (TEXT)
 * `created_at` (TIMESTAMPTZ)
 
+#### `staff_wallets`
+Staff account header (one-to-one with `staff`).
+* `id` (UUID, PK)
+* `tenant_id` (UUID, FK -> `tenants`)
+* `staff_id` (UUID, FK -> `staff`, Unique)
+* `current_balance` (NUMERIC(12, 2), Cached current balance)
+* `created_at` (TIMESTAMPTZ)
+
 ---
 
 ### 3.3 Customers & Wallet Ledger
@@ -130,6 +138,7 @@ Customer account header (one-to-one with `Customer`).
 * `id` (UUID, PK)
 * `tenant_id` (UUID, FK -> `tenants`)
 * `customer_id` (UUID, FK -> `customers`, Unique)
+* `current_balance` (NUMERIC(12, 2), Cached current balance)
 * `created_at` (TIMESTAMPTZ)
 
 #### `wallet_entries`

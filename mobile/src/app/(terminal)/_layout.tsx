@@ -10,9 +10,14 @@ import { TerminalStaffLogin } from '@/components/TerminalStaffLogin';
 import { Text } from '@/components/ui/text';
 
 export default function TerminalLayout() {
-  const { isAuthenticated, user, isTerminalDevice, activeStaff, clearStaffSession } = useAuthStore();
-  const { colorScheme } = useAppStore();
-  const { activeTenant } = useTenantStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const isTerminalDevice = useAuthStore((s) => s.isTerminalDevice);
+  const activeStaff = useAuthStore((s) => s.activeStaff);
+  const clearStaffSession = useAuthStore((s) => s.clearStaffSession);
+
+  const colorScheme = useAppStore((s) => s.colorScheme);
+  const activeTenant = useTenantStore((s) => s.activeTenant);
   const insets = useSafeAreaInsets();
   const isDark = colorScheme === 'dark';
 

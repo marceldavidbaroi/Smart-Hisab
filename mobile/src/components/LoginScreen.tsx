@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ShieldCheck, ArrowLeft, Key, EnvelopeSimple, Lock, User, CheckCircle, WarningCircle, Eye, EyeSlash } from 'phosphor-react-native';
+import { ShieldCheck, ArrowLeft, Key, EnvelopeSimple, Lock, User, CheckCircle, WarningCircle, Eye, EyeSlash, GoogleLogo } from 'phosphor-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Text } from '@/components/ui/text';
@@ -33,7 +33,7 @@ export function LoginScreen({
   onNavigateToRegister,
 }: LoginScreenProps) {
   const { colorScheme } = useAppStore();
-  const { login, signUp, resetPassword, pairWithPin, isLoading } = useAuthStore();
+  const { login, signUp, resetPassword, pairWithPin, loginWithGoogle, isLoading } = useAuthStore();
   const isDark = colorScheme === 'dark';
 
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -401,6 +401,33 @@ export function LoginScreen({
                       {mode === 'login_home' ? 'Sign In' : 'Create Account'}
                     </Text>
                   )}
+                </Button>
+
+                {/* Social Login Divider */}
+                <View className="flex-row items-center my-1">
+                  <View className="flex-1 h-px bg-border/50" />
+                  <Text className="text-[10px] uppercase font-bold text-muted-foreground mx-3 tracking-widest">OR</Text>
+                  <View className="flex-1 h-px bg-border/50" />
+                </View>
+
+                {/* Google Sign In Button */}
+                <Button
+                  variant="outline"
+                  onPress={() => {
+                    setAuthError(null);
+                    loginWithGoogle().then(() => {
+                      if (onLoginSuccess) onLoginSuccess();
+                    }).catch((err: any) => setAuthError(err.message || 'Google Sign-In failed.'));
+                  }}
+                  disabled={isLoading}
+                  className="w-full h-11 rounded-xl flex-row items-center justify-center min-h-[48px] bg-background border-border"
+                >
+                  <View className="mr-2">
+                    <GoogleLogo size={18} color={isDark ? '#e2e8f0' : '#475569'} weight="bold" />
+                  </View>
+                  <Text className="font-semibold text-foreground text-sm text-center">
+                    Continue with Google
+                  </Text>
                 </Button>
 
                 {/* Switch view helper text */}

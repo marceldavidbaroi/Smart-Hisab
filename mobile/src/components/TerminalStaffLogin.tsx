@@ -26,6 +26,7 @@ import {
   fetchPairedDeviceStaff,
   verifyStaffPin,
   setStaffPin,
+  unpairDeviceWithCode,
   KioskStaff,
 } from '@/services/staff';
 import { Text } from '@/components/ui/text';

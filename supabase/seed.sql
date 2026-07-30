@@ -58,3 +58,61 @@ begin
     );
   end if;
 end $$;
+
+-- Seed system staff roles for canteens
+insert into public.staff_roles (id, tenant_id, name, description, permissions, is_system_role)
+values 
+  (
+    '00000000-0000-0000-0000-000000000001',
+    null,
+    'Manager',
+    'System manager role with permission to open/close sessions, manage financial entries, and oversee canteen operations',
+    '{"modules": {"kiosk": {"log_pos": true, "log_expense": true, "log_advance": true, "view_active_session": true}, "operational_shifts": {"sessions_open": true, "sessions_close": true, "sessions_reopen": true}}}'::jsonb,
+    true
+  ),
+  (
+    '00000000-0000-0000-0000-000000000002',
+    null,
+    'Cashier',
+    'System cashier role for counter meal attendance, POS logging, and customer debt collection',
+    '{"modules": {"kiosk": {"log_pos": true, "log_expense": true, "log_advance": false, "view_active_session": true}, "operational_shifts": {"sessions_open": false, "sessions_close": false, "sessions_reopen": false}}}'::jsonb,
+    true
+  ),
+  (
+    '00000000-0000-0000-0000-000000000003',
+    null,
+    'Staff',
+    'General staff role with permission to view operational status and clock attendance',
+    '{"modules": {"kiosk": {"log_pos": false, "log_expense": false, "log_advance": false, "view_active_session": true}, "operational_shifts": {"sessions_open": false, "sessions_close": false, "sessions_reopen": false}}}'::jsonb,
+    true
+  ),
+  (
+    '00000000-0000-0000-0000-000000000004',
+    null,
+    'Kitchen Staff / Cook',
+    'Kitchen staff role with access to view shift meal prep counts and log market item lists',
+    '{"modules": {"kiosk": {"log_pos": false, "log_expense": false, "log_advance": false, "view_active_session": true}, "kitchen": {"view_meal_counts": true, "manage_market_notes": true}}}'::jsonb,
+    true
+  ),
+  (
+    '00000000-0000-0000-0000-000000000005',
+    null,
+    'Security Guard',
+    'Gatekeeper staff role for dining hall entry scanning and customer meal punching',
+    '{"modules": {"kiosk": {"log_pos": true, "log_expense": false, "log_advance": false, "view_active_session": true}, "gate": {"verify_customer": true}}}'::jsonb,
+    true
+  ),
+  (
+    '00000000-0000-0000-0000-000000000006',
+    null,
+    'Bazaar Purchaser',
+    'Procurement staff role for logging market shopping costs and bazaar notes',
+    '{"modules": {"kiosk": {"log_pos": false, "log_expense": true, "log_advance": false, "view_active_session": true}, "inventory": {"log_market_expense": true}}}'::jsonb,
+    true
+  )
+on conflict (id) do update set 
+  name = excluded.name,
+  description = excluded.description,
+  permissions = excluded.permissions,
+  is_system_role = excluded.is_system_role;
+

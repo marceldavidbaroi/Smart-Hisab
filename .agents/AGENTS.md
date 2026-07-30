@@ -40,3 +40,27 @@ This file outlines the core rules and constraints that the AI agent must adhere 
 * **Strict Constraint**: Use `web/src/composables/useFeedback.ts` for all user-facing API errors and success/info/warning toasts. Do not add per-feature `$q.notify`, custom snackbars, or ad-hoc error dialogs.
 * API failures → `showApiError` / `showError` (centered Dialog, OK only). Soft feedback → `showSuccess` / `showInfo` / `showWarning` (top toast).
 * Confirm/destructive Yes-Cancel dialogs and inline field validation remain exceptions.
+
+## Mobile App Architecture (React Native / Expo)
+
+### 1. File Size & Modularity
+* **Strict Constraint**: Files should not exceed 400 lines of code.
+* Continuously modularize code into smaller, reusable UI components and custom hooks. This ensures easier maintenance and reduced token usage during context building.
+
+### 2. Loading States & Animations
+* Always use Skeleton loaders for loading states instead of plain generic spinners (e.g., `ActivityIndicator`), to maintain a premium feel.
+* Incorporate lightweight micro-animations to ensure the UI feels dynamic and responsive.
+
+### 3. Dialogs & Modals
+* For any dialogs, prioritize using Bottom Slide Sheets/Dialogs instead of traditional center-screen popups. This is more ergonomic for mobile touch interfaces.
+* Use a Blur effect for the background of overlays, sheets, and modals (e.g., using `expo-blur`) instead of applying a solid dark tint or dimming.
+
+### 4. Data Refresh & Interactivity
+* Ensure there is always a pull-to-refresh mechanism (`RefreshControl`) implemented on every scrollable page or list.
+
+### 5. Layouts & Safe Area
+* Always use the proper Safe Area boundaries (via `react-native-safe-area-context`). Ensure UI elements do not overlap with device notches, status bars, and bottom navigation bars.
+
+### 6. Empty States & Primary Actions
+* When a list or page is empty (`length === 0`), hide top header creation/action buttons and place the primary action button directly inside the empty state card/container. Show top header action buttons only when items exist in the list.
+

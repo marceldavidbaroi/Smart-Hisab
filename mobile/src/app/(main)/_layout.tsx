@@ -10,10 +10,20 @@ import { useShiftStore } from '@/store/useShiftStore';
 import { Header } from '@/components/Header';
 
 export default function MainLayout() {
-  const { isAuthenticated, user, isTerminalDevice } = useAuthStore();
-  const { colorScheme } = useAppStore();
-  const { myTenants, activeTenant, isInitialized, fetchTenants } = useTenantStore();
-  const { shifts, isInitialized: shiftInitialized, fetchShifts } = useShiftStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const isTerminalDevice = useAuthStore((s) => s.isTerminalDevice);
+  
+  const colorScheme = useAppStore((s) => s.colorScheme);
+  
+  const myTenants = useTenantStore((s) => s.myTenants);
+  const activeTenant = useTenantStore((s) => s.activeTenant);
+  const isInitialized = useTenantStore((s) => s.isInitialized);
+  const fetchTenants = useTenantStore((s) => s.fetchTenants);
+
+  const shifts = useShiftStore((s) => s.shifts);
+  const shiftInitialized = useShiftStore((s) => s.isInitialized);
+  const fetchShifts = useShiftStore((s) => s.fetchShifts);
   const insets = useSafeAreaInsets();
   const isDark = colorScheme === 'dark';
 

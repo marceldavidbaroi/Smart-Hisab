@@ -5,8 +5,15 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useTenantStore } from '@/store/useTenantStore';
 
 export default function Index() {
-  const { isAuthenticated, user, isTerminalDevice, isLoading: authLoading } = useAuthStore();
-  const { myTenants, isInitialized: tenantInitialized, isLoading: tenantLoading, fetchTenants } = useTenantStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const isTerminalDevice = useAuthStore((s) => s.isTerminalDevice);
+  const authLoading = useAuthStore((s) => s.isLoading);
+
+  const myTenants = useTenantStore((s) => s.myTenants);
+  const tenantInitialized = useTenantStore((s) => s.isInitialized);
+  const tenantLoading = useTenantStore((s) => s.isLoading);
+  const fetchTenants = useTenantStore((s) => s.fetchTenants);
 
   useEffect(() => {
     if (isAuthenticated && user?.id && !tenantInitialized && !isTerminalDevice && !user?.isTerminalDevice) {

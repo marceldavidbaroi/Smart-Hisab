@@ -3,6 +3,8 @@ import { Stack } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { queryClient } from '@/api/queryClient';
 import { useAuthStore } from '@/store/useAuthStore';
 import '../../global.css';
@@ -15,21 +17,26 @@ export default function RootLayout() {
   }, [initialize]);
 
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="create-tenant" />
-          <Stack.Screen name="add-shift" />
-          <Stack.Screen name="terminal/index" />
-          <Stack.Screen name="staff/index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(main)" />
-          <Stack.Screen name="(terminal)" />
-        </Stack>
-        <StatusBar style="auto" />
-      </QueryClientProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <BottomSheetModalProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="create-tenant" />
+              <Stack.Screen name="add-shift" />
+              <Stack.Screen name="terminal/index" />
+              <Stack.Screen name="staff/index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(main)" />
+              <Stack.Screen name="(terminal)" />
+            </Stack>
+            <StatusBar style="auto" />
+          </BottomSheetModalProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
+
 

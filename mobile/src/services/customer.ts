@@ -12,6 +12,7 @@ export interface Customer {
   contract_shifts: string[] | null;
   factory_unit: string | null;
   is_active: boolean;
+  wallet_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +31,39 @@ export interface CreateCustomerInput {
   contract_daily_rate?: number | null;
   contract_shifts?: string[] | null;
   factory_unit?: string | null;
+}
+
+/**
+ * Fetch or create wallet for a given customer ID
+ */
+export async function ensureCustomerWallet(tenantId: string, customerId: string): Promise<string | null> {
+  try {
+    const { data: walletData } = await supabase
+      .from('customer_wallets')
+      .select('id')
+      .eq('customer_id', customerId)
+      .maybeSingle();
+
+    if (walletData?.id) {
+      return walletData.id;
+    }
+
+    const { data: newWallet, error: walletError } = await supabase
+      .from('customer_wallets')
+      .insert({ tenant_id: tenantId, customer_id: customerId })
+      .select('id')
+      .single();
+
+    if (walletError) {
+      console.warn('Failed to insert customer wallet:', walletError.message);
+      return null;
+    }
+
+    return newWallet?.id || null;
+  } catch (err: any) {
+    console.warn('ensureCustomerWallet exception:', err?.message || err);
+    return null;
+  }
 }
 
 /**
@@ -177,6 +211,8 @@ export async function createCustomer(input: CreateCustomerInput): Promise<Custom
     is_active: true,
   };
 
+  let createdCustomerRaw: any = null;
+
   const { data, error } = await supabase
     .from('customers')
     .insert(insertPayload)
@@ -198,15 +234,17 @@ export async function createCustomer(input: CreateCustomerInput): Promise<Custom
       throw rpcError;
     }
 
-    return {
-      ...rpcData,
-      outstanding_balance: Number(rpcData.outstanding_balance || 0),
-    };
+    createdCustomerRaw = rpcData;
+  } else {
+    createdCustomerRaw = data;
   }
 
+  const walletId = await ensureCustomerWallet(input.tenant_id, createdCustomerRaw.id);
+
   return {
-    ...data,
-    outstanding_balance: Number(data.outstanding_balance || 0),
+    ...createdCustomerRaw,
+    outstanding_balance: Number(createdCustomerRaw.outstanding_balance || 0),
+    wallet_id: walletId,
   };
 }
 

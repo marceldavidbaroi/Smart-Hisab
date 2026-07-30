@@ -213,7 +213,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           },
         });
         if (error) throw error;
-      } else if (GoogleSignin) {
+      } else if (GoogleSignin && process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID) {
         // Native Google Sign-In (Development / Production Native Build)
         await GoogleSignin.hasPlayServices();
         const userInfo = await GoogleSignin.signIn();

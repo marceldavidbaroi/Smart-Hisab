@@ -39,87 +39,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      baki_transactions: {
-        Row: {
-          amount: number
-          business_date: string
-          business_day_id: string | null
-          created_at: string
-          created_by_staff_id: string | null
-          created_by_user_id: string | null
-          customer_id: string
-          id: string
-          items_description: string
-          shift_id: string | null
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          business_date: string
-          business_day_id?: string | null
-          created_at?: string
-          created_by_staff_id?: string | null
-          created_by_user_id?: string | null
-          customer_id: string
-          id?: string
-          items_description: string
-          shift_id?: string | null
-          tenant_id: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          business_date?: string
-          business_day_id?: string | null
-          created_at?: string
-          created_by_staff_id?: string | null
-          created_by_user_id?: string | null
-          customer_id?: string
-          id?: string
-          items_description?: string
-          shift_id?: string | null
-          tenant_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "baki_transactions_business_day_id_fkey"
-            columns: ["business_day_id"]
-            isOneToOne: false
-            referencedRelation: "business_days"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "baki_transactions_created_by_staff_id_fkey"
-            columns: ["created_by_staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "baki_transactions_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "baki_transactions_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "baki_transactions_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       business_days: {
         Row: {
           business_date: string
@@ -202,148 +121,35 @@ export type Database = {
           },
         ]
       }
-      customer_collections: {
+      customer_wallets: {
         Row: {
-          amount: number
-          business_day_id: string | null
-          collected_at: string
-          collected_by_staff_id: string | null
-          collected_by_user_id: string | null
           created_at: string
           customer_id: string
           id: string
-          notes: string | null
-          payment_method: string
-          shift_id: string | null
           tenant_id: string
         }
         Insert: {
-          amount: number
-          business_day_id?: string | null
-          collected_at?: string
-          collected_by_staff_id?: string | null
-          collected_by_user_id?: string | null
           created_at?: string
           customer_id: string
           id?: string
-          notes?: string | null
-          payment_method: string
-          shift_id?: string | null
           tenant_id: string
         }
         Update: {
-          amount?: number
-          business_day_id?: string | null
-          collected_at?: string
-          collected_by_staff_id?: string | null
-          collected_by_user_id?: string | null
           created_at?: string
           customer_id?: string
           id?: string
-          notes?: string | null
-          payment_method?: string
-          shift_id?: string | null
           tenant_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "customer_collections_business_day_id_fkey"
-            columns: ["business_day_id"]
-            isOneToOne: false
-            referencedRelation: "business_days"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_collections_collected_by_staff_id_fkey"
-            columns: ["collected_by_staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_collections_customer_id_fkey"
+            foreignKeyName: "customer_wallets_customer_id_fkey"
             columns: ["customer_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "customer_collections_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_collections_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_daily_attendance: {
-        Row: {
-          attended_shifts: string[]
-          business_date: string
-          business_day_id: string | null
-          created_at: string
-          customer_id: string
-          id: string
-          rate_applied: number
-          shift_id: string | null
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          attended_shifts: string[]
-          business_date: string
-          business_day_id?: string | null
-          created_at?: string
-          customer_id: string
-          id?: string
-          rate_applied: number
-          shift_id?: string | null
-          tenant_id: string
-          updated_at?: string
-        }
-        Update: {
-          attended_shifts?: string[]
-          business_date?: string
-          business_day_id?: string | null
-          created_at?: string
-          customer_id?: string
-          id?: string
-          rate_applied?: number
-          shift_id?: string | null
-          tenant_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_daily_attendance_business_day_id_fkey"
-            columns: ["business_day_id"]
-            isOneToOne: false
-            referencedRelation: "business_days"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_daily_attendance_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_daily_attendance_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_daily_attendance_tenant_id_fkey"
+            foreignKeyName: "customer_wallets_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -404,6 +210,132 @@ export type Database = {
           },
         ]
       }
+      day_entries: {
+        Row: {
+          amount: number
+          business_day_id: string | null
+          category: string
+          created_at: string
+          created_by_staff_id: string | null
+          entry_type: string
+          id: string
+          notes: string | null
+          reference_id: string | null
+          reference_type: string | null
+          shift_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          business_day_id?: string | null
+          category: string
+          created_at?: string
+          created_by_staff_id?: string | null
+          entry_type: string
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          shift_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          business_day_id?: string | null
+          category?: string
+          created_at?: string
+          created_by_staff_id?: string | null
+          entry_type?: string
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          shift_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "day_entries_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "day_entries_created_by_staff_id_fkey"
+            columns: ["created_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "day_entries_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "day_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      day_notes: {
+        Row: {
+          business_day_id: string | null
+          content: string
+          created_at: string
+          created_by_staff_id: string | null
+          id: string
+          note_type: string
+          tenant_id: string
+        }
+        Insert: {
+          business_day_id?: string | null
+          content: string
+          created_at?: string
+          created_by_staff_id?: string | null
+          id?: string
+          note_type: string
+          tenant_id: string
+        }
+        Update: {
+          business_day_id?: string | null
+          content?: string
+          created_at?: string
+          created_by_staff_id?: string | null
+          id?: string
+          note_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "day_notes_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "day_notes_created_by_staff_id_fkey"
+            columns: ["created_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "day_notes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_pairings: {
         Row: {
           created_at: string
@@ -439,9 +371,121 @@ export type Database = {
           },
         ]
       }
+      meal_attendance: {
+        Row: {
+          business_day_id: string | null
+          charge_amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          recorded_by_staff_id: string | null
+          shift_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          business_day_id?: string | null
+          charge_amount?: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          recorded_by_staff_id?: string | null
+          shift_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          business_day_id?: string | null
+          charge_amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          recorded_by_staff_id?: string | null
+          shift_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_attendance_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_attendance_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_attendance_recorded_by_staff_id_fkey"
+            columns: ["recorded_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_attendance_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_attendance_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_configs: {
+        Row: {
+          created_at: string
+          effective_from: string
+          id: string
+          rate: number
+          shift_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          effective_from?: string
+          id?: string
+          rate: number
+          shift_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          effective_from?: string
+          id?: string
+          rate?: number
+          shift_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_configs_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_configs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       paired_devices: {
         Row: {
           device_name: string
+          device_sl: number | null
           device_token: string
           failed_attempts: number
           id: string
@@ -450,9 +494,11 @@ export type Database = {
           locked_until: string | null
           paired_at: string
           tenant_id: string
+          unpair_code: string | null
         }
         Insert: {
           device_name: string
+          device_sl?: number | null
           device_token: string
           failed_attempts?: number
           id?: string
@@ -461,9 +507,11 @@ export type Database = {
           locked_until?: string | null
           paired_at?: string
           tenant_id: string
+          unpair_code?: string | null
         }
         Update: {
           device_name?: string
+          device_sl?: number | null
           device_token?: string
           failed_attempts?: number
           id?: string
@@ -472,10 +520,66 @@ export type Database = {
           locked_until?: string | null
           paired_at?: string
           tenant_id?: string
+          unpair_code?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "paired_devices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salary_payouts: {
+        Row: {
+          amount: number
+          business_day_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          payment_mode: string
+          staff_id: string
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          business_day_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_mode?: string
+          staff_id: string
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          business_day_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_mode?: string
+          staff_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_payouts_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_payouts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_payouts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -517,6 +621,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "shifts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_attendance: {
+        Row: {
+          business_day_id: string | null
+          created_at: string
+          id: string
+          shift_id: string | null
+          staff_id: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_day_id?: string | null
+          created_at?: string
+          id?: string
+          shift_id?: string | null
+          staff_id: string
+          status: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_day_id?: string | null
+          created_at?: string
+          id?: string
+          shift_id?: string | null
+          staff_id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_attendance_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attendance_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attendance_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attendance_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -876,83 +1042,6 @@ export type Database = {
           },
         ]
       }
-      transaction_ledger: {
-        Row: {
-          amount: number
-          business_day_id: string | null
-          category: string
-          created_at: string
-          id: string
-          notes: string | null
-          operator_staff_id: string | null
-          operator_user_id: string | null
-          payment_method: string
-          shift_id: string | null
-          tenant_id: string
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          business_day_id?: string | null
-          category: string
-          created_at?: string
-          id?: string
-          notes?: string | null
-          operator_staff_id?: string | null
-          operator_user_id?: string | null
-          payment_method: string
-          shift_id?: string | null
-          tenant_id: string
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          business_day_id?: string | null
-          category?: string
-          created_at?: string
-          id?: string
-          notes?: string | null
-          operator_staff_id?: string | null
-          operator_user_id?: string | null
-          payment_method?: string
-          shift_id?: string | null
-          tenant_id?: string
-          type?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transaction_ledger_business_day_id_fkey"
-            columns: ["business_day_id"]
-            isOneToOne: false
-            referencedRelation: "business_days"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transaction_ledger_operator_staff_id_fkey"
-            columns: ["operator_staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transaction_ledger_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transaction_ledger_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_profiles: {
         Row: {
           avatar_url: string | null
@@ -982,6 +1071,77 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      wallet_entries: {
+        Row: {
+          amount: number
+          business_day_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          reference_id: string | null
+          reference_type: string | null
+          shift_id: string | null
+          tenant_id: string
+          type: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          business_day_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          shift_id?: string | null
+          tenant_id: string
+          type: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          business_day_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          shift_id?: string | null
+          tenant_id?: string
+          type?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_entries_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_entries_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_entries_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "customer_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1150,6 +1310,19 @@ export type Database = {
         Args: { p_device_token: string; p_tenant_id: string }
         Returns: Json
       }
+      get_financial_summary: {
+        Args: { p_end_date: string; p_start_date: string; p_tenant_id: string }
+        Returns: {
+          net_cash_flow: number
+          net_profit_loss: number
+          total_canteen_expenses: number
+          total_customer_payments: number
+          total_market_cost: number
+          total_meal_billed: number
+          total_salary_outflow: number
+        }[]
+      }
+      get_next_device_sl: { Args: { p_tenant_id: string }; Returns: number }
       get_open_session: {
         Args: { p_device_token: string; p_tenant_id: string }
         Returns: Json
@@ -1239,32 +1412,6 @@ export type Database = {
           start_time: string
         }[]
       }
-      list_attendance_for_date: {
-        Args: {
-          p_business_date: string
-          p_device_token: string
-          p_staff_id: string
-          p_tenant_id: string
-        }
-        Returns: {
-          attended_shifts: string[]
-          business_date: string
-          business_day_id: string | null
-          created_at: string
-          customer_id: string
-          id: string
-          rate_applied: number
-          shift_id: string | null
-          tenant_id: string
-          updated_at: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "customer_daily_attendance"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
       list_customers: {
         Args: {
           p_active_only?: boolean
@@ -1289,35 +1436,6 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "customers"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      list_daily_ledger_entries: {
-        Args: {
-          p_day_id: string
-          p_device_token: string
-          p_staff_id: string
-          p_tenant_id: string
-        }
-        Returns: {
-          amount: number
-          business_day_id: string | null
-          category: string
-          created_at: string
-          id: string
-          notes: string | null
-          operator_staff_id: string | null
-          operator_user_id: string | null
-          payment_method: string
-          shift_id: string | null
-          tenant_id: string
-          type: string
-          updated_at: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "transaction_ledger"
           isOneToOne: false
           isSetofReturn: true
         }
@@ -1451,6 +1569,10 @@ export type Database = {
       unpair_device: {
         Args: { p_device_token: string; p_tenant_id?: string }
         Returns: boolean
+      }
+      unpair_device_with_code: {
+        Args: { p_device_token: string; p_unpair_code: string }
+        Returns: Json
       }
       upsert_customer: {
         Args: {

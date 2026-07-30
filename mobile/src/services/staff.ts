@@ -11,6 +11,8 @@ export interface StaffMember {
   is_active: boolean;
   hashed_pin?: string | null;
   temp_pin?: string | null;
+  wallet_id?: string | null;
+  current_balance?: number;
   created_at: string;
   updated_at: string;
 }
@@ -38,12 +40,51 @@ export interface StaffRole {
 }
 
 /**
+ * Fetch or create wallet for a given staff member ID
+ */
+export async function ensureStaffWallet(tenantId: string, staffId: string): Promise<{ wallet_id: string | null; current_balance: number }> {
+  try {
+    const { data: walletData } = await supabase
+      .from('staff_wallets')
+      .select('id, current_balance')
+      .eq('staff_id', staffId)
+      .maybeSingle();
+
+    if (walletData?.id) {
+      return {
+        wallet_id: walletData.id,
+        current_balance: Number(walletData.current_balance || 0),
+      };
+    }
+
+    const { data: newWallet, error: walletError } = await supabase
+      .from('staff_wallets')
+      .insert({ tenant_id: tenantId, staff_id: staffId })
+      .select('id, current_balance')
+      .single();
+
+    if (walletError) {
+      console.warn('Failed to insert staff wallet:', walletError.message);
+      return { wallet_id: null, current_balance: 0 };
+    }
+
+    return {
+      wallet_id: newWallet?.id || null,
+      current_balance: Number(newWallet?.current_balance || 0),
+    };
+  } catch (err: any) {
+    console.warn('ensureStaffWallet exception:', err?.message || err);
+    return { wallet_id: null, current_balance: 0 };
+  }
+}
+
+/**
  * Fetch staff members for a given tenant
  */
 export async function getStaffMembers(tenantId: string): Promise<StaffMember[]> {
   const { data, error } = await supabase
     .from('staff_members')
-    .select('*, staff_roles(name)')
+    .select('*, staff_roles(name), staff_wallets(id, current_balance)')
     .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false });
 
@@ -52,10 +93,15 @@ export async function getStaffMembers(tenantId: string): Promise<StaffMember[]> 
     throw error;
   }
 
-  return (data || []).map((item: any) => ({
-    ...item,
-    role: item.staff_roles?.name || 'Staff',
-  }));
+  return (data || []).map((item: any) => {
+    const walletObj = Array.isArray(item.staff_wallets) ? item.staff_wallets[0] : item.staff_wallets;
+    return {
+      ...item,
+      role: item.staff_roles?.name || 'Staff',
+      wallet_id: walletObj?.id || null,
+      current_balance: Number(walletObj?.current_balance || 0),
+    };
+  });
 }
 
 /**
@@ -96,9 +142,13 @@ export async function createStaffMember(staff: {
   }
 
   const item = data as any;
+  const walletInfo = await ensureStaffWallet(staff.tenant_id, item.id);
+
   return {
     ...item,
     role: item.staff_roles?.name || staff.role,
+    wallet_id: walletInfo.wallet_id,
+    current_balance: walletInfo.current_balance,
   };
 }
 
@@ -418,4 +468,22 @@ export async function refreshDeviceToken(tenantId: string, deviceId: string): Pr
     throw error;
   }
   return data as string;
+}
+
+/**
+ * Unpair device using a 6-digit unpair code
+ */
+export async function unpairDeviceWithCode(deviceToken: string, unpairCode: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const { data, error } = await supabase.rpc('unpair_device_with_code', {
+      p_device_token: deviceToken,
+      p_unpair_code: unpairCode,
+    });
+    if (error) {
+      return { success: false, message: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Failed to unpair device' };
+  }
 }
