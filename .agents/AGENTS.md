@@ -72,5 +72,22 @@ This file outlines the core rules and constraints that the AI agent must adhere 
 * Prefer Swipeable rows (`SwipeableRow`) for item/entity list management (Edit & Delete actions) to keep list card surfaces clean and uncluttered.
 * Always incorporate an initial **Peek Nudge Animation** on the first list item upon screen load to visually signal swipeability to users.
 
+## Data Management & API Optimization (Web & Mobile)
 
+### 1. Prevent Redundant Calls
+* **Strict Constraint**: Never make unnecessary API calls. Always verify if the data is already available in the local state/cache or if the request can be optimized before hitting the network.
 
+### 2. Targeted Cache Mutation
+* **Strict Constraint**: On edit or delete actions, do not trigger a full list refetch. Instead, directly mutate/update the local cache for that specific item to save bandwidth and improve perceived performance.
+
+### 3. Optimistic Updates
+* For fast-paced environments (like POS systems), implement optimistic updates where the UI updates immediately on interaction before waiting for the API to confirm the change.
+
+### 4. Debounce/Throttle Inputs
+* Always debounce API calls triggered by text inputs (like search bars) to prevent spamming the backend with requests on every keystroke.
+
+### 5. Pagination & Infinite Scroll
+* Never fetch entire large database tables at once. Always use pagination or infinite scrolling for lists (like transaction history or large inventories) to minimize payload sizes.
+
+### 6. Stale-While-Revalidate
+* Rely on robust caching strategies (like React Query or SWR) to show cached data instantly while silently fetching the latest updates in the background.
