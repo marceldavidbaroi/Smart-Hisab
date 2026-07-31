@@ -129,7 +129,8 @@ Customer profiles (diners, students, room members).
 * `tenant_id` (UUID, FK -> `tenants`)
 * `name` (TEXT)
 * `phone` (TEXT)
-* `room_no` (TEXT)
+* `address` (TEXT, optional)
+* `institution` (TEXT, optional)
 * `is_active` (BOOLEAN)
 * `created_at` (TIMESTAMPTZ)
 
