@@ -15,14 +15,14 @@ export function BusinessDayGateGuard({ children }: BusinessDayGateGuardProps) {
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 
   useEffect(() => {
-    if (activeTenant?.id && !activeDay) {
+    if (activeTenant?.id && !activeDay && !hasFetchedOnce) {
       fetchActiveDay(activeTenant.id).finally(() => {
         setHasFetchedOnce(true);
       });
     } else {
       setHasFetchedOnce(true);
     }
-  }, [activeTenant?.id, activeDay, fetchActiveDay]);
+  }, [activeTenant?.id, activeDay, fetchActiveDay, hasFetchedOnce]);
 
   // If user clicked close/skip, show main app content immediately
   if (isDismissed) {
