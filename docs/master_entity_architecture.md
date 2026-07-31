@@ -202,6 +202,8 @@ Operational container for opening/closing day cash.
 * `expected_cash` (NUMERIC(12, 2), Calculated at day close)
 * `variance` (NUMERIC(12, 2), `closing_cash - expected_cash`)
 * `status` (TEXT: `open`, `closed`)
+* `opened_by_staff_id` (UUID, FK -> `staff`, Optional)
+* `closed_by_staff_id` (UUID, FK -> `staff`, Optional)
 * `opened_at` (TIMESTAMPTZ)
 * `closed_at` (TIMESTAMPTZ)
 

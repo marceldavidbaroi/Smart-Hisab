@@ -14,6 +14,18 @@ export default function RootLayout() {
 
   useEffect(() => {
     initialize();
+
+    // Catch unhandled keep-awake promise rejections gracefully on Web/Expo Go
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      const handleUnhandledRejection = (event: any) => {
+        if (event?.reason?.message?.toLowerCase().includes('keep awake')) {
+          event.preventDefault();
+          console.warn('[KeepAwake] Suppressed unhandled rejection:', event.reason?.message);
+        }
+      };
+      window.addEventListener('unhandledrejection', handleUnhandledRejection);
+      return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    }
   }, [initialize]);
 
   return (

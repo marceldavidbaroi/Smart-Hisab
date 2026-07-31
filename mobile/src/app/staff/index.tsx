@@ -39,6 +39,7 @@ import StaffAddEditModal from './components/StaffAddEditModal';
 import PinRevealModal from './components/PinRevealModal';
 import DevicePairingModal from './components/DevicePairingModal';
 import StaffSkeleton from './components/StaffSkeleton';
+import { WarningModal } from '@/components/ui/WarningModal';
 
 export default function StaffManagementScreen() {
   const router = useRouter();
@@ -114,27 +115,26 @@ export default function StaffManagementScreen() {
     setStaffModalVisible(true);
   };
 
-  // Handle staff deletion with confirmation
+  const [deleteTargetStaff, setDeleteTargetStaff] = useState<StaffMember | null>(null);
+  const [isDeletingStaff, setIsDeletingStaff] = useState(false);
+
+  // Handle staff deletion with confirmation sheet
   const handleDeleteStaff = (staff: StaffMember) => {
-    Alert.alert(
-      'Delete Staff Member',
-      `Are you sure you want to delete ${staff.full_name}? This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteStaffMember(staff.id);
-              setStaffList((prev) => prev.filter((item) => item.id !== staff.id));
-            } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to delete staff member');
-            }
-          },
-        },
-      ]
-    );
+    setDeleteTargetStaff(staff);
+  };
+
+  const confirmDeleteStaff = async () => {
+    if (!deleteTargetStaff) return;
+    try {
+      setIsDeletingStaff(true);
+      await deleteStaffMember(deleteTargetStaff.id);
+      setStaffList((prev) => prev.filter((item) => item.id !== deleteTargetStaff.id));
+      setDeleteTargetStaff(null);
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to delete staff member');
+    } finally {
+      setIsDeletingStaff(false);
+    }
   };
 
   // Open phone dialer app when tapping staff phone number
@@ -363,6 +363,20 @@ export default function StaffManagementScreen() {
         onSuccess={fetchData}
         isDark={isDark}
         insets={insets}
+      />
+
+      {/* Delete Staff Warning Sheet */}
+      <WarningModal
+        visible={Boolean(deleteTargetStaff)}
+        onClose={() => setDeleteTargetStaff(null)}
+        onConfirm={confirmDeleteStaff}
+        title="Delete Staff Member"
+        description={`Are you sure you want to delete staff member "${deleteTargetStaff?.full_name}"? This action cannot be undone.`}
+        variant="danger"
+        confirmText="Delete Staff"
+        cancelText="Cancel"
+        isLoading={isDeletingStaff}
+        isDark={isDark}
       />
     </View>
   );

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Play, StopCircle, CurrencyCircleDollar, CheckCircle, Warning, Clock } from 'phosphor-react-native';
-import { SwipeableModal } from '@/components/ui/SwipeableModal';
+import { BottomSlideModal } from '@/components/ui/BottomSlideModal';
+import { ErrorModal } from '@/components/ui/ErrorModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useBusinessDayStore, BusinessDay } from '@/store/useBusinessDayStore';
@@ -12,7 +13,7 @@ import { useAppStore } from '@/store/useAppStore';
 interface DayControlModalProps {
   visible: boolean;
   onClose: () => void;
-  enforceMode?: boolean; // If true, cannot dismiss until a day is started
+  enforceMode?: boolean;
 }
 
 export function DayControlModal({ visible, onClose, enforceMode = false }: DayControlModalProps) {
@@ -24,7 +25,7 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
   const { deviceToken, activeStaff } = useAuthStore();
   const { activeDay, startDay, endDay, isLoading } = useBusinessDayStore();
 
-  const [mode, setMode] = useState<'start' | 'end'>('start');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [cashInput, setCashInput] = useState('');
   const [notesInput, setNotesInput] = useState('');
   const [summaryResult, setSummaryResult] = useState<{ expected_cash: number; variance: number } | null>(null);
@@ -32,12 +33,12 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
   const handleStartDay = async () => {
     const amount = parseFloat(cashInput);
     if (isNaN(amount) || amount < 0) {
-      Alert.alert('Validation Error', 'Please enter a valid non-negative opening cash amount.');
+      setErrorMessage('Please enter a valid non-negative opening cash amount.');
       return;
     }
 
     if (!activeTenant?.id) {
-      Alert.alert('Error', 'No active workspace selected.');
+      setErrorMessage('No active workspace selected.');
       return;
     }
 
@@ -49,10 +50,9 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
         openingCash: amount,
       });
       setCashInput('');
-      Alert.alert('Day Started', `Business Day has been started with ৳ ${amount.toFixed(2)} opening cash.`);
       onClose();
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to start business day.');
+      setErrorMessage(err.message || 'Failed to start business day.');
     }
   };
 
@@ -92,8 +92,9 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
   const isDayRunning = !!activeDay && activeDay.status === 'open';
 
   return (
-    <SwipeableModal
+    <BottomSlideModal
       visible={visible}
+      isDark={isDark}
       onClose={() => {
         if (enforceMode && !isDayRunning) {
           Alert.alert('Day Required', 'You must start a business day before proceeding.');
@@ -103,7 +104,7 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
         onClose();
       }}
     >
-      <View className="p-5 gap-4">
+      <View className="gap-4">
         {/* Header */}
         <View className="flex-row items-center justify-between border-b border-border pb-3">
           <View className="flex-row items-center gap-2.5">
@@ -176,7 +177,7 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
             </View>
 
             <View className="gap-1.5">
-              <Text className="text-[11px] font-semibold text-muted-foreground uppercase">
+              <Text className="text-xs font-semibold text-muted-foreground uppercase">
                 Opening Counter Cash (৳) *
               </Text>
               <Input
@@ -210,7 +211,7 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
           <View className="gap-3.5">
             <View className="bg-card border border-border p-3.5 rounded-xl flex-row items-center justify-between">
               <View>
-                <Text className="text-[10px] font-semibold text-muted-foreground uppercase">Opening Cash</Text>
+                <Text className="text-xs font-semibold text-muted-foreground uppercase">Opening Cash</Text>
                 <Text className="text-sm font-bold text-foreground">৳ {Number(activeDay?.opening_cash || 0).toFixed(2)}</Text>
               </View>
               <View className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
@@ -219,7 +220,7 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
             </View>
 
             <View className="gap-1.5">
-              <Text className="text-[11px] font-semibold text-muted-foreground uppercase">
+              <Text className="text-xs font-semibold text-muted-foreground uppercase">
                 Closing Counter Cash (৳) *
               </Text>
               <Input
@@ -233,7 +234,7 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
             </View>
 
             <View className="gap-1.5">
-              <Text className="text-[11px] font-semibold text-muted-foreground uppercase">
+              <Text className="text-xs font-semibold text-muted-foreground uppercase">
                 Closing Notes (Optional)
               </Text>
               <Input
@@ -263,6 +264,14 @@ export function DayControlModal({ visible, onClose, enforceMode = false }: DayCo
           </View>
         )}
       </View>
-    </SwipeableModal>
+
+      {/* Error Slide Sheet */}
+      <ErrorModal
+        visible={Boolean(errorMessage)}
+        onClose={() => setErrorMessage(null)}
+        message={errorMessage}
+        isDark={isDark}
+      />
+    </BottomSlideModal>
   );
 }

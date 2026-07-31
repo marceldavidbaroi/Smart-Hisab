@@ -19,15 +19,18 @@ export interface BusinessDay {
 
 interface BusinessDayState {
   activeDay: BusinessDay | null;
+  lastClosedDay: BusinessDay | null;
   isLoading: boolean;
   error: string | null;
 
   fetchActiveDay: (tenantId: string) => Promise<BusinessDay | null>;
+  fetchLastClosedDay: (tenantId: string) => Promise<BusinessDay | null>;
   startDay: (params: {
     tenantId: string;
     deviceToken?: string | null;
     staffId?: string | null;
     openingCash: number;
+    businessDate?: string;
   }) => Promise<string>;
   endDay: (params: {
     tenantId: string;
@@ -47,6 +50,7 @@ interface BusinessDayState {
 
 export const useBusinessDayStore = create<BusinessDayState>((set, get) => ({
   activeDay: null,
+  lastClosedDay: null,
   isLoading: false,
   error: null,
 
@@ -64,6 +68,10 @@ export const useBusinessDayStore = create<BusinessDayState>((set, get) => ({
 
       if (error) throw error;
       set({ activeDay: data || null, isLoading: false });
+
+      // Fetch last closed day in parallel for float suggestion
+      get().fetchLastClosedDay(tenantId);
+
       return data || null;
     } catch (err: any) {
       console.warn('[fetchActiveDay] error:', err.message || err);
@@ -72,12 +80,34 @@ export const useBusinessDayStore = create<BusinessDayState>((set, get) => ({
     }
   },
 
-  startDay: async ({ tenantId, deviceToken, staffId, openingCash }) => {
+  fetchLastClosedDay: async (tenantId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('business_days')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('status', 'closed')
+        .order('closed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      set({ lastClosedDay: data || null });
+      return data || null;
+    } catch (err) {
+      console.warn('[fetchLastClosedDay] error:', err);
+      return null;
+    }
+  },
+
+  startDay: async ({ tenantId, deviceToken, staffId, openingCash, businessDate }) => {
     set({ isLoading: true, error: null });
     try {
       if (openingCash < 0) {
         throw new Error('Opening cash amount cannot be negative.');
       }
+
+      const selectedDate = businessDate || new Date().toISOString().split('T')[0];
 
       // If device token & staff ID are provided, call start_business_day RPC
       if (deviceToken && staffId) {
@@ -93,18 +123,15 @@ export const useBusinessDayStore = create<BusinessDayState>((set, get) => ({
         return data as string;
       }
 
-      // Direct insert for authenticated manager user
-      const { data: userRes } = await supabase.auth.getUser();
-      const userId = userRes.user?.id;
-
+      // Direct insert for authenticated manager/staff user
       const { data, error } = await supabase
         .from('business_days')
         .insert({
           tenant_id: tenantId,
-          business_date: new Date().toISOString().split('T')[0],
+          business_date: selectedDate,
           status: 'open',
           opening_cash: openingCash,
-          opened_by_user_id: userId,
+          opened_by_staff_id: staffId || null,
           opened_at: new Date().toISOString(),
         })
         .select()
@@ -142,10 +169,6 @@ export const useBusinessDayStore = create<BusinessDayState>((set, get) => ({
         return data?.[0] || data;
       }
 
-      // Direct manager update
-      const { data: userRes } = await supabase.auth.getUser();
-      const userId = userRes.user?.id;
-
       // Calculate expected cash
       const { data: dayData } = await supabase
         .from('business_days')
@@ -155,22 +178,29 @@ export const useBusinessDayStore = create<BusinessDayState>((set, get) => ({
 
       const openingCash = dayData?.opening_cash || 0;
 
-      const { data: ledgerInflows } = await supabase
-        .from('transaction_ledger')
-        .select('amount')
-        .eq('business_day_id', dayId)
-        .eq('type', 'inflow')
-        .eq('payment_method', 'cash');
+      let totalInflow = 0;
+      let totalOutflow = 0;
 
-      const { data: ledgerOutflows } = await supabase
-        .from('transaction_ledger')
-        .select('amount')
-        .eq('business_day_id', dayId)
-        .eq('type', 'outflow')
-        .eq('payment_method', 'cash');
+      try {
+        const { data: ledgerInflows } = await supabase
+          .from('transaction_ledger')
+          .select('amount')
+          .eq('business_day_id', dayId)
+          .eq('type', 'inflow')
+          .eq('payment_method', 'cash');
 
-      const totalInflow = (ledgerInflows || []).reduce((acc, row) => acc + (row.amount || 0), 0);
-      const totalOutflow = (ledgerOutflows || []).reduce((acc, row) => acc + (row.amount || 0), 0);
+        const { data: ledgerOutflows } = await supabase
+          .from('transaction_ledger')
+          .select('amount')
+          .eq('business_day_id', dayId)
+          .eq('type', 'outflow')
+          .eq('payment_method', 'cash');
+
+        totalInflow = (ledgerInflows || []).reduce((acc, row) => acc + (row.amount || 0), 0);
+        totalOutflow = (ledgerOutflows || []).reduce((acc, row) => acc + (row.amount || 0), 0);
+      } catch (e) {
+        console.warn('Ledger query skipped:', e);
+      }
 
       const expectedCash = openingCash + totalInflow - totalOutflow;
       const variance = closingCash - expectedCash;
@@ -182,7 +212,7 @@ export const useBusinessDayStore = create<BusinessDayState>((set, get) => ({
           closing_cash: closingCash,
           expected_cash: expectedCash,
           variance: variance,
-          closed_by_user_id: userId,
+          closed_by_staff_id: staffId || null,
           closed_at: new Date().toISOString(),
           notes: notes || null,
         })

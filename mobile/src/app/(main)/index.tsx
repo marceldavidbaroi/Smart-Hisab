@@ -28,6 +28,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useTenantStore } from '@/store/useTenantStore';
 import { useBusinessDayStore } from '@/store/useBusinessDayStore';
 import { DayControlModal } from '@/components/ui/DayControlModal';
+import { RunningDayBanner } from '@/components/RunningDayBanner';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -93,40 +94,8 @@ export default function HomeScreen() {
 
   return (
     <ScrollView className={`flex-1 ${isDark ? 'dark bg-background' : 'bg-slate-50/50'} p-5`}>
-      {/* Business Day Status Card */}
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => setDayModalVisible(true)}
-        className={`border rounded-2xl p-4 mb-4 shadow-xs flex-row items-center justify-between ${
-          activeDay
-            ? 'bg-emerald-500/10 border-emerald-500/30'
-            : 'bg-amber-500/10 border-amber-500/30'
-        }`}
-      >
-        <View className="flex-row items-center gap-3">
-          <View className={`w-10 h-10 rounded-xl items-center justify-center border ${
-            activeDay ? 'bg-emerald-500/20 border-emerald-500/40' : 'bg-amber-500/20 border-amber-500/40'
-          }`}>
-            <Clock size={22} color={activeDay ? '#10b981' : '#f59e0b'} weight="bold" />
-          </View>
-          <View>
-            <Text className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Business Day Status
-            </Text>
-            <Text className="text-sm font-bold text-foreground mt-0.5">
-              {activeDay ? `Day Running (Opening: ৳ ${Number(activeDay.opening_cash || 0).toFixed(2)})` : 'No Active Day Running'}
-            </Text>
-          </View>
-        </View>
-
-        <View className={`px-3 py-1.5 rounded-xl border ${
-          activeDay ? 'bg-emerald-500/20 border-emerald-500/40' : 'bg-amber-500 border-amber-600'
-        }`}>
-          <Text className={`text-xs font-bold ${activeDay ? 'text-emerald-700 dark:text-emerald-400' : 'text-white'}`}>
-            {activeDay ? 'End Day' : 'Start Day'}
-          </Text>
-        </View>
-      </TouchableOpacity>
+      {/* Live Business Day Banner */}
+      <RunningDayBanner onPressCloseDay={() => setDayModalVisible(true)} />
 
       {/* Day Control Modal */}
       <DayControlModal

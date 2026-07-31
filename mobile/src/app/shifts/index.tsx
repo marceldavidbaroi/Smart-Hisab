@@ -29,6 +29,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BottomSlideModal } from '@/components/ui/BottomSlideModal';
+import { WarningModal } from '@/components/ui/WarningModal';
 import { SwipeableRow } from '@/components/ui/SwipeableRow';
 
 export default function ShiftsScreen() {
@@ -193,26 +194,25 @@ export default function ShiftsScreen() {
     }
   };
 
+  const [deleteTargetShift, setDeleteTargetShift] = useState<Shift | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = (shift: Shift) => {
     if (!shift.id) return;
-    Alert.alert(
-      'Delete Shift',
-      `Are you sure you want to delete "${shift.name}"? This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteShift(shift.id!);
-            } catch (err: any) {
-              Alert.alert('Error', err?.message || 'Failed to delete shift.');
-            }
-          },
-        },
-      ]
-    );
+    setDeleteTargetShift(shift);
+  };
+
+  const confirmDeleteShift = async () => {
+    if (!deleteTargetShift?.id) return;
+    try {
+      setIsDeleting(true);
+      await deleteShift(deleteTargetShift.id);
+      setDeleteTargetShift(null);
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to delete shift.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const activeShiftsCount = shifts.filter((s) => s.is_active).length;
@@ -447,6 +447,20 @@ export default function ShiftsScreen() {
           </Button>
         </View>
       </BottomSlideModal>
+
+      {/* Delete Shift Warning Sheet */}
+      <WarningModal
+        visible={Boolean(deleteTargetShift)}
+        onClose={() => setDeleteTargetShift(null)}
+        onConfirm={confirmDeleteShift}
+        title="Delete Shift"
+        description={`Are you sure you want to delete shift "${deleteTargetShift?.name}"? This action cannot be undone.`}
+        variant="danger"
+        confirmText="Delete Shift"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+        isDark={isDark}
+      />
     </SafeAreaView>
   );
 }

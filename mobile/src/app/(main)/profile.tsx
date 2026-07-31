@@ -26,6 +26,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useTenantStore, Tenant } from '@/store/useTenantStore';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/lib/supabase';
+import { WarningModal } from '@/components/ui/WarningModal';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
@@ -266,189 +267,37 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* Delete Tenant Modal */}
-      <Modal
+      {/* Delete Tenant Slide Sheet */}
+      <WarningModal
         visible={showDeleteTenantModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeleteTenantModal(false)}
-      >
-        <View className="flex-1 bg-black/60 justify-center items-center p-5">
-          <View className={`w-full max-w-md ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} border rounded-3xl p-5 shadow-2xl`}>
-            {/* Header */}
-            <View className="flex-row items-center justify-between pb-3 border-b border-border mb-4">
-              <View className="flex-row items-center gap-2">
-                <Warning size={22} color="#ef4444" />
-                <Text className="text-lg font-bold text-destructive">Delete Tenant</Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowDeleteTenantModal(false)} className="p-1">
-                <X size={20} color={isDark ? '#94a3b8' : '#64748b'} />
-              </TouchableOpacity>
-            </View>
+        onClose={() => setShowDeleteTenantModal(false)}
+        onConfirm={handleConfirmDeleteTenant}
+        title="Delete Tenant Workspace"
+        description={`Permanently delete workspace "${selectedTenantObj?.name || 'Selected Tenant'}" and all its operational data. This action cannot be undone.`}
+        variant="danger"
+        confirmText="Delete Workspace"
+        cancelText="Cancel"
+        isLoading={isDeletingTenant}
+        isDark={isDark}
+        requiredConfirmText={expectedTenantConfirm}
+        confirmInputPlaceholder={expectedTenantConfirm}
+      />
 
-            {/* Tenant Selector (if multiple tenants exist) */}
-            {myTenants.length > 1 && (
-              <View className="mb-4">
-                <Text className="text-xs font-semibold text-foreground mb-2">Select Tenant to Delete:</Text>
-                <ScrollView style={{ maxHeight: 140 }} className="bg-muted/50 rounded-xl p-1 border border-border">
-                  {myTenants.map((m) => {
-                    const t = m.tenants;
-                    if (!t) return null;
-                    const isSelected = t.id === selectedTenantId;
-                    return (
-                      <TouchableOpacity
-                        key={t.id}
-                        onPress={() => setSelectedTenantId(t.id)}
-                        className={`p-2.5 rounded-lg flex-row items-center justify-between mb-1 ${
-                          isSelected ? 'bg-destructive/15 border border-destructive/30' : 'bg-card'
-                        }`}
-                      >
-                        <Text className={`text-xs font-medium ${isSelected ? 'text-destructive font-bold' : 'text-foreground'}`}>
-                          {t.name}
-                        </Text>
-                        {isSelected && <CheckCircle size={16} color="#ef4444" />}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Instructions */}
-            <Text className="text-xs text-muted-foreground mb-3 leading-5">
-              This will permanently delete tenant <Text className="font-bold text-foreground">{selectedTenantObj?.name || 'Selected Tenant'}</Text> and all its data. This action cannot be undone.
-            </Text>
-
-            <View className="bg-destructive/10 p-3 rounded-xl mb-4 border border-destructive/20">
-              <Text className="text-xs text-muted-foreground mb-1">To confirm, type exactly:</Text>
-              <Text className="text-sm font-mono font-bold text-destructive select-all">
-                {expectedTenantConfirm}
-              </Text>
-            </View>
-
-            {/* Input field */}
-            <TextInput
-              value={tenantConfirmText}
-              onChangeText={setTenantConfirmText}
-              placeholder={expectedTenantConfirm}
-              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-              autoCapitalize="none"
-              autoCorrect={false}
-              className={`w-full bg-background border ${
-                isTenantMatch ? 'border-emerald-500' : 'border-border'
-              } rounded-xl px-4 py-3 text-foreground text-sm font-mono mb-5`}
-            />
-
-            {/* Modal Footer Buttons */}
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                onPress={() => setShowDeleteTenantModal(false)}
-                disabled={isDeletingTenant}
-                className="flex-1 bg-muted py-3 rounded-xl items-center"
-              >
-                <Text className="text-muted-foreground font-semibold text-sm">Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleConfirmDeleteTenant}
-                disabled={!isTenantMatch || isDeletingTenant}
-                className={`flex-1 py-3 rounded-xl items-center flex-row justify-center gap-2 ${
-                  isTenantMatch && !isDeletingTenant
-                    ? 'bg-destructive'
-                    : 'bg-destructive/40 opacity-50'
-                }`}
-              >
-                {isDeletingTenant ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <>
-                    <Trash size={16} color="#ffffff" />
-                    <Text className="text-white font-bold text-sm">Delete Tenant</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Delete Profile Modal */}
-      <Modal
+      {/* Delete Profile Slide Sheet */}
+      <WarningModal
         visible={showDeleteProfileModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeleteProfileModal(false)}
-      >
-        <View className="flex-1 bg-black/60 justify-center items-center p-5">
-          <View className={`w-full max-w-md ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} border rounded-3xl p-5 shadow-2xl`}>
-            {/* Header */}
-            <View className="flex-row items-center justify-between pb-3 border-b border-border mb-4">
-              <View className="flex-row items-center gap-2">
-                <Warning size={22} color="#ef4444" />
-                <Text className="text-lg font-bold text-destructive">Delete Profile</Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowDeleteProfileModal(false)} className="p-1">
-                <X size={20} color={isDark ? '#94a3b8' : '#64748b'} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Instructions */}
-            <Text className="text-xs text-muted-foreground mb-3 leading-5">
-              This will permanently delete your user profile account and credentials. This action cannot be undone.
-            </Text>
-
-            <View className="bg-destructive/10 p-3 rounded-xl mb-4 border border-destructive/20">
-              <Text className="text-xs text-muted-foreground mb-1">To confirm, type exactly:</Text>
-              <Text className="text-sm font-mono font-bold text-destructive select-all">
-                DELETE PROFILE
-              </Text>
-            </View>
-
-            {/* Input field */}
-            <TextInput
-              value={profileConfirmText}
-              onChangeText={setProfileConfirmText}
-              placeholder="DELETE PROFILE"
-              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              className={`w-full bg-background border ${
-                isProfileMatch ? 'border-emerald-500' : 'border-border'
-              } rounded-xl px-4 py-3 text-foreground text-sm font-mono mb-5`}
-            />
-
-            {/* Modal Footer Buttons */}
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                onPress={() => setShowDeleteProfileModal(false)}
-                disabled={isDeletingProfile}
-                className="flex-1 bg-muted py-3 rounded-xl items-center"
-              >
-                <Text className="text-muted-foreground font-semibold text-sm">Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleConfirmDeleteProfile}
-                disabled={!isProfileMatch || isDeletingProfile}
-                className={`flex-1 py-3 rounded-xl items-center flex-row justify-center gap-2 ${
-                  isProfileMatch && !isDeletingProfile
-                    ? 'bg-destructive'
-                    : 'bg-destructive/40 opacity-50'
-                }`}
-              >
-                {isDeletingProfile ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <>
-                    <Trash size={16} color="#ffffff" />
-                    <Text className="text-white font-bold text-sm">Delete Profile</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowDeleteProfileModal(false)}
+        onConfirm={handleConfirmDeleteProfile}
+        title="Delete User Profile"
+        description="Permanently delete your profile account credentials and all personal account data. This action cannot be undone."
+        variant="danger"
+        confirmText="Delete Profile"
+        cancelText="Cancel"
+        isLoading={isDeletingProfile}
+        isDark={isDark}
+        requiredConfirmText="DELETE PROFILE"
+        confirmInputPlaceholder="DELETE PROFILE"
+      />
     </SafeAreaView>
   );
 }

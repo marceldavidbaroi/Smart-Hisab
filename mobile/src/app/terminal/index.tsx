@@ -31,6 +31,7 @@ import {
 import { SwipeableRow } from '@/components/ui/SwipeableRow';
 import TerminalAddModal from './components/TerminalAddModal';
 import TerminalSkeleton from './components/TerminalSkeleton';
+import { WarningModal } from '@/components/ui/WarningModal';
 
 export default function TerminalManagementScreen() {
   const router = useRouter();
@@ -98,28 +99,25 @@ export default function TerminalManagementScreen() {
     }
   };
 
+  const [deleteTargetTerminal, setDeleteTargetTerminal] = useState<DevicePairing | null>(null);
+  const [isDeletingTerminal, setIsDeletingTerminal] = useState(false);
+
   const handleDeleteTerminal = (item: DevicePairing) => {
-    Alert.alert(
-      'Remove Device',
-      item.is_paired_device
-        ? `Are you sure you want to disconnect paired terminal "${item.device_name}"?`
-        : `Are you sure you want to revoke pairing PIN for "${item.device_name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDevicePairing(item.id, item.is_paired_device);
-              setTerminals((prev) => prev.filter((t) => t.id !== item.id));
-            } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to remove device');
-            }
-          },
-        },
-      ]
-    );
+    setDeleteTargetTerminal(item);
+  };
+
+  const confirmDeleteTerminal = async () => {
+    if (!deleteTargetTerminal) return;
+    try {
+      setIsDeletingTerminal(true);
+      await deleteDevicePairing(deleteTargetTerminal.id, deleteTargetTerminal.is_paired_device);
+      setTerminals((prev) => prev.filter((t) => t.id !== deleteTargetTerminal.id));
+      setDeleteTargetTerminal(null);
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to remove device');
+    } finally {
+      setIsDeletingTerminal(false);
+    }
   };
 
   const handleRefreshDeviceToken = async (item: DevicePairing) => {
@@ -397,6 +395,24 @@ export default function TerminalManagementScreen() {
         isDark={isDark}
         accentColor={accentColor}
         insets={insets}
+      />
+
+      {/* Delete Device Warning Sheet */}
+      <WarningModal
+        visible={Boolean(deleteTargetTerminal)}
+        onClose={() => setDeleteTargetTerminal(null)}
+        onConfirm={confirmDeleteTerminal}
+        title="Remove Device"
+        description={
+          deleteTargetTerminal?.is_paired_device
+            ? `Are you sure you want to disconnect paired terminal "${deleteTargetTerminal?.device_name}"?`
+            : `Are you sure you want to revoke pairing PIN for "${deleteTargetTerminal?.device_name}"?`
+        }
+        variant="danger"
+        confirmText="Remove Device"
+        cancelText="Cancel"
+        isLoading={isDeletingTerminal}
+        isDark={isDark}
       />
     </View>
   );

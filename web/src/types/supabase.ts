@@ -124,18 +124,21 @@ export type Database = {
       customer_wallets: {
         Row: {
           created_at: string
+          current_balance: number
           customer_id: string
           id: string
           tenant_id: string
         }
         Insert: {
           created_at?: string
+          current_balance?: number
           customer_id: string
           id?: string
           tenant_id: string
         }
         Update: {
           created_at?: string
+          current_balance?: number
           customer_id?: string
           id?: string
           tenant_id?: string
@@ -159,6 +162,7 @@ export type Database = {
       }
       customers: {
         Row: {
+          address: string | null
           category: string | null
           contract_daily_rate: number | null
           contract_shifts: string[] | null
@@ -166,6 +170,7 @@ export type Database = {
           factory_unit: string | null
           full_name: string
           id: string
+          institution: string | null
           is_active: boolean
           outstanding_balance: number
           phone: string
@@ -173,6 +178,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           category?: string | null
           contract_daily_rate?: number | null
           contract_shifts?: string[] | null
@@ -180,6 +186,7 @@ export type Database = {
           factory_unit?: string | null
           full_name: string
           id?: string
+          institution?: string | null
           is_active?: boolean
           outstanding_balance?: number
           phone: string
@@ -187,6 +194,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           category?: string | null
           contract_daily_rate?: number | null
           contract_shifts?: string[] | null
@@ -194,6 +202,7 @@ export type Database = {
           factory_unit?: string | null
           full_name?: string
           id?: string
+          institution?: string | null
           is_active?: boolean
           outstanding_balance?: number
           phone?: string
@@ -373,43 +382,36 @@ export type Database = {
       }
       meal_attendance: {
         Row: {
-          business_day_id: string | null
           charge_amount: number
           created_at: string
           customer_id: string
+          date: string
           id: string
           recorded_by_staff_id: string | null
           shift_id: string | null
           tenant_id: string
         }
         Insert: {
-          business_day_id?: string | null
           charge_amount?: number
           created_at?: string
           customer_id: string
+          date?: string
           id?: string
           recorded_by_staff_id?: string | null
           shift_id?: string | null
           tenant_id: string
         }
         Update: {
-          business_day_id?: string | null
           charge_amount?: number
           created_at?: string
           customer_id?: string
+          date?: string
           id?: string
           recorded_by_staff_id?: string | null
           shift_id?: string | null
           tenant_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "meal_attendance_business_day_id_fkey"
-            columns: ["business_day_id"]
-            isOneToOne: false
-            referencedRelation: "business_days"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "meal_attendance_customer_id_fkey"
             columns: ["customer_id"]
@@ -777,6 +779,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "staff_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_wallets: {
+        Row: {
+          created_at: string
+          current_balance: number
+          id: string
+          staff_id: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_balance?: number
+          id?: string
+          staff_id: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          current_balance?: number
+          id?: string
+          staff_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_wallets_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: true
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_wallets_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1180,16 +1221,29 @@ export type Database = {
         Args: { p_name: string; p_slug: string }
         Returns: string
       }
-      create_terminal_customer: {
-        Args: {
-          p_contract_daily_rate?: number
-          p_factory_unit?: string
-          p_full_name: string
-          p_phone?: string
-          p_tenant_id: string
-        }
-        Returns: Json
-      }
+      create_terminal_customer:
+        | {
+            Args: {
+              p_contract_daily_rate?: number
+              p_factory_unit?: string
+              p_full_name: string
+              p_phone?: string
+              p_tenant_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_address?: string
+              p_contract_daily_rate?: number
+              p_factory_unit?: string
+              p_full_name: string
+              p_institution?: string
+              p_phone?: string
+              p_tenant_id: string
+            }
+            Returns: Json
+          }
       delete_own_account: { Args: never; Returns: undefined }
       edit_pos_sale: {
         Args: {
@@ -1353,6 +1407,7 @@ export type Database = {
       get_terminal_customers: {
         Args: { p_tenant_id: string }
         Returns: {
+          address: string | null
           category: string | null
           contract_daily_rate: number | null
           contract_shifts: string[] | null
@@ -1360,6 +1415,7 @@ export type Database = {
           factory_unit: string | null
           full_name: string
           id: string
+          institution: string | null
           is_active: boolean
           outstanding_balance: number
           phone: string
@@ -1413,6 +1469,7 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: {
+          address: string | null
           category: string | null
           contract_daily_rate: number | null
           contract_shifts: string[] | null
@@ -1420,6 +1477,7 @@ export type Database = {
           factory_unit: string | null
           full_name: string
           id: string
+          institution: string | null
           is_active: boolean
           outstanding_balance: number
           phone: string
@@ -1582,6 +1640,7 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: {
+          address: string | null
           category: string | null
           contract_daily_rate: number | null
           contract_shifts: string[] | null
@@ -1589,6 +1648,7 @@ export type Database = {
           factory_unit: string | null
           full_name: string
           id: string
+          institution: string | null
           is_active: boolean
           outstanding_balance: number
           phone: string
