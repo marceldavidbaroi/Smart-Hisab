@@ -23,7 +23,7 @@ interface StaffAddEditModalProps {
   onResetPin?: (staff: StaffMember) => void;
   isDark: boolean;
   accentColor: string;
-  insets: any;
+  insets?: any;
 }
 
 export default function StaffAddEditModal({

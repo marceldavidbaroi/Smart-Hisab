@@ -1,13 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
-  KeyboardAvoidingView,
   Platform,
   Animated,
   Dimensions,
+  Modal,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -31,6 +32,7 @@ export function BottomSlideModal({
 }: BottomSlideModalProps) {
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
     if (visible) {
@@ -49,25 +51,44 @@ export function BottomSlideModal({
     }
   }, [visible]);
 
-  if (!visible) return null;
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   return (
-    <View className="absolute inset-0 z-50 flex-1 justify-end">
-      {/* Dark Dim Backdrop */}
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View className="absolute inset-0 bg-black/60" />
-      </TouchableWithoutFeedback>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <View className="flex-1 justify-end relative">
+        {/* Dark Dim Backdrop */}
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View className="absolute inset-0 bg-black/60" />
+        </TouchableWithoutFeedback>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="w-full justify-end"
-      >
         <Animated.View
           style={{
             transform: [{ translateY }],
             backgroundColor: isDark ? '#0f172a' : '#ffffff',
             maxHeight: SCREEN_HEIGHT * 0.85,
-            paddingBottom: Math.max(insets.bottom, 16) + 8,
+            paddingBottom: keyboardHeight > 0 ? keyboardHeight : Math.max(insets.bottom, 16) + 12,
           }}
           className="w-full border-t border-border rounded-t-3xl shadow-2xl overflow-hidden"
         >
@@ -75,7 +96,7 @@ export function BottomSlideModal({
           <TouchableOpacity
             onPress={onClose}
             activeOpacity={0.7}
-            className="w-full items-center py-3 cursor-pointer"
+            className="w-full items-center pt-3.5 pb-2 cursor-pointer"
           >
             <View className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
           </TouchableOpacity>
@@ -84,7 +105,8 @@ export function BottomSlideModal({
           <ScrollView
             contentContainerStyle={{
               paddingHorizontal: 20,
-              paddingBottom: 16,
+              paddingTop: 8,
+              paddingBottom: 24,
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -92,8 +114,8 @@ export function BottomSlideModal({
             <View className={className}>{children}</View>
           </ScrollView>
         </Animated.View>
-      </KeyboardAvoidingView>
-    </View>
+      </View>
+    </Modal>
   );
 }
 
