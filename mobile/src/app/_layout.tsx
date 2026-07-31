@@ -15,7 +15,6 @@ export default function RootLayout() {
   useEffect(() => {
     initialize();
 
-    // Catch unhandled keep-awake promise rejections gracefully on Web/Expo Go
     if (typeof window !== 'undefined' && window.addEventListener) {
       const handleUnhandledRejection = (event: any) => {
         if (event?.reason?.message?.toLowerCase().includes('keep awake')) {
@@ -36,11 +35,9 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="create-tenant" />
-              <Stack.Screen name="terminal/index" />
               <Stack.Screen name="staff/index" />
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(main)" />
-              <Stack.Screen name="(terminal)" />
             </Stack>
             <StatusBar style="auto" />
           </BottomSheetModalProvider>
@@ -49,5 +46,3 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
-
-

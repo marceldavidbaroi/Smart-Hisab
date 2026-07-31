@@ -5,10 +5,12 @@ import { useBusinessDayStore } from '@/store/useBusinessDayStore';
 import { useAppStore } from '@/store/useAppStore';
 
 interface RunningDayBannerProps {
-  onPressDayControl: () => void;
+  onPressDayControl?: () => void;
+  onPressCloseDay?: () => void;
 }
 
-export function RunningDayBanner({ onPressDayControl }: RunningDayBannerProps) {
+export function RunningDayBanner({ onPressDayControl, onPressCloseDay }: RunningDayBannerProps) {
+  const handlePress = onPressDayControl || onPressCloseDay || (() => {});
   const { colorScheme } = useAppStore();
   const isDark = colorScheme === 'dark';
   const { activeDay } = useBusinessDayStore();
@@ -30,7 +32,7 @@ export function RunningDayBanner({ onPressDayControl }: RunningDayBannerProps) {
     return (
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={onPressDayControl}
+        onPress={handlePress}
         className={`border rounded-2xl p-4 mb-4 shadow-sm flex-row items-center justify-between ${
           isDark ? 'bg-amber-950/40 border-amber-500/30' : 'bg-amber-500/10 border-amber-500/30'
         }`}
@@ -64,7 +66,7 @@ export function RunningDayBanner({ onPressDayControl }: RunningDayBannerProps) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      onPress={onPressDayControl}
+      onPress={handlePress}
       className={`border rounded-2xl p-4 mb-4 shadow-sm flex-row items-center justify-between ${
         isDark ? 'bg-emerald-950/40 border-emerald-500/30' : 'bg-emerald-500/10 border-emerald-500/30'
       }`}
