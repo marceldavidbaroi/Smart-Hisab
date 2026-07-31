@@ -90,7 +90,7 @@ export function BottomSlideModal({
             maxHeight: SCREEN_HEIGHT * 0.85,
             paddingBottom: keyboardHeight > 0 ? keyboardHeight : Math.max(insets.bottom, 16) + 12,
           }}
-          className="w-full border-t border-border rounded-t-3xl shadow-2xl overflow-hidden"
+          className="w-full border-t border-border rounded-t-[32px] shadow-2xl overflow-hidden"
         >
           {/* Pull / Close Handle Bar */}
           <TouchableOpacity

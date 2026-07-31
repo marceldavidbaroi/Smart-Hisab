@@ -53,6 +53,7 @@ This file outlines the core rules and constraints that the AI agent must adhere 
 
 ### 3. Dialogs & Modals
 * For any dialogs, prioritize using Bottom Slide Sheets/Dialogs instead of traditional center-screen popups. This is more ergonomic for mobile touch interfaces.
+* **Strict Constraint**: Bottom slide sheets must have soft rounded top corners (`rounded-t-[32px]` or `rounded-t-3xl`) and must **never contain a top-right 'X' or close button**. Users dismiss bottom slide sheets exclusively via backdrop tap, top drag handle bar, or primary action/cancel buttons.
 * Use a Blur effect for the background of overlays, sheets, and modals (e.g., using `expo-blur`) instead of applying a solid dark tint or dimming.
 
 ### 4. Data Refresh & Interactivity

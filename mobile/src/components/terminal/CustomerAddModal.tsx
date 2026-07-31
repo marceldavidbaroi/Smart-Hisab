@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { UserPlus, X, Buildings, MapPin } from 'phosphor-react-native';
+import { UserPlus, Buildings, MapPin } from 'phosphor-react-native';
 import { Input } from '@/components/ui/input';
 import { BottomSlideModal } from '@/components/ui/BottomSlideModal';
 
@@ -45,19 +45,11 @@ export default function CustomerAddModal({
 }: CustomerAddModalProps) {
   return (
     <BottomSlideModal visible={visible} onClose={onClose} isDark={isDark}>
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-row items-center gap-2">
-          <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
-            <UserPlus size={18} color={isDark ? '#e2e8f0' : '#0f172a'} />
-          </View>
-          <Text className="text-lg font-bold text-foreground">Add New Customer</Text>
+      <View className="flex-row items-center gap-2 mb-5">
+        <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
+          <UserPlus size={18} color={isDark ? '#e2e8f0' : '#0f172a'} />
         </View>
-        <TouchableOpacity
-          onPress={onClose}
-          className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
-        >
-          <X size={18} color={isDark ? '#94a3b8' : '#64748b'} />
-        </TouchableOpacity>
+        <Text className="text-lg font-bold text-foreground">Add New Customer</Text>
       </View>
 
       <View className="gap-3.5 mb-6">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { User, X, CalendarCheck, Receipt, Coins, FileText } from 'phosphor-react-native';
+import { User, CalendarCheck, Receipt, Coins, FileText } from 'phosphor-react-native';
 import { BottomSlideModal } from '@/components/ui/BottomSlideModal';
 import { Customer } from '@/services/customer';
 
@@ -29,23 +29,14 @@ export default function CustomerActionModal({
 
   return (
     <BottomSlideModal visible={visible} onClose={onClose} isDark={isDark}>
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-row items-center gap-3">
-          <View className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 items-center justify-center">
-            <User size={22} color={isDark ? '#d4984e' : '#56778a'} weight="bold" />
-          </View>
-          <View>
-            <Text className="text-base font-bold text-foreground">{customer.full_name}</Text>
-            <Text className="text-xs text-muted-foreground">{customer.phone || 'No phone'}</Text>
-          </View>
+      <View className="flex-row items-center gap-3 mb-5">
+        <View className="w-10 h-10 rounded-full bg-amber-500/10 items-center justify-center">
+          <User size={22} color={isDark ? '#d4984e' : '#56778a'} weight="bold" />
         </View>
-
-        <TouchableOpacity
-          onPress={onClose}
-          className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
-        >
-          <X size={18} color={isDark ? '#94a3b8' : '#64748b'} />
-        </TouchableOpacity>
+        <View>
+          <Text className="text-base font-bold text-foreground">{customer.full_name}</Text>
+          <Text className="text-xs text-muted-foreground">{customer.phone || 'No phone'}</Text>
+        </View>
       </View>
 
       {/* 2x2 Action Grid */}
