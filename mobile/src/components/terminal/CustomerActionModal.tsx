@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { User, CalendarCheck, Receipt, Coins, FileText } from 'phosphor-react-native';
+import { User, CalendarCheck, Receipt, Coins, FileText, CreditCard, Wallet } from 'phosphor-react-native';
 import { BottomSlideModal } from '@/components/ui/BottomSlideModal';
 import { Customer } from '@/services/customer';
 
@@ -39,58 +39,80 @@ export default function CustomerActionModal({
         </View>
       </View>
 
-      {/* 2x2 Action Grid */}
-      <View className="flex-row flex-wrap justify-between gap-3 mb-2">
-        {/* 1. Meal Attendance */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={onToggleAttendance}
-          disabled={isAttendancePending}
-          className="w-[48%] aspect-square bg-emerald-600 dark:bg-emerald-500 rounded-2xl items-center justify-center p-3"
-        >
-          <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mb-2">
-            <CalendarCheck size={22} color="#ffffff" weight="bold" />
-          </View>
-          <Text className="text-sm font-bold text-white text-center">Meal</Text>
-          {isAttendancePending && <ActivityIndicator color="#ffffff" size="small" className="mt-1" />}
-        </TouchableOpacity>
-
-        {/* 2. Baki Entry */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={onOpenBakiModal}
-          className="w-[48%] aspect-square bg-amber-600 dark:bg-amber-500 rounded-2xl items-center justify-center p-3"
-        >
-          <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mb-2">
-            <Receipt size={22} color="#ffffff" weight="bold" />
-          </View>
-          <Text className="text-sm font-bold text-white text-center">Baki</Text>
-        </TouchableOpacity>
-
-        {/* 3. Direct Payment */}
+      {/* Action Buttons */}
+      <View className="gap-3 mb-2">
+        {/* 1. Add Meal */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => {
-            Alert.alert('Payment Collection', `Collect payment from ${customer.full_name}`);
+            onClose();
+            onToggleAttendance();
           }}
-          className="w-[48%] aspect-square bg-blue-600 dark:bg-blue-500 rounded-2xl items-center justify-center p-3"
+          disabled={isAttendancePending}
+          className="w-full bg-emerald-600 dark:bg-emerald-500 rounded-2xl flex-row items-center p-4 min-h-[56px]"
         >
-          <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mb-2">
-            <Coins size={22} color="#ffffff" weight="bold" />
+          <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mr-3">
+            <CalendarCheck size={22} color="#ffffff" weight="bold" />
           </View>
-          <Text className="text-sm font-bold text-white text-center">Payment</Text>
+          <View className="flex-1">
+            <Text className="text-base font-bold text-white">Add Meal</Text>
+            <Text className="text-xs text-white/80">Log daily attendance/meal charge</Text>
+          </View>
+          {isAttendancePending && <ActivityIndicator color="#ffffff" size="small" />}
         </TouchableOpacity>
 
-        {/* 4. Ledger Report */}
+        {/* 2. New Transaction (Baki / Payment) */}
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={onOpenReport}
-          className="w-[48%] aspect-square bg-slate-800 dark:bg-slate-700 rounded-2xl items-center justify-center p-3"
+          onPress={() => {
+            onClose();
+            onOpenBakiModal();
+          }}
+          className="w-full bg-amber-600 dark:bg-amber-500 rounded-2xl flex-row items-center p-4 min-h-[56px]"
         >
-          <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mb-2">
+          <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mr-3">
+            <Receipt size={22} color="#ffffff" weight="bold" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-base font-bold text-white">New Transaction</Text>
+            <Text className="text-xs text-white/80">Record credit (baki) or payment entry</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* 3. Customer Wallet */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            onClose();
+            Alert.alert('Customer Wallet', `View and manage wallet account for ${customer.full_name}`);
+          }}
+          className="w-full bg-indigo-600 dark:bg-indigo-500 rounded-2xl flex-row items-center p-4 min-h-[56px]"
+        >
+          <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mr-3">
+            <Wallet size={22} color="#ffffff" weight="bold" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-base font-bold text-white">Wallet Account</Text>
+            <Text className="text-xs text-white/80">Manage customer prepaid balance & top-ups</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* 4. Customer Report */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            onClose();
+            onOpenReport();
+          }}
+          className="w-full bg-slate-800 dark:bg-slate-700 rounded-2xl flex-row items-center p-4 min-h-[56px]"
+        >
+          <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mr-3">
             <FileText size={22} color="#ffffff" weight="bold" />
           </View>
-          <Text className="text-sm font-bold text-white text-center">Report</Text>
+          <View className="flex-1">
+            <Text className="text-base font-bold text-white">Customer Report</Text>
+            <Text className="text-xs text-white/80">View statement & transaction history</Text>
+          </View>
         </TouchableOpacity>
       </View>
     </BottomSlideModal>

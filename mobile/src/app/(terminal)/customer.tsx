@@ -13,7 +13,6 @@ import {
   UserPlus,
   Phone,
   MagnifyingGlass,
-  Wallet,
   ArrowLeft,
   Coins,
 } from 'phosphor-react-native';
@@ -445,9 +444,14 @@ export default function TerminalCustomerScreen() {
                 }}
                 accentColor={accentColor}
               >
-                <View className="bg-card border border-border rounded-2xl p-4 shadow-xs mb-3 flex-row items-center justify-between">
-                  {/* Left Side: Avatar Initials, Name, Phone & Unit */}
-                  <View className="flex-row items-center gap-3 flex-1 mr-2">
+                <TouchableOpacity
+                  key={customer.id}
+                  onPress={() => handleSelectCustomer(customer)}
+                  activeOpacity={0.7}
+                  className="bg-card border border-border rounded-2xl p-4 shadow-xs mb-3 flex-row items-center justify-between"
+                >
+                  {/* Avatar Initials, Name, Phone & Unit/Address */}
+                  <View className="flex-row items-center gap-3 flex-1">
                     <View className="w-12 h-12 rounded-2xl bg-primary/15 items-center justify-center border border-primary/20">
                       <Text className="text-base font-bold text-primary">
                         {customer.full_name.slice(0, 2).toUpperCase()}
@@ -496,19 +500,7 @@ export default function TerminalCustomerScreen() {
                       </View>
                     </View>
                   </View>
-
-                  {/* Right Side: Wallet Balance Button */}
-                  <TouchableOpacity
-                    onPress={() => handleSelectCustomer(customer)}
-                    activeOpacity={0.7}
-                    className="flex-row items-center gap-1.5 bg-amber-500/10 px-3.5 py-2.5 rounded-xl border border-amber-500/20 min-h-[44px]"
-                  >
-                    <Wallet size={18} color="#f59e0b" weight="bold" />
-                    <Text className="text-sm font-bold text-amber-600 dark:text-amber-400">
-                      ৳{(customer.outstanding_balance || 0).toFixed(0)}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               </SwipeableRow>
             ))}
           </View>
