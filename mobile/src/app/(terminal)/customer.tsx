@@ -85,8 +85,6 @@ export default function TerminalCustomerScreen() {
   const [phone, setPhone] = useState('');
   const [institution, setInstitution] = useState('');
   const [address, setAddress] = useState('');
-  const [dailyRate, setDailyRate] = useState('');
-  const [factoryUnit, setFactoryUnit] = useState('');
 
   const {
     data: customers = [],
@@ -322,16 +320,12 @@ export default function TerminalCustomerScreen() {
         phone: phone.trim() || null,
         address: address.trim() || null,
         institution: institution.trim() || null,
-        contract_daily_rate: dailyRate.trim() ? parseFloat(dailyRate) || 0 : null,
-        factory_unit: factoryUnit.trim() || null,
       });
 
       setFullName('');
       setPhone('');
       setAddress('');
       setInstitution('');
-      setDailyRate('');
-      setFactoryUnit('');
       setModalVisible(false);
     } catch (err: any) {
       Alert.alert('Error', err?.message || 'Failed to create customer');
@@ -533,10 +527,6 @@ export default function TerminalCustomerScreen() {
         setInstitution={setInstitution}
         address={address}
         setAddress={setAddress}
-        dailyRate={dailyRate}
-        setDailyRate={setDailyRate}
-        factoryUnit={factoryUnit}
-        setFactoryUnit={setFactoryUnit}
         onSubmit={handleAddCustomer}
         isPending={createCustomerMutation.isPending}
         isDark={isDark}
