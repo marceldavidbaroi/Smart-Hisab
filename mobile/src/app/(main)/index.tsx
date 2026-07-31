@@ -19,7 +19,8 @@ import {
   CheckCircle,
   Lightning,
   ArrowsClockwise,
-  ForkKnife
+  ForkKnife,
+  CalendarCheck
 } from 'phosphor-react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -267,6 +268,20 @@ export default function HomeScreen() {
             <View className="flex-1">
               <Text className="text-xs font-bold text-foreground">Meal Config</Text>
               <Text className="text-[10px] text-muted-foreground">Pricing & meal note</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={() => router.push('/meal-attendance')}
+            activeOpacity={0.7}
+            className="flex-1 min-w-[45%] bg-card border border-border rounded-xl p-3.5 flex-row items-center gap-3 shadow-xs"
+          >
+            <View className="w-10 h-10 rounded-lg bg-orange-500/10 items-center justify-center border border-orange-500/20">
+              <CalendarCheck size={20} color="#f97316" weight="bold" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs font-bold text-foreground">Meal Attendance</Text>
+              <Text className="text-[10px] text-muted-foreground">Track daily meals</Text>
             </View>
           </TouchableOpacity>
 

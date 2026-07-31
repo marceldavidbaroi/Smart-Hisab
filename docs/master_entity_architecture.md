@@ -182,7 +182,7 @@ Record of customer consuming a meal during a shift.
 * `id` (UUID, PK)
 * `tenant_id` (UUID, FK -> `tenants`)
 * `customer_id` (UUID, FK -> `customers`)
-* `business_day_id` (UUID, FK -> `business_days`)
+* `date` (DATE, Default: current_date)
 * `shift_id` (UUID, FK -> `shifts`)
 * `charge_amount` (NUMERIC(10, 2))
 * `recorded_by_staff_id` (UUID, FK -> `staff`)
