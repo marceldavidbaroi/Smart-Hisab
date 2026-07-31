@@ -20,6 +20,7 @@ interface ShiftState {
   error: string | null;
   fetchShifts: (tenantId: string) => Promise<Shift[]>;
   createShift: (tenantId: string, shiftData: Omit<Shift, 'id' | 'tenant_id'>) => Promise<Shift>;
+  updateShift: (shiftId: string, shiftData: Partial<Shift>) => Promise<Shift>;
   toggleShiftStatus: (shiftId: string, isActive: boolean) => Promise<void>;
   deleteShift: (shiftId: string) => Promise<void>;
   resetShiftStore: () => void;
@@ -98,6 +99,32 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
     } catch (err: any) {
       console.error('Failed to create shift:', err);
       set({ isLoading: false, error: err.message || 'Failed to create shift.' });
+      throw err;
+    }
+  },
+
+  updateShift: async (shiftId: string, shiftData: Partial<Shift>) => {
+    try {
+      const { data, error } = await supabase
+        .from('shifts')
+        .update({
+          ...shiftData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', shiftId)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      const updated: Shift = data;
+      set((state) => ({
+        shifts: state.shifts.map((s) => (s.id === shiftId ? updated : s)),
+      }));
+
+      return updated;
+    } catch (err: any) {
+      console.error('Failed to update shift:', err);
       throw err;
     }
   },

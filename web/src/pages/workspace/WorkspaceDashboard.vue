@@ -10,11 +10,165 @@
           <span class="text-primary text-weight-bold">{{ tenantStore.activeTenant?.name }}</span>
         </p>
       </div>
-      <div>
+      <div class="row items-center q-gutter-sm">
+        <q-btn
+          v-if="tenantStore.isFeatureEnabled('meal-management')"
+          color="primary"
+          icon="restaurant_menu"
+          :label="$t('nav.mealConfigs')"
+          unelevated
+          dense
+          class="q-px-md cursor-pointer text-weight-bold"
+          style="border-radius: 8px; min-height: 40px"
+          :to="{
+            name: 'workspace-meal-configs',
+            params: { tenantSlug: tenantStore.activeTenant?.slug },
+          }"
+        />
         <q-chip outline color="primary" class="q-px-md font-semibold">
           {{ $t('workspace.dashboard.role') }}: {{ tenantStore.activeRole || 'Member' }}
         </q-chip>
       </div>
+    </div>
+
+    <!-- Quick Actions Card Section -->
+    <div class="q-mb-lg">
+      <q-card class="glass-card">
+        <q-card-section class="card-gradient-header row items-center q-py-sm">
+          <q-icon name="bolt" size="22px" class="text-amber-7 q-mr-sm" />
+          <div class="text-subtitle1 text-bold text-slate-800">
+            {{ $t('workspace.dashboard.quickActions') }}
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-py-md">
+          <div class="row q-col-gutter-md">
+            <div
+              v-if="tenantStore.isFeatureEnabled('meal-management')"
+              class="col-12 col-sm-6 col-md-3"
+            >
+              <q-btn
+                flat
+                bordered
+                no-caps
+                align="left"
+                class="full-width quick-action-btn bg-white text-dark"
+                :to="{
+                  name: 'workspace-meal-configs',
+                  params: { tenantSlug: tenantStore.activeTenant?.slug },
+                }"
+              >
+                <div class="row items-center no-wrap full-width q-pa-xs">
+                  <q-avatar size="36px" color="teal-1" text-color="teal-9" class="q-mr-md">
+                    <q-icon name="restaurant_menu" size="20px" />
+                  </q-avatar>
+                  <div class="column">
+                    <div class="text-weight-bold text-slate-800 text-subtitle2">
+                      {{ $t('nav.mealConfigs') }}
+                    </div>
+                    <div class="text-caption text-grey-6" style="font-size: 11px">
+                      Configure rates & notes
+                    </div>
+                  </div>
+                </div>
+              </q-btn>
+            </div>
+
+            <div
+              v-if="tenantStore.isFeatureEnabled('meal-management')"
+              class="col-12 col-sm-6 col-md-3"
+            >
+              <q-btn
+                flat
+                bordered
+                no-caps
+                align="left"
+                class="full-width quick-action-btn bg-white text-dark"
+                :to="{
+                  name: 'workspace-customers',
+                  params: { tenantSlug: tenantStore.activeTenant?.slug },
+                }"
+              >
+                <div class="row items-center no-wrap full-width q-pa-xs">
+                  <q-avatar size="36px" color="blue-1" text-color="blue-9" class="q-mr-md">
+                    <q-icon name="face" size="20px" />
+                  </q-avatar>
+                  <div class="column">
+                    <div class="text-weight-bold text-slate-800 text-subtitle2">
+                      {{ $t('customers.nav.label') }}
+                    </div>
+                    <div class="text-caption text-grey-6" style="font-size: 11px">
+                      Manage registered customers
+                    </div>
+                  </div>
+                </div>
+              </q-btn>
+            </div>
+
+            <div
+              v-if="tenantStore.isFeatureEnabled('shift-sessions')"
+              class="col-12 col-sm-6 col-md-3"
+            >
+              <q-btn
+                flat
+                bordered
+                no-caps
+                align="left"
+                class="full-width quick-action-btn bg-white text-dark"
+                :to="{
+                  name: 'workspace-shifts',
+                  params: { tenantSlug: tenantStore.activeTenant?.slug },
+                }"
+              >
+                <div class="row items-center no-wrap full-width q-pa-xs">
+                  <q-avatar size="36px" color="purple-1" text-color="purple-9" class="q-mr-md">
+                    <q-icon name="schedule" size="20px" />
+                  </q-avatar>
+                  <div class="column">
+                    <div class="text-weight-bold text-slate-800 text-subtitle2">
+                      {{ $t('nav.shiftsConfig') }}
+                    </div>
+                    <div class="text-caption text-grey-6" style="font-size: 11px">
+                      Operating shift windows
+                    </div>
+                  </div>
+                </div>
+              </q-btn>
+            </div>
+
+            <div
+              v-if="tenantStore.isFeatureEnabled('financial-ledger')"
+              class="col-12 col-sm-6 col-md-3"
+            >
+              <q-btn
+                flat
+                bordered
+                no-caps
+                align="left"
+                class="full-width quick-action-btn bg-white text-dark"
+                :to="{
+                  name: 'workspace-ledger',
+                  params: { tenantSlug: tenantStore.activeTenant?.slug },
+                }"
+              >
+                <div class="row items-center no-wrap full-width q-pa-xs">
+                  <q-avatar size="36px" color="amber-1" text-color="amber-9" class="q-mr-md">
+                    <q-icon name="account_balance_wallet" size="20px" />
+                  </q-avatar>
+                  <div class="column">
+                    <div class="text-weight-bold text-slate-800 text-subtitle2">
+                      {{ $t('nav.ledger') }}
+                    </div>
+                    <div class="text-caption text-grey-6" style="font-size: 11px">
+                      Cashbook transactions
+                    </div>
+                  </div>
+                </div>
+              </q-btn>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
     </div>
 
     <!-- Cards Grid -->
@@ -190,5 +344,17 @@ const hasFeatures = computed(() => {
 .feature-disabled {
   background: rgba(0, 0, 0, 0.02);
   opacity: 0.6;
+}
+
+.quick-action-btn {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    border-color: rgba(14, 74, 71, 0.2);
+  }
 }
 </style>

@@ -505,6 +505,12 @@ const navGroups = computed<NavGroup[]>(() => {
           },
         },
         {
+          label: t('nav.mealConfigs'),
+          icon: 'restaurant_menu',
+          toName: 'workspace-meal-configs',
+          requiredFeature: 'meal-management',
+        },
+        {
           label: t('nav.sessions'),
           icon: 'point_of_sale',
           toName: 'workspace-sessions',

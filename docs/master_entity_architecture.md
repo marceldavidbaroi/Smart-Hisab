@@ -173,9 +173,9 @@ Operating windows within a day.
 Meal rate rules.
 * `id` (UUID, PK)
 * `tenant_id` (UUID, FK -> `tenants`)
-* `shift_id` (UUID, FK -> `shifts`, Optional — null for flat daily rate)
 * `rate` (NUMERIC(10, 2))
 * `effective_from` (DATE)
+* `note` (TEXT, Optional — details/description of the meal)
 
 #### `meal_attendance`
 Record of customer consuming a meal during a shift.

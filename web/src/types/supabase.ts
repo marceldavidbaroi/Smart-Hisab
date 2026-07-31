@@ -445,34 +445,27 @@ export type Database = {
           created_at: string
           effective_from: string
           id: string
+          note: string | null
           rate: number
-          shift_id: string | null
           tenant_id: string
         }
         Insert: {
           created_at?: string
           effective_from?: string
           id?: string
+          note?: string | null
           rate: number
-          shift_id?: string | null
           tenant_id: string
         }
         Update: {
           created_at?: string
           effective_from?: string
           id?: string
+          note?: string | null
           rate?: number
-          shift_id?: string | null
           tenant_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "meal_configs_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "meal_configs_tenant_id_fkey"
             columns: ["tenant_id"]

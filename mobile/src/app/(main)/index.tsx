@@ -18,7 +18,8 @@ import {
   SignOut,
   CheckCircle,
   Lightning,
-  ArrowsClockwise
+  ArrowsClockwise,
+  ForkKnife
 } from 'phosphor-react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -252,6 +253,20 @@ export default function HomeScreen() {
             <View className="flex-1">
               <Text className="text-xs font-bold text-foreground">Add Terminal</Text>
               <Text className="text-[10px] text-muted-foreground">Register POS device</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={() => router.push('/meal-configs')}
+            activeOpacity={0.7}
+            className="flex-1 min-w-[45%] bg-card border border-border rounded-xl p-3.5 flex-row items-center gap-3 shadow-xs"
+          >
+            <View className="w-10 h-10 rounded-lg bg-teal-500/10 items-center justify-center border border-teal-500/20">
+              <ForkKnife size={20} color="#14b8a6" weight="bold" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs font-bold text-foreground">Meal Config</Text>
+              <Text className="text-[10px] text-muted-foreground">Pricing & meal note</Text>
             </View>
           </TouchableOpacity>
 

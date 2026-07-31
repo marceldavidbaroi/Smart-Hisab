@@ -80,6 +80,7 @@
       v-model="showForm"
       :is-edit="isEdit"
       :initial-data="editingShift"
+      :existing-shifts="shifts"
       :saving="saving"
       @submit="handleFormSubmit"
     />

@@ -137,6 +137,14 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'meal-configs',
+        name: 'workspace-meal-configs',
+        component: () => import('@/pages/workspace/WorkspaceMealConfigs.vue'),
+        meta: {
+          requiredFeature: 'meal-management',
+        },
+      },
+      {
         path: 'sessions',
         name: 'workspace-sessions',
         component: () => import('@/pages/workspace/WorkspaceSessions.vue'),

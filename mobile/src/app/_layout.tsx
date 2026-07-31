@@ -24,7 +24,6 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="create-tenant" />
-              <Stack.Screen name="add-shift" />
               <Stack.Screen name="terminal/index" />
               <Stack.Screen name="staff/index" />
               <Stack.Screen name="(auth)" />

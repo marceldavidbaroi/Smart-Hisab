@@ -19,9 +19,26 @@
       <q-form @submit.prevent="handleSubmit" class="q-gutter-y-md q-mt-sm">
         <q-card-section class="q-py-none">
           <div class="q-mb-md">
-            <label class="block text-caption text-grey-7 text-weight-medium q-mb-xs">{{
-              $t('sessions.shiftForm.shiftName')
-            }}</label>
+            <div class="row items-center justify-between q-mb-xs">
+              <label class="block text-caption text-grey-7 text-weight-medium">
+                {{ $t('sessions.shiftForm.shiftName') }}
+              </label>
+              <div class="row q-gutter-x-xs">
+                <q-chip
+                  v-for="preset in presets"
+                  :key="preset.name"
+                  clickable
+                  dense
+                  outline
+                  size="sm"
+                  color="primary"
+                  class="cursor-pointer"
+                  @click="applyPreset(preset)"
+                >
+                  {{ preset.label }}
+                </q-chip>
+              </div>
+            </div>
             <q-input
               v-model="form.name"
               type="text"
@@ -110,16 +127,9 @@
             </div>
           </div>
 
-          <div class="row items-center justify-between q-mt-md">
-            <div class="col-8">
-              <div class="text-subtitle2 text-weight-medium text-slate-800">
-                {{ $t('sessions.shiftForm.activeStatus') }}
-              </div>
-              <div class="text-caption text-grey-6">
-                {{ $t('sessions.shiftForm.activeStatusDesc') }}
-              </div>
-            </div>
-            <q-toggle v-model="form.is_active" color="primary" />
+          <div v-if="overlapError" class="q-mt-sm q-pa-sm bg-red-1 border-all rounded-borders text-negative row items-center q-gutter-x-xs">
+            <q-icon name="warning" size="18px" />
+            <span class="text-caption text-weight-medium flex-1">{{ overlapError }}</span>
           </div>
         </q-card-section>
 
@@ -162,6 +172,7 @@ const props = defineProps<{
   modelValue: boolean;
   isEdit: boolean;
   initialData?: Shift | null;
+  existingShifts?: Shift[];
   saving: boolean;
 }>();
 
@@ -172,12 +183,27 @@ const emit = defineEmits<{
 
 const TIME12H_RE = /^(0[1-9]|1[0-2]):([0-5][0-9])\s?(AM|PM)$/i;
 
+const presets = [
+  { name: 'Breakfast', label: 'Breakfast', start: '07:00 AM', end: '11:00 AM' },
+  { name: 'Lunch', label: 'Lunch', start: '12:00 PM', end: '04:00 PM' },
+  { name: 'Dinner', label: 'Dinner', start: '07:00 PM', end: '11:00 PM' },
+];
+
+function applyPreset(preset: { name: string; start: string; end: string }) {
+  form.value.name = preset.name;
+  form.value.start_time = preset.start;
+  form.value.end_time = preset.end;
+  overlapError.value = null;
+}
+
 const form = ref<Shift>({
   name: '',
   start_time: '08:00 AM',
   end_time: '04:00 PM',
   is_active: true,
 });
+
+const overlapError = ref<string | null>(null);
 
 function to12h(time24: string | null | undefined): string {
   if (!time24) return '';
@@ -195,7 +221,6 @@ function to24h(time12: string | null | undefined): string {
   if (!time12) return '';
   const match = time12.trim().match(TIME12H_RE);
   if (!match) {
-    // Already 24h from picker / DB (HH:mm[:ss])
     const [h = '', m = '00'] = time12.split(':');
     if (/^\d{1,2}$/.test(h) && /^\d{2}/.test(m)) {
       return `${h.padStart(2, '0')}:${m.slice(0, 2)}`;
@@ -213,6 +238,11 @@ function to24h(time12: string | null | undefined): string {
   return `${String(hours).padStart(2, '0')}:${minutes}`;
 }
 
+function timeToMinutes(time24Str: string): number {
+  const [h = '0', m = '0'] = time24Str.split(':');
+  return parseInt(h, 10) * 60 + parseInt(m, 10);
+}
+
 function time12hRule(val: string) {
   if (!val?.trim()) return true;
   return TIME12H_RE.test(val.trim()) || 'Use format 05:00 AM';
@@ -221,6 +251,7 @@ function time12hRule(val: string) {
 watch(
   () => props.modelValue,
   (isOpen) => {
+    overlapError.value = null;
     if (isOpen) {
       if (props.initialData) {
         form.value = {
@@ -241,10 +272,38 @@ watch(
 );
 
 function handleSubmit() {
+  overlapError.value = null;
+  const start24 = to24h(form.value.start_time);
+  const end24 = to24h(form.value.end_time);
+
+  if (!start24 || !end24) return;
+
+  const newStartMin = timeToMinutes(start24);
+  let newEndMin = timeToMinutes(end24);
+  if (newEndMin <= newStartMin) {
+    newEndMin += 24 * 60; // Overnight shift handling
+  }
+
+  // Check overlap with existing active shifts
+  const existingList = props.existingShifts || [];
+  const conflictingShift = existingList.find((s) => {
+    if (props.isEdit && s.id === props.initialData?.id) return false;
+    const sStart = timeToMinutes(s.start_time);
+    let sEnd = timeToMinutes(s.end_time);
+    if (sEnd <= sStart) sEnd += 24 * 60;
+
+    return Math.max(newStartMin, sStart) < Math.min(newEndMin, sEnd);
+  });
+
+  if (conflictingShift) {
+    overlapError.value = `Time overlaps with existing shift "${conflictingShift.name}" (${to12h(conflictingShift.start_time)} - ${to12h(conflictingShift.end_time)}).`;
+    return;
+  }
+
   emit('submit', {
     ...form.value,
-    start_time: to24h(form.value.start_time),
-    end_time: to24h(form.value.end_time),
+    start_time: start24,
+    end_time: end24,
   });
 }
 </script>
