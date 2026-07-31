@@ -7,10 +7,12 @@ export interface Customer {
   full_name: string;
   category?: string | null;
   phone: string | null;
+  address?: string | null;
+  institution?: string | null;
   outstanding_balance: number;
   contract_daily_rate: number | null;
   contract_shifts: string[] | null;
-  factory_unit: string | null;
+  factory_unit?: string | null;
   is_active: boolean;
   wallet_id?: string | null;
   created_at: string;
@@ -28,6 +30,8 @@ export interface CreateCustomerInput {
   tenant_id: string;
   full_name: string;
   phone?: string | null;
+  address?: string | null;
+  institution?: string | null;
   contract_daily_rate?: number | null;
   contract_shifts?: string[] | null;
   factory_unit?: string | null;
@@ -112,7 +116,8 @@ export async function getCustomers(
           list = list.filter(
             (c: any) =>
               (c.full_name && c.full_name.toLowerCase().includes(s)) ||
-              (c.phone && c.phone.includes(s))
+              (c.phone && c.phone.includes(s)) ||
+              (c.institution && c.institution.toLowerCase().includes(s))
           );
         }
         console.log('[getCustomers] Successfully fetched customers via list_customers RPC, count:', list.length);
@@ -143,7 +148,7 @@ export async function getCustomers(
     if (filters.search) {
       const s = filters.search.trim();
       if (s) {
-        query = query.or(`full_name.ilike.%${s}%,phone.ilike.%${s}%`);
+        query = query.or(`full_name.ilike.%${s}%,phone.ilike.%${s}%,institution.ilike.%${s}%`);
       }
     }
 
@@ -181,7 +186,8 @@ export async function getCustomers(
           list = list.filter(
             (c: any) =>
               (c.full_name && c.full_name.toLowerCase().includes(s)) ||
-              (c.phone && c.phone.includes(s))
+              (c.phone && c.phone.includes(s)) ||
+              (c.institution && c.institution.toLowerCase().includes(s))
           );
         }
         customersList = list;
@@ -205,6 +211,8 @@ export async function createCustomer(input: CreateCustomerInput): Promise<Custom
     tenant_id: input.tenant_id,
     full_name: input.full_name,
     phone: input.phone || null,
+    address: input.address || null,
+    institution: input.institution || null,
     factory_unit: input.factory_unit || null,
     contract_daily_rate: input.contract_daily_rate ?? null,
     contract_shifts: input.contract_shifts || null,
@@ -225,6 +233,8 @@ export async function createCustomer(input: CreateCustomerInput): Promise<Custom
       p_tenant_id: input.tenant_id,
       p_full_name: input.full_name,
       p_phone: input.phone || null,
+      p_address: input.address || null,
+      p_institution: input.institution || null,
       p_factory_unit: input.factory_unit || null,
       p_contract_daily_rate: input.contract_daily_rate ?? null,
     });

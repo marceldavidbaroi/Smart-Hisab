@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { UserPlus, X } from 'phosphor-react-native';
+import { UserPlus, X, Buildings, MapPin } from 'phosphor-react-native';
 import { Input } from '@/components/ui/input';
 import { BottomSlideModal } from '@/components/ui/BottomSlideModal';
 
@@ -11,6 +11,10 @@ interface CustomerAddModalProps {
   setFullName: (val: string) => void;
   phone: string;
   setPhone: (val: string) => void;
+  institution: string;
+  setInstitution: (val: string) => void;
+  address: string;
+  setAddress: (val: string) => void;
   dailyRate: string;
   setDailyRate: (val: string) => void;
   factoryUnit: string;
@@ -27,6 +31,10 @@ export default function CustomerAddModal({
   setFullName,
   phone,
   setPhone,
+  institution,
+  setInstitution,
+  address,
+  setAddress,
   dailyRate,
   setDailyRate,
   factoryUnit,
@@ -37,8 +45,13 @@ export default function CustomerAddModal({
 }: CustomerAddModalProps) {
   return (
     <BottomSlideModal visible={visible} onClose={onClose} isDark={isDark}>
-      <View className="flex-row items-center justify-between mb-5">
-        <Text className="text-lg font-bold text-foreground">Add New Customer</Text>
+      <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center gap-2">
+          <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
+            <UserPlus size={18} color={isDark ? '#e2e8f0' : '#0f172a'} />
+          </View>
+          <Text className="text-lg font-bold text-foreground">Add New Customer</Text>
+        </View>
         <TouchableOpacity
           onPress={onClose}
           className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
@@ -53,7 +66,7 @@ export default function CustomerAddModal({
           <Input
             value={fullName}
             onChangeText={setFullName}
-            placeholder="Enter full name"
+            placeholder="Enter customer full name"
             placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
           />
         </View>
@@ -69,25 +82,49 @@ export default function CustomerAddModal({
           />
         </View>
 
-        <View>
-          <Text className="text-xs font-semibold text-muted-foreground mb-1">Daily Contract Rate (৳, Optional)</Text>
-          <Input
-            value={dailyRate}
-            onChangeText={setDailyRate}
-            keyboardType="numeric"
-            placeholder="0.00"
-            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-          />
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <Text className="text-xs font-semibold text-muted-foreground mb-1">Institution / Org (Optional)</Text>
+            <Input
+              value={institution}
+              onChangeText={setInstitution}
+              placeholder="e.g. DU, BUET, Office"
+              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+            />
+          </View>
+
+          <View className="flex-1">
+            <Text className="text-xs font-semibold text-muted-foreground mb-1">Address / Location (Optional)</Text>
+            <Input
+              value={address}
+              onChangeText={setAddress}
+              placeholder="e.g. Hall Room 302 / Flat B4"
+              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+            />
+          </View>
         </View>
 
-        <View>
-          <Text className="text-xs font-semibold text-muted-foreground mb-1">Factory Unit (Optional)</Text>
-          <Input
-            value={factoryUnit}
-            onChangeText={setFactoryUnit}
-            placeholder="e.g. Unit 1"
-            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-          />
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <Text className="text-xs font-semibold text-muted-foreground mb-1">Daily Contract Rate (৳)</Text>
+            <Input
+              value={dailyRate}
+              onChangeText={setDailyRate}
+              keyboardType="numeric"
+              placeholder="0.00"
+              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+            />
+          </View>
+
+          <View className="flex-1">
+            <Text className="text-xs font-semibold text-muted-foreground mb-1">Factory / Dept Unit</Text>
+            <Input
+              value={factoryUnit}
+              onChangeText={setFactoryUnit}
+              placeholder="e.g. Unit 1"
+              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+            />
+          </View>
         </View>
       </View>
 
@@ -95,7 +132,7 @@ export default function CustomerAddModal({
         activeOpacity={0.8}
         onPress={onSubmit}
         disabled={isPending}
-        className="bg-primary h-12 rounded-xl items-center justify-center flex-row gap-2 shadow-sm"
+        className="bg-primary h-12 rounded-xl items-center justify-center flex-row gap-2 shadow-sm mb-2"
       >
         {isPending ? (
           <ActivityIndicator color="#ffffff" size="small" />

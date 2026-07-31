@@ -83,6 +83,8 @@ export default function TerminalCustomerScreen() {
   // Form state for creating customer
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [address, setAddress] = useState('');
   const [dailyRate, setDailyRate] = useState('');
   const [factoryUnit, setFactoryUnit] = useState('');
 
@@ -318,12 +320,16 @@ export default function TerminalCustomerScreen() {
       await createCustomerMutation.mutateAsync({
         full_name: fullName.trim(),
         phone: phone.trim() || null,
+        address: address.trim() || null,
+        institution: institution.trim() || null,
         contract_daily_rate: dailyRate.trim() ? parseFloat(dailyRate) || 0 : null,
         factory_unit: factoryUnit.trim() || null,
       });
 
       setFullName('');
       setPhone('');
+      setAddress('');
+      setInstitution('');
       setDailyRate('');
       setFactoryUnit('');
       setModalVisible(false);
@@ -459,10 +465,24 @@ export default function TerminalCustomerScreen() {
                         {customer.full_name}
                       </Text>
                       <View className="flex-row items-center gap-2 mt-1 flex-wrap">
-                        {customer.factory_unit ? (
+                        {customer.institution ? (
+                          <View className="bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+                            <Text className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                              {customer.institution}
+                            </Text>
+                          </View>
+                        ) : customer.factory_unit ? (
                           <View className="bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
                             <Text className="text-xs font-semibold text-primary">
                               {customer.factory_unit}
+                            </Text>
+                          </View>
+                        ) : null}
+
+                        {customer.address ? (
+                          <View className="bg-slate-500/10 px-2.5 py-1 rounded-md border border-slate-500/20">
+                            <Text className="text-xs font-medium text-slate-600 dark:text-slate-400" numberOfLines={1}>
+                              {customer.address}
                             </Text>
                           </View>
                         ) : null}
@@ -509,6 +529,10 @@ export default function TerminalCustomerScreen() {
         setFullName={setFullName}
         phone={phone}
         setPhone={setPhone}
+        institution={institution}
+        setInstitution={setInstitution}
+        address={address}
+        setAddress={setAddress}
         dailyRate={dailyRate}
         setDailyRate={setDailyRate}
         factoryUnit={factoryUnit}
