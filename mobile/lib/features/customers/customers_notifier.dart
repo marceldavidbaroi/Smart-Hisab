@@ -9,6 +9,7 @@ import '../../core/services/supabase_service.dart';
 class CustomersState {
   final List<Customer> customers;
   final Set<String> markedCustomerIds;
+  final Map<String, Set<String>> customerAttendanceDates;
   final String activeShiftName;
   final double activeShiftRate;
   final bool isLoading;
@@ -18,6 +19,7 @@ class CustomersState {
   const CustomersState({
     this.customers = const [],
     this.markedCustomerIds = const {},
+    this.customerAttendanceDates = const {},
     this.activeShiftName = 'Lunch',
     this.activeShiftRate = 80.0,
     this.isLoading = false,
@@ -42,6 +44,7 @@ class CustomersState {
   CustomersState copyWith({
     List<Customer>? customers,
     Set<String>? markedCustomerIds,
+    Map<String, Set<String>>? customerAttendanceDates,
     String? activeShiftName,
     double? activeShiftRate,
     bool? isLoading,
@@ -51,6 +54,7 @@ class CustomersState {
     return CustomersState(
       customers: customers ?? this.customers,
       markedCustomerIds: markedCustomerIds ?? this.markedCustomerIds,
+      customerAttendanceDates: customerAttendanceDates ?? this.customerAttendanceDates,
       activeShiftName: activeShiftName ?? this.activeShiftName,
       activeShiftRate: activeShiftRate ?? this.activeShiftRate,
       isLoading: isLoading ?? this.isLoading,
@@ -99,7 +103,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
         state = state.copyWith(
           customers: fetchedList,
           activeShiftName: shiftInfo['shiftName'] as String? ?? 'Lunch',
-          activeShiftRate: (shiftInfo['shiftRate'] as num?)?.toDouble() ?? 80.0,
+          activeShiftRate: (shiftInfo['shiftRate'] as num?)?.toDouble() ?? 0.0,
           markedCustomerIds: (shiftInfo['markedIds'] as Set<String>?) ?? {},
           isLoading: false,
         );
@@ -127,7 +131,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
   Future<Map<String, dynamic>> _resolveActiveShiftAndAttendance(String tId) async {
     String shiftName = 'Lunch';
-    double shiftRate = 80.0;
+    double shiftRate = 0.0;
     Set<String> markedIds = {};
 
     try {
@@ -146,13 +150,13 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
         final mealConfig = await SupabaseService.client
             .from('meal_configs')
-            .select('price')
+            .select('rate')
             .eq('tenant_id', tId)
             .eq('shift_id', shiftId)
-            .order('effective_date', ascending: false)
+            .order('effective_from', ascending: false)
             .maybeSingle();
-        if (mealConfig != null && mealConfig['price'] != null) {
-          shiftRate = (mealConfig['price'] as num).toDouble();
+        if (mealConfig != null && mealConfig['rate'] != null) {
+          shiftRate = (mealConfig['rate'] as num).toDouble();
         }
 
         final todayStr = DateTime.now().toIso8601String().substring(0, 10);
@@ -166,6 +170,18 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
         final attendanceList = attendance as List;
         markedIds = attendanceList.map((row) => row['customer_id'] as String).toSet();
+      }
+
+      if (shiftRate == 0.0) {
+        final fallbackConfig = await SupabaseService.client
+            .from('meal_configs')
+            .select('rate')
+            .eq('tenant_id', tId)
+            .order('effective_from', ascending: false)
+            .maybeSingle();
+        if (fallbackConfig != null && fallbackConfig['rate'] != null) {
+          shiftRate = (fallbackConfig['rate'] as num).toDouble();
+        }
       }
     } catch (e) {
       debugPrint('_resolveActiveShiftAndAttendance note: $e');
@@ -224,6 +240,45 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     } catch (e) {
       debugPrint('recordMealAttendance RPC error: $e');
       return true;
+    }
+  }
+
+  Set<String> getCustomerAttendanceDates(String customerId) {
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    final dates = state.customerAttendanceDates[customerId] ?? {};
+    if (state.markedCustomerIds.contains(customerId) && !dates.contains(todayStr)) {
+      return {...dates, todayStr};
+    }
+    return dates;
+  }
+
+  Future<void> toggleCustomerAttendanceDate(String customerId, DateTime date) async {
+    final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final todayKey = DateTime.now().toIso8601String().substring(0, 10);
+    final isToday = dateKey == todayKey;
+
+    final existingDates = Set<String>.from(getCustomerAttendanceDates(customerId));
+
+    if (existingDates.contains(dateKey)) {
+      existingDates.remove(dateKey);
+      if (isToday) {
+        final updatedMarked = Set<String>.from(state.markedCustomerIds)..remove(customerId);
+        state = state.copyWith(markedCustomerIds: updatedMarked);
+      }
+    } else {
+      existingDates.add(dateKey);
+      if (isToday) {
+        final updatedMarked = Set<String>.from(state.markedCustomerIds)..add(customerId);
+        state = state.copyWith(markedCustomerIds: updatedMarked);
+      }
+    }
+
+    final updatedMap = Map<String, Set<String>>.from(state.customerAttendanceDates);
+    updatedMap[customerId] = existingDates;
+    state = state.copyWith(customerAttendanceDates: updatedMap);
+
+    if (isToday) {
+      await recordMealAttendance(customerId);
     }
   }
 
@@ -364,8 +419,28 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     required String customerId,
     required List<String> subscribedShifts,
   }) async {
-    debugPrint('updateMealSubscription for $customerId: $subscribedShifts');
-    return true;
+    final tId = tenantId ?? 'tenant-demo';
+    final updatedList = state.customers.map((c) {
+      if (c.id == customerId) {
+        return c.copyWith(activeMeals: subscribedShifts);
+      }
+      return c;
+    }).toList();
+
+    state = state.copyWith(customers: updatedList);
+    await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
+
+    try {
+      if (SupabaseService.isInitialized) {
+        await SupabaseService.client.from('customers').update({
+          'subscribed_shifts': subscribedShifts,
+        }).eq('id', customerId);
+      }
+      return true;
+    } catch (e) {
+      debugPrint('updateMealSubscription error: $e');
+      return true;
+    }
   }
 
   Future<void> deleteCustomer(String customerId) async {
@@ -422,4 +497,32 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
   void setSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
   }
+
+  Future<bool> voidWalletEntry({
+    required String customerId,
+    required String entryId,
+    required String reason,
+  }) async {
+    final tId = tenantId;
+    if (tId == null || tId.isEmpty) return false;
+
+    try {
+      if (SupabaseService.isInitialized) {
+        await SupabaseService.client.rpc('void_wallet_entry', params: {
+          'p_tenant_id': tId,
+          'p_entry_id': entryId,
+          'p_reason': reason,
+        });
+
+        // Re-sync customer list & wallet balances
+        await fetchCustomers();
+        return true;
+      }
+      return true;
+    } catch (e) {
+      debugPrint('voidWalletEntry RPC error: $e');
+      rethrow;
+    }
+  }
 }
+

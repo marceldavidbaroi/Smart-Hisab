@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/models/customer.dart';
+import '../settings/meal_configs_notifier.dart';
 import 'customers_notifier.dart';
 
 class ManageMealSubscriptionBottomSheet extends ConsumerStatefulWidget {
@@ -30,8 +31,14 @@ class ManageMealSubscriptionBottomSheet extends ConsumerStatefulWidget {
 
 class _ManageMealSubscriptionBottomSheetState
     extends ConsumerState<ManageMealSubscriptionBottomSheet> {
-  final Set<String> _selectedShifts = {'Breakfast', 'Lunch', 'Dinner'};
+  late Set<String> _selectedShifts;
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedShifts = Set<String>.from(widget.customer.activeMeals);
+  }
 
   Future<void> _handleSave() async {
     setState(() => _isSaving = true);
@@ -45,7 +52,7 @@ class _ManageMealSubscriptionBottomSheetState
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Updated meal subscription for ${widget.customer.name}'),
+          content: Text('Updated active meals for ${widget.customer.name}'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -55,12 +62,35 @@ class _ManageMealSubscriptionBottomSheetState
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final shifts = [
-      {'name': 'Morning Breakfast', 'code': 'Breakfast', 'icon': LucideIcons.coffee},
-      {'name': 'Afternoon Lunch', 'code': 'Lunch', 'icon': LucideIcons.utensils},
-      {'name': 'Evening Snacks', 'code': 'Snacks', 'icon': LucideIcons.cookie},
-      {'name': 'Night Dinner', 'code': 'Dinner', 'icon': LucideIcons.moon},
-    ];
+    final mealConfigsState = ref.watch(mealConfigsNotifierProvider);
+    final configuredMealConfigs = mealConfigsState.mealConfigs;
+
+    final List<Map<String, dynamic>> mealList = configuredMealConfigs.isNotEmpty
+        ? configuredMealConfigs.map((config) {
+            final title = (config.note != null && config.note!.isNotEmpty)
+                ? config.note!
+                : (config.shiftName != null && config.shiftName!.isNotEmpty
+                    ? config.shiftName!
+                    : 'Rate Config (৳${config.rate.toStringAsFixed(0)})');
+
+            final codeKey = (config.note != null && config.note!.isNotEmpty)
+                ? config.note!
+                : config.id;
+
+            return {
+              'name': title,
+              'code': codeKey,
+              'id': config.id,
+              'icon': LucideIcons.utensils,
+              'subtitle': '৳${config.rate.toStringAsFixed(0)} per meal',
+            };
+          }).toList()
+        : [
+            {'name': 'Morning Breakfast', 'code': 'Breakfast', 'id': 'b1', 'icon': LucideIcons.coffee, 'subtitle': '৳80 per meal'},
+            {'name': 'Afternoon Lunch', 'code': 'Lunch', 'id': 'l1', 'icon': LucideIcons.utensils, 'subtitle': '৳120 per meal'},
+            {'name': 'Evening Snacks', 'code': 'Snacks', 'id': 's1', 'icon': LucideIcons.cookie, 'subtitle': '৳40 per meal'},
+            {'name': 'Night Dinner', 'code': 'Dinner', 'id': 'd1', 'icon': LucideIcons.moon, 'subtitle': '৳100 per meal'},
+          ];
 
     return Container(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 24),
@@ -85,13 +115,13 @@ class _ManageMealSubscriptionBottomSheetState
           ),
           const SizedBox(height: 16),
 
-          // Title
+          // Title Header
           Row(
             children: [
-              const Icon(LucideIcons.calendarCheck2, color: AppColors.primary, size: 22),
+              const Icon(LucideIcons.utensils, color: AppColors.primary, size: 22),
               const SizedBox(width: 10),
               Text(
-                'Manage Meal Subscription',
+                'Customer Meals',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -100,8 +130,9 @@ class _ManageMealSubscriptionBottomSheetState
               ),
             ],
           ),
+          const SizedBox(height: 2),
           Text(
-            'Select regular daily meal shifts for ${widget.customer.name}',
+            'Select active meal configurations for ${widget.customer.name}',
             style: TextStyle(
               fontSize: 13,
               color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -109,22 +140,26 @@ class _ManageMealSubscriptionBottomSheetState
           ),
           const SizedBox(height: 16),
 
-          // Checkbox List for Shifts
-          ...shifts.map((s) {
-            final code = s['code'] as String;
-            final name = s['name'] as String;
-            final icon = s['icon'] as IconData;
-            final isSelected = _selectedShifts.contains(code);
+          // Checkbox List for Meal Configs with Active/Inactive Badges
+          ...mealList.map((m) {
+            final code = m['code'] as String;
+            final id = m['id'] as String;
+            final name = m['name'] as String;
+            final subtitle = m['subtitle'] as String;
+            final icon = m['icon'] as IconData;
+
+            final isSelected = _selectedShifts.contains(code) || _selectedShifts.contains(id) || _selectedShifts.contains(name);
 
             return Container(
-              margin: const EdgeInsets.only(bottom: 8),
+              margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.1)
+                    ? AppColors.primary.withValues(alpha: 0.08)
                     : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  color: isSelected ? AppColors.primary : (isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                  width: isSelected ? 1.5 : 1.0,
                 ),
               ),
               child: CheckboxListTile(
@@ -135,20 +170,53 @@ class _ManageMealSubscriptionBottomSheetState
                       _selectedShifts.add(code);
                     } else {
                       _selectedShifts.remove(code);
+                      _selectedShifts.remove(id);
+                      _selectedShifts.remove(name);
                     }
                   });
                 },
-                secondary: Icon(icon, color: isSelected ? AppColors.primary : Colors.grey),
-                title: Text(
-                  name,
+                secondary: Icon(
+                  icon,
+                  color: isSelected ? AppColors.primary : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                ),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: (isSelected ? AppColors.success : Colors.grey).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isSelected ? 'Active' : 'Inactive',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? AppColors.success : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                subtitle: Text(
+                  subtitle,
                   style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    fontSize: 13,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
                 ),
                 activeColor: AppColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             );
           }),
@@ -183,7 +251,7 @@ class _ManageMealSubscriptionBottomSheetState
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Save Plan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      : const Text('Save Active Meals', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

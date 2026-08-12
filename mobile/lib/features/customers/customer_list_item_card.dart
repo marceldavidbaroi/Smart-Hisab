@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -7,20 +6,17 @@ import '../../core/models/customer.dart';
 import '../../core/utils/formatters.dart';
 import 'collect_baki_bottom_sheet.dart';
 import 'customer_detail_screen.dart';
-import 'customers_notifier.dart';
 
-class CustomerListItemCard extends ConsumerWidget {
+class CustomerListItemCard extends StatelessWidget {
   final Customer customer;
-  final bool isMarked;
 
   const CustomerListItemCard({
     super.key,
     required this.customer,
-    required this.isMarked,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final balance = customer.currentBalance;
 
@@ -120,57 +116,14 @@ class CustomerListItemCard extends ConsumerWidget {
                 ),
               ),
 
-              // Balance & One-Tap Attendance Button
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    AppFormatters.formatBdt(balance),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: balance > 0 ? AppColors.danger : AppColors.success,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  InkWell(
-                    onTap: () {
-                      ref
-                          .read(customersNotifierProvider.notifier)
-                          .recordMealAttendance(customer.id);
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: isMarked
-                            ? AppColors.success
-                            : AppColors.success.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.success),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isMarked ? LucideIcons.checkCircle2 : LucideIcons.utensils,
-                            size: 13,
-                            color: isMarked ? Colors.white : AppColors.success,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isMarked ? 'Ate' : 'Meal',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: isMarked ? Colors.white : AppColors.success,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              // Balance Display
+              Text(
+                AppFormatters.formatBdt(balance),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: balance > 0 ? AppColors.danger : AppColors.success,
+                ),
               ),
             ],
           ),

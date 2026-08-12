@@ -73,14 +73,38 @@ Immutable append-only ledger for customer debt tracking.
 | `reference_id` | UUID | | FK to source record |
 | `recorded_by_staff_id` | UUID | FK → `staff_members(id)` ON DELETE SET NULL | Staff who recorded this entry |
 | `notes` | TEXT | | |
+| `metadata` | JSONB | NOT NULL DEFAULT '{}'::jsonb | Audit metadata (status, void_info, reason, terminal details) |
 | `created_at` | TIMESTAMPTZ | NOT NULL DEFAULT now() | |
 
-**Indexes**: `tenant_id`, `wallet_id`, `business_day_id`
+**Indexes**: `tenant_id`, `wallet_id`, `business_day_id`, `(metadata->>'status')`
 
 **Balance rule**:
 - `meal_charge` → increases debt (customer owes more)
 - `payment` → decreases debt (customer paid)
 - `adjustment` → can go either way (manual correction)
+
+---
+
+## `metadata` JSON Schema (Transaction Mistakes & Audit Log)
+
+To handle staff mistakes without hard-deleting ledger history, `metadata` stores status, mandatory void reasons, and audit trails:
+
+```json
+{
+  "status": "active", // "active" | "voided" | "reversal"
+  "void_info": {
+    "reason": "Wrong customer selected by staff mistake",
+    "voided_at": "2026-08-12T20:55:00Z",
+    "voided_by_staff_id": "b3e91a27-...",
+    "original_entry_id": "f81c92a1-...",
+    "reversal_entry_id": "a12d84c3-..."
+  },
+  "device_info": {
+    "terminal_id": "pos_counter_1",
+    "app_version": "v1.0.0"
+  }
+}
+```
 
 ---
 
@@ -109,8 +133,23 @@ Immutable append-only ledger for customer debt tracking.
 ```
 1. Staff records payment → calls record_baki_payment(tenant, customer, amount, staff)
 2. RPC resolves active business_day + current shift
-3. INSERT into wallet_entries (type='payment', amount=X)
+3. INSERT into wallet_entries (type='payment', amount=X, metadata={'status':'active'})
 4. INSERT into day_entries (entry_type='inflow', category='customer_payment', amount=X)
 5. Trigger updates customer_wallets.current_balance -= X
 6. Customer debt decreases, cash drawer increases
 ```
+
+---
+
+## Ledger Flow: Handling Staff Mistakes (Voiding / Cutting Baki Transaction)
+
+```
+1. Staff identifies mistake → taps "Void Entry" & provides mandatory reason in Modal Bottom Sheet
+2. Calls RPC void_wallet_entry(tenant, entry_id, reason, staff_id)
+3. RPC checks if business_day is still OPEN (enforce_closed_day_lock)
+4. RPC updates original wallet_entry metadata: status='voided', void_info={reason, voided_at, voided_by_staff_id, reversal_entry_id}
+5. RPC inserts opposing wallet_entry (type='adjustment', amount=-X) with metadata status='reversal' referencing original_entry_id
+6. If entry was a cash payment, RPC inserts opposing day_entries outflow record to re-balance cash drawer
+7. Trigger updates customer_wallets.current_balance back to correct original state
+```
+

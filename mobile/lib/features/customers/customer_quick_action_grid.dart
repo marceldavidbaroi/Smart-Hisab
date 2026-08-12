@@ -6,8 +6,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/models/customer.dart';
 import 'add_manual_baki_bottom_sheet.dart';
 import 'collect_baki_bottom_sheet.dart';
-import 'customers_notifier.dart';
 import 'manage_meal_subscription_bottom_sheet.dart';
+import 'meal_attendance_calendar_bottom_sheet.dart';
 
 class CustomerQuickActionGrid extends ConsumerWidget {
   final Customer customer;
@@ -74,18 +74,18 @@ class CustomerQuickActionGrid extends ConsumerWidget {
       children: [
         _buildActionButton(
           context: context,
-          icon: LucideIcons.calendarCheck2,
-          label: 'Subscription',
+          icon: LucideIcons.utensilsCrossed,
+          label: 'Add Meal',
           color: AppColors.primary,
           onTap: () => ManageMealSubscriptionBottomSheet.show(context, customer),
         ),
         _buildActionButton(
           context: context,
-          icon: isMarkedToday ? LucideIcons.checkCircle2 : LucideIcons.utensils,
-          label: isMarkedToday ? 'Meal: Ate' : 'Mark Meal',
+          icon: isMarkedToday ? LucideIcons.checkCircle2 : LucideIcons.calendarCheck2,
+          label: isMarkedToday ? 'Meal: Ate Today' : 'Mark Attendance',
           color: AppColors.success,
           onTap: () async {
-            await ref.read(customersNotifierProvider.notifier).recordMealAttendance(customer.id);
+            await MealAttendanceCalendarBottomSheet.show(context, customer);
             onActionCompleted();
           },
         ),

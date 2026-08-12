@@ -83,9 +83,10 @@ Immutable append-only ledger for vendor debt tracking.
 | `recorded_by_staff_id` | UUID | FK → `staff_members(id)` ON DELETE SET NULL | |
 | `recorded_by_user_id` | UUID | FK → `auth.users(id)` ON DELETE SET NULL | |
 | `notes` | TEXT | | |
+| `metadata` | JSONB | NOT NULL DEFAULT '{}'::jsonb | Audit metadata (status, void_info, reason) |
 | `created_at` | TIMESTAMPTZ | NOT NULL DEFAULT now() | |
 
-**Indexes**: `tenant_id`, `vendor_wallet_id`, `business_day_id`
+**Indexes**: `tenant_id`, `vendor_wallet_id`, `business_day_id`, `(metadata->>'status')`
 
 **Balance rule**:
 - `purchase` → increases debt (canteen owes vendor more)
@@ -110,11 +111,13 @@ Company cashbook ledger. Every cash movement during a business day.
 | `reference_type` | TEXT | CHECK IN ('wallet_entry', 'salary_payout', 'vendor_wallet_entry', 'direct_expense', 'direct_income') | |
 | `reference_id` | UUID | | FK to source record |
 | `notes` | TEXT | | |
+| `metadata` | JSONB | NOT NULL DEFAULT '{}'::jsonb | Audit metadata (status, void_info, reason) |
 | `created_by_staff_id` | UUID | FK → `staff_members(id)` ON DELETE SET NULL | |
 | `created_by_user_id` | UUID | FK → `auth.users(id)` ON DELETE SET NULL | |
 | `created_at` | TIMESTAMPTZ | NOT NULL DEFAULT now() | |
 
-**Indexes**: `tenant_id`, `business_day_id`, `category`
+**Indexes**: `tenant_id`, `business_day_id`, `category`, `(metadata->>'status')`
+
 
 ---
 

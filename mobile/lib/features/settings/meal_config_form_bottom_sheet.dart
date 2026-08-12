@@ -74,7 +74,7 @@ class _MealConfigFormBottomSheetState extends ConsumerState<MealConfigFormBottom
     final notifier = ref.read(mealConfigsNotifierProvider.notifier);
     bool success;
 
-    final note = _noteController.text.trim().isEmpty ? null : _noteController.text.trim();
+    final note = _noteController.text.trim();
 
     if (widget.mealConfig == null) {
       success = await notifier.addMealConfig(
@@ -110,6 +110,20 @@ class _MealConfigFormBottomSheetState extends ConsumerState<MealConfigFormBottom
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextFormField(
+            controller: _noteController,
+            decoration: const InputDecoration(
+              labelText: 'Meal Config Title',
+              hintText: 'e.g. Regular Rate, Ramadan Rate',
+            ),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) {
+                return 'Title is required';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
             controller: _rateController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
@@ -137,14 +151,6 @@ class _MealConfigFormBottomSheetState extends ConsumerState<MealConfigFormBottom
                 '${_effectiveFrom.day}/${_effectiveFrom.month}/${_effectiveFrom.year}',
                 style: const TextStyle(fontSize: 15),
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _noteController,
-            decoration: const InputDecoration(
-              labelText: 'Note / Title (Optional)',
-              hintText: 'e.g. Regular Rate, Ramadan Rate',
             ),
           ),
           const SizedBox(height: 24),

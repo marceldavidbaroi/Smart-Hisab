@@ -109,9 +109,12 @@ sequenceDiagram
   - Swipe left on customer card or tap "Collect Payment" on detail page.
   - Enter collection amount in modal bottom sheet (with quick preset chips ৳100, ৳200, ৳500).
   - Submit and verify RPC `record_baki_payment` updates customer wallet balance and records transaction entry.
-- [ ] **3.5 Customer Detail Page**
+- [ ] **3.5 Customer Detail Page & Transaction Voiding**
   - Tap customer tile to open detail view.
   - Verify outstanding balance header card and infinite scroll transaction history ledger.
+  - Test swiping or tapping "Void / Cut Entry" on a transaction entry.
+  - Verify modal bottom sheet prompts for mandatory cancellation reason.
+  - Verify RPC `void_wallet_entry` updates metadata (`status: "voided"`, `void_info`), inserts balancing adjustment entry, and recalculates customer balance without deleting history.
 
 ---
 
@@ -122,12 +125,17 @@ sequenceDiagram
 - [ ] **4.2 Record Expense / Market Cost**
   - Tap "+ Expense" button. Select category (e.g. `market_cost` / `canteen_expense`), enter amount, optional vendor, and note.
   - Submit and verify expense entry records as cash outflow and updates vendor balance if vendor was selected.
-- [ ] **4.3 Record Misc Income**
+- [ ] **4.3 Void / Cut Erroneous Cashbook Entry**
+  - Tap on an erroneous cashbook entry in active business day.
+  - Enter mandatory cancellation reason in modal bottom sheet.
+  - Verify entry metadata is updated to voided status and balancing reversal entry restores cash drawer balance.
+- [ ] **4.4 Record Misc Income**
   - Tap "+ Income" button. Enter amount and note.
   - Verify entry records as cash inflow and updates cashbook summary header.
-- [ ] **4.4 Add Day Note / Market List**
+- [ ] **4.5 Add Day Note / Market List**
   - Tap "+ Note" button. Select type (`market_list` / `general_note` / `issue`) and enter content.
   - Submit and verify note displays in Day Notes section.
+
 
 ---
 

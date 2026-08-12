@@ -13,6 +13,8 @@ class Customer {
   final double currentBalance;
   final DateTime? createdAt;
 
+  final List<String> activeMeals;
+
   const Customer({
     required this.id,
     required this.tenantId,
@@ -23,6 +25,7 @@ class Customer {
     this.isActive = true,
     this.currentBalance = 0.0,
     this.createdAt,
+    this.activeMeals = const ['Breakfast', 'Lunch', 'Dinner'],
   });
 
   /// Factory constructor to create a [Customer] from a Supabase JSON payload.
@@ -38,6 +41,13 @@ class Customer {
       balance = (json['balance'] as num?)?.toDouble() ?? 0.0;
     }
 
+    List<String> meals = const ['Breakfast', 'Lunch', 'Dinner'];
+    if (json['active_meals'] != null && json['active_meals'] is List) {
+      meals = List<String>.from(json['active_meals'] as List);
+    } else if (json['subscribed_shifts'] != null && json['subscribed_shifts'] is List) {
+      meals = List<String>.from(json['subscribed_shifts'] as List);
+    }
+
     return Customer(
       id: json['id'] as String? ?? '',
       tenantId: json['tenant_id'] as String? ?? '',
@@ -50,6 +60,7 @@ class Customer {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
+      activeMeals: meals,
     );
   }
 
@@ -65,6 +76,7 @@ class Customer {
       'is_active': isActive,
       'current_balance': currentBalance,
       'created_at': createdAt?.toIso8601String(),
+      'active_meals': activeMeals,
     };
   }
 
@@ -79,6 +91,7 @@ class Customer {
     bool? isActive,
     double? currentBalance,
     DateTime? createdAt,
+    List<String>? activeMeals,
   }) {
     return Customer(
       id: id ?? this.id,
@@ -90,6 +103,7 @@ class Customer {
       isActive: isActive ?? this.isActive,
       currentBalance: currentBalance ?? this.currentBalance,
       createdAt: createdAt ?? this.createdAt,
+      activeMeals: activeMeals ?? this.activeMeals,
     );
   }
 }

@@ -211,6 +211,7 @@ export type Database = {
           created_by_user_id: string | null
           entry_type: string
           id: string
+          metadata: Json
           notes: string | null
           reference_id: string | null
           reference_type: string | null
@@ -226,6 +227,7 @@ export type Database = {
           created_by_user_id?: string | null
           entry_type: string
           id?: string
+          metadata?: Json
           notes?: string | null
           reference_id?: string | null
           reference_type?: string | null
@@ -241,6 +243,7 @@ export type Database = {
           created_by_user_id?: string | null
           entry_type?: string
           id?: string
+          metadata?: Json
           notes?: string | null
           reference_id?: string | null
           reference_type?: string | null
@@ -1034,6 +1037,7 @@ export type Database = {
           business_day_id: string | null
           created_at: string
           id: string
+          metadata: Json
           notes: string | null
           recorded_by_staff_id: string | null
           recorded_by_user_id: string | null
@@ -1048,6 +1052,7 @@ export type Database = {
           business_day_id?: string | null
           created_at?: string
           id?: string
+          metadata?: Json
           notes?: string | null
           recorded_by_staff_id?: string | null
           recorded_by_user_id?: string | null
@@ -1062,6 +1067,7 @@ export type Database = {
           business_day_id?: string | null
           created_at?: string
           id?: string
+          metadata?: Json
           notes?: string | null
           recorded_by_staff_id?: string | null
           recorded_by_user_id?: string | null
@@ -1188,7 +1194,9 @@ export type Database = {
           business_day_id: string | null
           created_at: string
           id: string
+          metadata: Json
           notes: string | null
+          recorded_by_staff_id: string | null
           reference_id: string | null
           reference_type: string | null
           shift_id: string | null
@@ -1201,7 +1209,9 @@ export type Database = {
           business_day_id?: string | null
           created_at?: string
           id?: string
+          metadata?: Json
           notes?: string | null
+          recorded_by_staff_id?: string | null
           reference_id?: string | null
           reference_type?: string | null
           shift_id?: string | null
@@ -1214,7 +1224,9 @@ export type Database = {
           business_day_id?: string | null
           created_at?: string
           id?: string
+          metadata?: Json
           notes?: string | null
+          recorded_by_staff_id?: string | null
           reference_id?: string | null
           reference_type?: string | null
           shift_id?: string | null
@@ -1222,7 +1234,15 @@ export type Database = {
           type?: string
           wallet_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wallet_entries_recorded_by_staff_id_fkey"
+            columns: ["recorded_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1708,6 +1728,24 @@ export type Database = {
             Returns: Json
           }
         | { Args: { p_pin: string; p_tenant_id: string }; Returns: Json }
+      void_day_entry: {
+        Args: {
+          p_entry_id: string
+          p_reason: string
+          p_staff_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      void_wallet_entry: {
+        Args: {
+          p_entry_id: string
+          p_reason: string
+          p_staff_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

@@ -248,7 +248,6 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                               final customer = filtered[idx];
                               return CustomerListItemCard(
                                 customer: customer,
-                                isMarked: state.markedCustomerIds.contains(customer.id),
                               );
                             },
                           ),

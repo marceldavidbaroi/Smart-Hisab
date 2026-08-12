@@ -743,10 +743,22 @@ BEGIN
   v_day_id := public.start_business_day(p_tenant_id, p_staff_id, 0);
   v_shift_id := public.get_current_shift(p_tenant_id);
 
-  SELECT rate INTO v_rate FROM public.meal_configs
-  WHERE tenant_id = p_tenant_id AND shift_id = v_shift_id
-  ORDER BY effective_from DESC LIMIT 1;
-  IF v_rate IS NULL THEN v_rate := 50; END IF;
+  -- 1. Try to get meal rate for specific shift if shift_id is active
+  IF v_shift_id IS NOT NULL THEN
+    SELECT rate INTO v_rate FROM public.meal_configs
+    WHERE tenant_id = p_tenant_id AND shift_id = v_shift_id
+    ORDER BY effective_from DESC LIMIT 1;
+  END IF;
+
+  -- 2. Fallback: Get latest configured meal rate for tenant
+  IF v_rate IS NULL THEN
+    SELECT rate INTO v_rate FROM public.meal_configs
+    WHERE tenant_id = p_tenant_id
+    ORDER BY effective_from DESC LIMIT 1;
+  END IF;
+
+  -- 3. Default fallback if no meal config exists yet
+  IF v_rate IS NULL THEN v_rate := 0; END IF;
 
   SELECT id INTO v_wallet_id FROM public.customer_wallets
   WHERE tenant_id = p_tenant_id AND customer_id = p_customer_id;
