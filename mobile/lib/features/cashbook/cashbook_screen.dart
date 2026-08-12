@@ -1,179 +1,156 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
-import '../../core/widgets/custom_modal_bottom_sheet.dart';
+import 'add_day_note_bottom_sheet.dart';
+import 'add_expense_bottom_sheet.dart';
+import 'add_income_bottom_sheet.dart';
+import 'cashbook_notifier.dart';
+import 'widgets/cashbook_summary_header.dart';
+import 'widgets/transaction_list.dart';
 
-class CashbookScreen extends StatefulWidget {
+class CashbookScreen extends ConsumerWidget {
   const CashbookScreen({super.key});
 
-  @override
-  State<CashbookScreen> createState() => _CashbookScreenState();
-}
+  void _openAddExpenseModal(BuildContext context, WidgetRef ref) {
+    AddExpenseBottomSheet.show(
+      context,
+      onSubmit: ({
+        required String title,
+        required String category,
+        required double amount,
+        String? notes,
+      }) {
+        ref.read(cashbookNotifierProvider.notifier).addExpense(
+              title: title,
+              category: category,
+              amount: amount,
+              notes: notes,
+            );
+      },
+    );
+  }
 
-class _CashbookScreenState extends State<CashbookScreen> {
-  final List<Map<String, dynamic>> _entries = [
-    {
-      'id': '1',
-      'title': 'Bazar Purchase (Vegetables)',
-      'category': 'Market Expense',
-      'amount': 2500.0,
-      'type': 'expense',
-      'time': '09:30 AM',
-    },
-    {
-      'id': '2',
-      'title': 'Baki Collected (Rahim)',
-      'category': 'Collection',
-      'amount': 450.0,
-      'type': 'income',
-      'time': '11:15 AM',
-    },
-  ];
-
-  void _openAddExpenseModal() {
-    final titleCtrl = TextEditingController();
-    final amountCtrl = TextEditingController();
-
-    CustomModalBottomSheet.show(
-      context: context,
-      title: "Record Market Expense",
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            controller: titleCtrl,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Expense Description',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-              filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: amountCtrl,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Amount (৳)',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-              filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              final amt = num.tryParse(amountCtrl.text) ?? 0;
-              setState(() {
-                _entries.insert(0, {
-                  'id': AppFormatters.generateUuid(),
-                  'title': titleCtrl.text.isEmpty ? 'Market Expense' : titleCtrl.text,
-                  'category': 'Expense',
-                  'amount': amt.toDouble(),
-                  'type': 'expense',
-                  'time': 'Just now',
-                });
-              });
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.warning,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text(
-              'Save Expense',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ),
-        ],
-      ),
+  void _openAddNoteModal(BuildContext context, WidgetRef ref) {
+    AddDayNoteBottomSheet.show(
+      context,
+      onSubmit: ({
+        required String title,
+        required String content,
+      }) {
+        ref.read(cashbookNotifierProvider.notifier).addDayNote(
+              title: title,
+              content: content,
+            );
+      },
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cashbookState = ref.watch(cashbookNotifierProvider);
+    final notifier = ref.read(cashbookNotifierProvider.notifier);
+
     return AppSafeArea(
       child: RefreshIndicator(
-        onRefresh: () async => setState(() {}),
+        onRefresh: () async {
+          await notifier.fetchCashbookEntries();
+        },
         color: AppColors.primary,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Cashbook & Bazar', style: Theme.of(context).textTheme.titleLarge),
-                  IconButton(
-                    icon: const Icon(LucideIcons.plusCircle, color: AppColors.primary),
-                    onPressed: _openAddExpenseModal,
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Cashbook & Bazar',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimaryDark,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Daily inflow, market expense & notes',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondaryDark,
+                        ),
+                      ),
+                    ],
                   ),
+                  Row(
+                    children: [
+                      IconButton(
+                        tooltip: 'Record Misc Income',
+                        icon: const Icon(LucideIcons.arrowDownLeft, color: AppColors.success),
+                        onPressed: () => AddIncomeBottomSheet.show(context),
+                      ),
+                      IconButton(
+                        tooltip: 'Add Day Note',
+                        icon: const Icon(LucideIcons.fileText, color: AppColors.info),
+                        onPressed: () => _openAddNoteModal(context, ref),
+                      ),
+                      IconButton(
+                        tooltip: 'Record Expense',
+                        icon: const Icon(LucideIcons.plusCircle, color: AppColors.danger),
+                        onPressed: () => _openAddExpenseModal(context, ref),
+                      ),
+                    ],
+                  ),
+
                 ],
               ),
               const SizedBox(height: 16),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _entries.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 10),
-                  itemBuilder: (ctx, idx) {
-                    final item = _entries[idx];
-                    final isExpense = item['type'] == 'expense';
 
-                    return Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardDark,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.cardBorderDark),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isExpense ? LucideIcons.arrowUpRight : LucideIcons.arrowDownLeft,
-                            color: isExpense ? AppColors.danger : AppColors.success,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item['title'],
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimaryDark,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${item['category']} • ${item['time']}',
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryDark),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            AppFormatters.formatBdt(item['amount']),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isExpense ? AppColors.danger : AppColors.success,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+              // Cashflow Summary Header
+              CashbookSummaryHeader(
+                totalInflow: cashbookState.totalInflow,
+                totalOutflow: cashbookState.totalOutflow,
+                netBalance: cashbookState.netBalance,
+              ),
+              const SizedBox(height: 16),
+
+              // Transaction List Header Title
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Day Transactions',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimaryDark,
+                    ),
+                  ),
+                  Text(
+                    '${cashbookState.entries.length} entries',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondaryDark,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Day Transactions List
+              Expanded(
+                child: TransactionList(
+                  entries: cashbookState.entries,
+                  isLoading: cashbookState.isLoading,
+                  onDelete: (id) => notifier.deleteEntry(id),
+                  onAddExpense: () => _openAddExpenseModal(context, ref),
+                  onAddNote: () => _openAddNoteModal(context, ref),
                 ),
               ),
             ],

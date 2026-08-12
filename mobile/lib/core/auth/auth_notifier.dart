@@ -104,6 +104,161 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Sign In with Email & Password
+  Future<bool> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    try {
+      if (SupabaseService.isInitialized) {
+        final res = await SupabaseService.client.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
+        if (res.user != null) {
+          await initializeAuth();
+          return true;
+        }
+      }
+      // Demo / fallback mode
+      await signInDemoUser();
+      return true;
+    } catch (e) {
+      debugPrint('Email Sign-In error: $e');
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Sign Up with Email & Password
+  Future<bool> signUpWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    try {
+      if (SupabaseService.isInitialized) {
+        final res = await SupabaseService.client.auth.signUp(
+          email: email,
+          password: password,
+        );
+        if (res.user != null) {
+          await initializeAuth();
+          return true;
+        }
+      }
+      // Demo fallback mode for new user
+      state = state.copyWith(
+        status: AuthStatus.authenticatedNoTenant,
+        userId: 'demo-user-new',
+        userEmail: email,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('Email Sign-Up error: $e');
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Create Canteen RPC Call (`create_tenant`)
+  Future<bool> createTenant(String name) async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    try {
+      if (SupabaseService.isInitialized) {
+        final res = await SupabaseService.client.rpc('create_tenant', params: {
+          'p_name': name,
+        }) as Map<String, dynamic>;
+
+        if (res['success'] == true && res['data'] != null) {
+          final data = res['data'] as Map<String, dynamic>;
+          await setActiveTenant(
+            tenantId: data['tenant_id'] as String,
+            tenantName: data['name'] as String? ?? name,
+            role: data['role'] as String? ?? 'owner',
+          );
+          return true;
+        } else {
+          final errMessage = res['error']?['message'] as String? ??
+              'Failed to create canteen';
+          state = state.copyWith(
+            status: AuthStatus.authenticatedNoTenant,
+            errorMessage: errMessage,
+          );
+          return false;
+        }
+      }
+
+      // Demo mode fallback
+      await setActiveTenant(
+        tenantId: 'tenant-${DateTime.now().millisecondsSinceEpoch}',
+        tenantName: name,
+        role: 'owner',
+      );
+      return true;
+    } catch (e) {
+      debugPrint('createTenant error: $e');
+      state = state.copyWith(
+        status: AuthStatus.authenticatedNoTenant,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Join Canteen via Invite Code RPC (`join_tenant_by_code`)
+  Future<bool> joinTenant(String code) async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    try {
+      if (SupabaseService.isInitialized) {
+        final res =
+            await SupabaseService.client.rpc('join_tenant_by_code', params: {
+          'p_code': code,
+        }) as Map<String, dynamic>;
+
+        if (res['success'] == true && res['data'] != null) {
+          final data = res['data'] as Map<String, dynamic>;
+          await setActiveTenant(
+            tenantId: data['tenant_id'] as String,
+            tenantName: data['name'] as String? ?? 'Joined Canteen',
+            role: data['role'] as String? ?? 'manager',
+          );
+          return true;
+        } else {
+          final errMessage = res['error']?['message'] as String? ??
+              'Invalid or expired invite code';
+          state = state.copyWith(
+            status: AuthStatus.authenticatedNoTenant,
+            errorMessage: errMessage,
+          );
+          return false;
+        }
+      }
+
+      // Demo mode fallback
+      await setActiveTenant(
+        tenantId: 'tenant-joined-$code',
+        tenantName: 'Demo Joined Canteen',
+        role: 'manager',
+      );
+      return true;
+    } catch (e) {
+      debugPrint('joinTenant error: $e');
+      state = state.copyWith(
+        status: AuthStatus.authenticatedNoTenant,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
   /// Manually update tenant after creating/joining
   Future<void> setActiveTenant({
     required String tenantId,

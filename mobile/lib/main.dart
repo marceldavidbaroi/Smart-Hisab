@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/config/env.dart';
 import 'core/services/error_handler_service.dart';
 import 'core/services/hive_service.dart';
 import 'core/services/notification_service.dart';
@@ -9,8 +10,11 @@ import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
 import 'core/auth/auth_state.dart';
 import 'features/app_scaffold.dart';
-import 'features/auth/login_screen.dart';
+import 'features/auth/landing_screen.dart';
+import 'features/auth/onboarding_choice_screen.dart';
 import 'features/splash/splash_screen.dart';
+
+import 'core/theme/theme_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,42 +31,40 @@ void main() async {
   // Initialize Supabase Client with local/env fallback
   try {
     await SupabaseService.initialize(
-      url: const String.fromEnvironment(
-        'SUPABASE_URL',
-        defaultValue: 'http://10.0.2.2:54321', // Local Supabase Docker Android Loopback
-      ),
-      anonKey: const String.fromEnvironment(
-        'SUPABASE_ANON_KEY',
-        defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', // Local dev key
-      ),
+      url: Env.supabaseUrl,
+      anonKey: Env.supabaseAnonKey,
     );
   } catch (e) {
     debugPrint('Supabase init warning: $e');
   }
 
   runApp(
-    const SmartHisabApp(),
+    const ProviderScope(
+      child: SmartHisabApp(),
+    ),
   );
 }
 
-class SmartHisabApp extends StatelessWidget {
+class SmartHisabApp extends ConsumerWidget {
   const SmartHisabApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ProviderScope(
-      child: MaterialApp(
-        title: 'Smart-Hisab',
-        scaffoldMessengerKey: NotificationService.messengerKey,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        home: const AuthGuard(),
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeNotifierProvider);
+
+    return MaterialApp(
+      title: 'Smart-Hisab',
+      scaffoldMessengerKey: NotificationService.messengerKey,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      home: const AuthGuard(),
     );
   }
 }
 
-/// Reactive AuthGuard ensuring unauthenticated users always land on LoginScreen
+/// Reactive AuthGuard ensuring correct flow routing
 class AuthGuard extends ConsumerWidget {
   const AuthGuard({super.key});
 
@@ -75,13 +77,15 @@ class AuthGuard extends ConsumerWidget {
         return const SplashScreen();
 
       case AuthStatus.authenticatedWithTenant:
-      case AuthStatus.authenticatedNoTenant:
         return const AppScaffold();
+
+      case AuthStatus.authenticatedNoTenant:
+        return const OnboardingChoiceScreen();
 
       case AuthStatus.unauthenticated:
       case AuthStatus.error:
       default:
-        return const LoginScreen();
+        return const LandingScreen();
     }
   }
 }

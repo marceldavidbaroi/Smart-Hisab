@@ -1,123 +1,281 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/models/staff_member.dart';
 import '../../core/widgets/app_safe_area.dart';
-import '../../core/widgets/custom_modal_bottom_sheet.dart';
+import 'add_staff_bottom_sheet.dart';
+import 'record_salary_payout_bottom_sheet.dart';
+import 'staff_detail_screen.dart';
+import 'staff_notifier.dart';
 
-class StaffScreen extends StatefulWidget {
+class StaffScreen extends ConsumerStatefulWidget {
   const StaffScreen({super.key});
 
   @override
-  State<StaffScreen> createState() => _StaffScreenState();
+  ConsumerState<StaffScreen> createState() => _StaffScreenState();
 }
 
-class _StaffScreenState extends State<StaffScreen> {
-  final List<Map<String, dynamic>> _staffMembers = [
-    {'id': '1', 'name': 'Abul Bashar', 'role': 'Head Cook', 'monthlySalary': 15000},
-    {'id': '2', 'name': 'Jamil Hossain', 'role': 'Cashier / Assistant', 'monthlySalary': 12000},
-  ];
+class _StaffScreenState extends ConsumerState<StaffScreen> {
+  final _searchController = TextEditingController();
 
-  void _openSalaryPayoutModal(Map<String, dynamic> staff) {
-    final amountCtrl = TextEditingController();
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-    CustomModalBottomSheet.show(
-      context: context,
-      title: "Salary Payout — ${staff['name']}",
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            controller: amountCtrl,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Payout Amount (৳)',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-              filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Confirm Payout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-          ),
-        ],
-      ),
+  void _openAddStaffModal() {
+    AddStaffBottomSheet.show(
+      context,
+      onAdd: ({
+        required name,
+        required phone,
+        required role,
+        required monthlySalary,
+        pinCode,
+      }) {
+        ref.read(staffNotifierProvider.notifier).addStaff(
+              name: name,
+              phone: phone,
+              role: role,
+              monthlySalary: monthlySalary,
+              pinCode: pinCode,
+            );
+      },
+    );
+  }
+
+  void _openSalaryPayoutModal(StaffMember staff) {
+    RecordSalaryPayoutBottomSheet.show(
+      context,
+      staff: staff,
+      onConfirm: ({required amount, required paymentMode, required staffId, notes}) {
+        ref.read(staffNotifierProvider.notifier).recordSalaryPayout(
+              staffId: staffId,
+              amount: amount,
+              paymentMode: paymentMode,
+              notes: notes,
+            );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final staffState = ref.watch(staffNotifierProvider);
+    final staffList = staffState.filteredStaffList;
+
     return AppSafeArea(
       child: RefreshIndicator(
-        onRefresh: () async => setState(() {}),
+        onRefresh: () async {
+          await ref.read(staffNotifierProvider.notifier).fetchStaff();
+        },
         color: AppColors.primary,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Staff Management', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _staffMembers.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 10),
-                  itemBuilder: (ctx, idx) {
-                    final item = _staffMembers[idx];
+              // Header & Add Staff CTA
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Staff Management', style: Theme.of(context).textTheme.titleLarge),
+                  ElevatedButton.icon(
+                    onPressed: _openAddStaffModal,
+                    icon: const Icon(LucideIcons.userPlus, size: 16, color: Colors.white),
+                    label: const Text('Add Staff', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
-                    return Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardDark,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.cardBorderDark),
-                      ),
-                      child: Row(
-                        children: [
-                          const CircleAvatar(
-                            backgroundColor: AppColors.cardBorderDark,
-                            child: Icon(LucideIcons.userCheck, color: AppColors.primary),
+              // Search Bar
+              TextField(
+                controller: _searchController,
+                style: const TextStyle(color: Colors.white),
+                onChanged: (val) {
+                  ref.read(staffNotifierProvider.notifier).setSearchQuery(val);
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search staff by name or role...',
+                  hintStyle: const TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
+                  prefixIcon: const Icon(LucideIcons.search, color: AppColors.textSecondaryDark, size: 18),
+                  filled: true,
+                  fillColor: AppColors.cardDark,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Payroll Stats Overview Bar
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.cardDark,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.cardBorderDark),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        const Text('Monthly Payroll', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark)),
+                        const SizedBox(height: 2),
+                        Text('৳${staffState.totalMonthlyPayroll.toStringAsFixed(0)}',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ],
+                    ),
+                    Container(height: 30, width: 1, color: AppColors.cardBorderDark),
+                    Column(
+                      children: [
+                        const Text('Paid This Month', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark)),
+                        const SizedBox(height: 2),
+                        Text('৳${staffState.totalPaidPayrollThisMonth.toStringAsFixed(0)}',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Content List
+              Expanded(
+                child: staffState.isLoading
+                    ? ListView.separated(
+                        itemCount: 4,
+                        separatorBuilder: (ctx, idx) => const SizedBox(height: 10),
+                        itemBuilder: (ctx, idx) => Shimmer.fromColors(
+                          baseColor: AppColors.cardDark,
+                          highlightColor: AppColors.cardBorderDark,
+                          child: Container(
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppColors.cardDark,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
+                        ),
+                      )
+                    : staffList.isEmpty
+                        ? Center(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  item['name'],
-                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimaryDark),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  item['role'],
-                                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                                const Icon(LucideIcons.users, size: 48, color: AppColors.textSecondaryDark),
+                                const SizedBox(height: 12),
+                                const Text('No staff members found', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 16)),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: _openAddStaffModal,
+                                  icon: const Icon(LucideIcons.userPlus, size: 16, color: Colors.white),
+                                  label: const Text('Add Staff Member', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
                                 ),
                               ],
                             ),
+                          )
+                        : ListView.separated(
+                            itemCount: staffList.length,
+                            separatorBuilder: (context, index) => const SizedBox(height: 10),
+                            itemBuilder: (ctx, idx) {
+                              final item = staffList[idx];
+
+                              return Dismissible(
+                                key: Key(item.id),
+                                background: Container(
+                                  color: AppColors.danger.withValues(alpha: 0.8),
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 20),
+                                  child: const Icon(LucideIcons.trash2, color: Colors.white),
+                                ),
+                                direction: DismissDirection.endToStart,
+                                onDismissed: (direction) {
+                                  ref.read(staffNotifierProvider.notifier).deleteStaff(item.id);
+                                },
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => StaffDetailScreen(staff: item),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.cardDark,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: AppColors.cardBorderDark),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                                          child: const Icon(LucideIcons.userCheck, color: AppColors.primary),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                item.name,
+                                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimaryDark),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.primary.withValues(alpha: 0.15),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                    child: Text(
+                                                      item.role.name.toUpperCase(),
+                                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    '৳${item.monthlySalary.toStringAsFixed(0)}/mo',
+                                                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => _openSalaryPayoutModal(item),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.accent,
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                          ),
+                                          child: const Text('Pay Salary', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                          ElevatedButton(
-                            onPressed: () => _openSalaryPayoutModal(item),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accent,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Text('Pay Salary', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
               ),
             ],
           ),

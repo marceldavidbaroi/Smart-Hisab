@@ -28,4 +28,9 @@ abstract class AppFormatters {
   static String formatDateShort(DateTime dt) {
     return DateFormat('dd MMM yyyy').format(dt);
   }
+
+  /// Format DateTime to time only e.g. "10:30 AM"
+  static String formatTimeOnly(DateTime dt) {
+    return DateFormat('hh:mm a').format(dt);
+  }
 }

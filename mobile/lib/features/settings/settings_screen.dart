@@ -1,100 +1,165 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/widgets/app_safe_area.dart';
-import '../../core/widgets/custom_modal_bottom_sheet.dart';
 
-class SettingsScreen extends StatelessWidget {
+import '../../core/auth/auth_notifier.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/theme/theme_notifier.dart';
+import '../../core/widgets/app_safe_area.dart';
+import 'canteen_profile_screen.dart';
+import 'invite_manager_screen.dart';
+import 'my_profile_screen.dart';
+import 'offline_storage_screen.dart';
+import 'shifts_and_rates_screen.dart';
+import 'vendors_screen.dart';
+
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
-  void _showInviteManagerModal(BuildContext context) {
-    CustomModalBottomSheet.show(
-      context: context,
-      title: "Invite Manager",
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            "Give this 6-digit code to your manager. Valid for 24 hours.",
-            style: TextStyle(color: AppColors.textSecondaryDark),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.primary),
-            ),
-            child: const Text(
-              "8 4 9 2 0 1",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 8,
-                color: AppColors.primary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.cardBorderDark,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            icon: const Icon(LucideIcons.check, color: Colors.white),
-            label: const Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeNotifierProvider);
+    final authState = ref.watch(authNotifierProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return AppSafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Settings', style: Theme.of(context).textTheme.titleLarge),
+            Text('Settings & Config', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 20),
-            _buildTile(
-              context,
-              'Invite Manager',
-              'Generate 6-digit join code for manager',
-              LucideIcons.userPlus,
-              () => _showInviteManagerModal(context),
-            ),
-            const SizedBox(height: 12),
-            _buildTile(
-              context,
-              'Shifts & Meal Configs',
-              'Breakfast, Lunch, Dinner timings & rates',
-              LucideIcons.clock,
-              () {},
-            ),
-            const SizedBox(height: 12),
-            _buildTile(
-              context,
-              'Vendors Ledger',
-              'Market suppliers & Bazar accounts',
-              LucideIcons.truck,
-              () {},
-            ),
-            const SizedBox(height: 12),
-            _buildTile(
-              context,
-              'Offline Storage & Outbox',
-              'View pending offline sync queue',
-              LucideIcons.database,
-              () {},
+
+            Expanded(
+              child: ListView(
+                children: [
+                  // Canteen Profile Tile
+                  _buildTile(
+                    context,
+                    title: 'Canteen Profile',
+                    subtitle: 'Manage canteen name, tier status & profile',
+                    icon: LucideIcons.store,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CanteenProfileScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Profile Header Tile
+                  _buildTile(
+                    context,
+                    title: authState.userEmail ?? 'My Profile',
+                    subtitle: 'Role: ${authState.role?.toUpperCase() ?? 'OWNER'} • ${authState.tenantName ?? 'Canteen'}',
+                    icon: LucideIcons.user,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MyProfileScreen()),
+                      );
+                    },
+                  ),
+
+
+                  const SizedBox(height: 12),
+
+                  _buildTile(
+                    context,
+                    title: 'Invite Manager',
+                    subtitle: 'Generate 6-digit join code for manager',
+                    icon: LucideIcons.userPlus,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const InviteManagerScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildTile(
+                    context,
+                    title: 'Shifts & Meal Configs',
+                    subtitle: 'Breakfast, Lunch, Dinner timings & default rates',
+                    icon: LucideIcons.clock,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ShiftsAndRatesScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildTile(
+                    context,
+                    title: 'Vendors Ledger',
+                    subtitle: 'Market suppliers & Bazar accounts payable',
+                    icon: LucideIcons.truck,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const VendorsScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildTile(
+                    context,
+                    title: 'Offline Storage & Outbox',
+                    subtitle: 'View pending offline sync queue',
+                    icon: LucideIcons.database,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const OfflineStorageScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Theme Toggle Switch Tile
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.cardDark : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? AppColors.cardBorderDark : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Icon(
+                        themeMode == ThemeMode.dark ? LucideIcons.moon : LucideIcons.sun,
+                        color: AppColors.primary,
+                      ),
+                      title: const Text(
+                        'Dark Mode',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        themeMode == ThemeMode.dark ? 'Dark theme active' : 'Light theme active',
+                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                      ),
+                      trailing: Switch(
+                        value: themeMode == ThemeMode.dark,
+                        activeThumbColor: AppColors.primary,
+                        onChanged: (val) {
+                          ref.read(themeNotifierProvider.notifier).toggleTheme();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -103,23 +168,27 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildTile(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-    VoidCallback onTap,
-  ) {
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardDark,
+        color: isDark ? AppColors.cardDark : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorderDark),
+        border: Border.all(
+          color: isDark ? AppColors.cardBorderDark : const Color(0xFFE2E8F0),
+        ),
       ),
       child: ListTile(
         leading: Icon(icon, color: AppColors.primary),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimaryDark),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           subtitle,

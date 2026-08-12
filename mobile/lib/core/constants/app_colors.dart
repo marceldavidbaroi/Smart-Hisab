@@ -34,4 +34,11 @@ abstract class AppColors {
   // Skeleton Loader
   static const Color shimmerBase = Color(0xFF334155);
   static const Color shimmerHighlight = Color(0xFF475569);
+
+  // Aliases for common dark mode usage
+  static const Color backgroundDark = bgDark;
+  static const Color surfaceDark = cardDark;
+  static const Color surfaceLight = cardBorderDark;
+  static const Color textSecondary = textSecondaryDark;
+  static const Color textPrimary = textPrimaryDark;
 }
