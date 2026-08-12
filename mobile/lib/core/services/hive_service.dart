@@ -24,11 +24,13 @@ class HiveService {
 
   /// Write item to cache box with specific key (e.g. 'customer:123')
   static Future<void> setCache(String key, Map<String, dynamic> value) async {
+    if (!Hive.isBoxOpen(cacheBoxName)) return;
     await _cacheBox.put(key, value);
   }
 
   /// Read item from cache box
   static Map<String, dynamic>? getCache(String key) {
+    if (!Hive.isBoxOpen(cacheBoxName)) return null;
     final raw = _cacheBox.get(key);
     if (raw == null) return null;
     return Map<String, dynamic>.from(raw as Map);
@@ -36,6 +38,7 @@ class HiveService {
 
   /// Remove item from cache box (targeted local cache mutation)
   static Future<void> deleteCache(String key) async {
+    if (!Hive.isBoxOpen(cacheBoxName)) return;
     await _cacheBox.delete(key);
   }
 }

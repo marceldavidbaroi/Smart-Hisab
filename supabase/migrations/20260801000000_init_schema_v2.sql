@@ -4,8 +4,37 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 --------------------------------------------------------------------------------
+-- 0. CLEAN RESET (DROP LEGACY TABLES)
+--------------------------------------------------------------------------------
+DROP TABLE IF EXISTS public.audit_logs CASCADE;
+DROP TABLE IF EXISTS public.day_notes CASCADE;
+DROP TABLE IF EXISTS public.vendor_payments CASCADE;
+DROP TABLE IF EXISTS public.salary_payouts CASCADE;
+DROP TABLE IF EXISTS public.expenses CASCADE;
+DROP TABLE IF EXISTS public.baki_collections CASCADE;
+DROP TABLE IF EXISTS public.meal_attendance CASCADE;
+DROP TABLE IF EXISTS public.day_entries CASCADE;
+DROP TABLE IF EXISTS public.business_days CASCADE;
+DROP TABLE IF EXISTS public.vendor_wallets CASCADE;
+DROP TABLE IF EXISTS public.vendors CASCADE;
+DROP TABLE IF EXISTS public.customer_wallets CASCADE;
+DROP TABLE IF EXISTS public.customers CASCADE;
+DROP TABLE IF EXISTS public.meal_configs CASCADE;
+DROP TABLE IF EXISTS public.shifts CASCADE;
+DROP TABLE IF EXISTS public.staff_wallets CASCADE;
+DROP TABLE IF EXISTS public.staff_members CASCADE;
+DROP TABLE IF EXISTS public.tenant_invites CASCADE;
+DROP TABLE IF EXISTS public.tenant_members CASCADE;
+DROP TABLE IF EXISTS public.tenants CASCADE;
+DROP TABLE IF EXISTS public.user_profiles CASCADE;
+DROP TABLE IF EXISTS public.devices CASCADE;
+DROP TABLE IF EXISTS public.terminal_pairings CASCADE;
+DROP TABLE IF EXISTS public.daily_summaries CASCADE;
+
+--------------------------------------------------------------------------------
 -- 1. IDENTITY & ACCESS
 --------------------------------------------------------------------------------
+
 
 -- User Profiles (1-to-1 with auth.users)
 CREATE TABLE IF NOT EXISTS public.user_profiles (

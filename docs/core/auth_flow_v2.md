@@ -4,15 +4,16 @@
 
 ---
 
-## 1. Auth Method: Google Sign-In Only
+## 1. Auth Method: Dual Auth (Email/Password + Google Sign-In)
 
-One auth method for everyone. No email/password. No device pairing PINs. No web dashboard required.
+Dual authentication ensures zero-friction development testing (Email/Password) while offering a seamless social login experience in production (Google Sign-In). 
+The initial app screen is a Landing Page highlighting core features, providing "Sign In" and "Sign Up" options.
 
 | User Type | Auth Method | What They See |
 |---|---|---|
-| **Owner** | Google Sign-In | Full access — all tabs, settings, staff/customer management |
-| **Manager** | Google Sign-In + Join Code | Management access — day control, reports, counter mode (no tenant/billing settings) |
-| **Counter Staff** | 4-digit PIN on shared device | Counter mode only — meal toggle, baki collection. **No Google account needed.** |
+| **Owner** | Email/Password OR Google | Full access — all tabs, settings, staff/customer management |
+| **Manager** | Email/Password OR Google + Join Code | Management access — day control, reports, counter mode (no tenant/billing settings) |
+| **Counter Staff** | 4-digit PIN on shared device | Counter mode only — meal toggle, baki collection. **No email or Google account needed.** |
 
 ---
 
@@ -22,8 +23,9 @@ One auth method for everyone. No email/password. No device pairing PINs. No web 
 
 ```
 1. Download app
-2. "Continue with Google"
-3. No tenant found → Onboarding Choice screen:
+2. See Landing Page (Features overview)
+3. Tap "Sign Up" -> Choose Email/Password OR Google
+4. No tenant found → Onboarding Choice screen:
    ┌──────────────────────────────┐
    │                              │
    │  🏪  "Create My Canteen"    │
@@ -32,9 +34,9 @@ One auth method for everyone. No email/password. No device pairing PINs. No web 
    │       (I have a code)        │
    │                              │
    └──────────────────────────────┘
-4. Tap "Create My Canteen"
-5. Enter canteen name → Done
-6. Lands on Home screen as Owner
+5. Tap "Create My Canteen"
+6. Enter canteen name → Done
+7. Lands on Home screen as Owner
 ```
 
 ### Flow B: Manager Joining an Existing Canteen
@@ -45,7 +47,7 @@ Owner's Phone:
 
 Manager's Phone:
   2. Download app
-  3. "Continue with Google"
+  3. See Landing Page -> Tap "Sign Up" (Email/Password OR Google)
   4. No tenant found → Onboarding Choice screen
   5. Tap "Join a Canteen"
   6. Enter 6-digit code

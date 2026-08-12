@@ -18,7 +18,8 @@
     "deploy:backend": "bash ./deploy_backend.sh",
     "clear-tenant": "bash ./scripts/clear-tenant.sh",
     "mobile:dev": "cd mobile && flutter run",
-    "mobile:analyze": "cd mobile && flutter analyze"
+    "mobile:analyze": "cd mobile && flutter analyze",
+    "mobile:clean": "cd mobile && flutter clean && flutter pub get"
   },
   "devDependencies": {
     "supabase": "^2.105.0",

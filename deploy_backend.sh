@@ -13,19 +13,17 @@ echo "=========================================="
 echo "🚀 Deploying Supabase Backend..."
 echo "=========================================="
 
-# If project ref is not in environment, prompt user
-if [ -z "$SUPABASE_PROJECT_REF" ]; then
-  echo "SUPABASE_PROJECT_REF is not defined in your environment."
-  read -p "Enter your Supabase Project Ref ID: " SUPABASE_PROJECT_REF
-fi
+# Set default project ref if not set
+SUPABASE_PROJECT_REF="${SUPABASE_PROJECT_REF:-ragbgcqewutilfsiuief}"
 
 # Link to the remote Supabase project
 echo "🔗 Linking to Supabase project ref: $SUPABASE_PROJECT_REF..."
 npx supabase link --project-ref "$SUPABASE_PROJECT_REF"
 
+
 # Push database migrations to remote project
 echo "📤 Pushing database migrations..."
-npx supabase db push
+npx supabase db push --linked
 
 # Generate updated typescript types for the Quasar frontend
 echo "📝 Generating TypeScript types..."

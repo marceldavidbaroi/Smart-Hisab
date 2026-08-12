@@ -19,11 +19,21 @@ class SupabaseService {
     );
   }
 
+  /// Check if Supabase instance is initialized
+  static bool get isInitialized {
+    try {
+      Supabase.instance.client;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Get current user ID
-  static String? get currentUserId => client.auth.currentUser?.id;
+  static String? get currentUserId => isInitialized ? client.auth.currentUser?.id : null;
 
   /// Check if user is authenticated
-  static bool get isAuthenticated => client.auth.currentUser != null;
+  static bool get isAuthenticated => isInitialized && client.auth.currentUser != null;
 
   /// Call Supabase RPC endpoint with parameters
   static Future<T?> callRpc<T>(
