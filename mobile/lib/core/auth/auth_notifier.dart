@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../services/error_handler_service.dart';
 import '../services/hive_service.dart';
 import '../services/supabase_service.dart';
 import 'auth_demo_service.dart';
@@ -237,6 +238,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             newTenantId = res;
           } else if (res is Map<String, dynamic>) {
             if (res['success'] == false) {
+              ErrorHandlerService.handleApiResponse(res, 'Create Canteen Error');
               final errMessage = res['error']?['message'] as String? ?? 'Failed to create canteen.';
               state = state.copyWith(isSubmitting: false, errorMessage: errMessage);
               return false;
@@ -298,6 +300,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         if (res != null) {
           if (res is Map<String, dynamic>) {
             if (res['success'] == false) {
+              ErrorHandlerService.handleApiResponse(res, 'Join Canteen Error');
               final errMessage = res['error']?['message'] as String? ?? 'Failed to join canteen.';
               state = state.copyWith(isSubmitting: false, errorMessage: errMessage);
               return false;
@@ -363,6 +366,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (currentUser != null && _isValidUuid(tenantId)) {
         final res = await action();
         if (res != null && res['success'] == false) {
+          ErrorHandlerService.handleApiResponse(res, 'Canteen Action Error');
           final errMessage = res['error']?['message'] as String? ?? 'Failed to perform canteen action.';
           debugPrint('Canteen RPC warning: $errMessage');
           state = state.copyWith(isSubmitting: false, errorMessage: errMessage);
@@ -439,6 +443,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final res = await AuthTenantService.deleteAccount();
       if (res != null && res['success'] == false) {
+        ErrorHandlerService.handleApiResponse(res, 'Delete Account Error');
         final errMessage = res['error']?['message'] as String? ?? 'Failed to delete user account.';
         state = state.copyWith(isSubmitting: false, errorMessage: errMessage);
         return false;

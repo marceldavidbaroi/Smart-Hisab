@@ -844,7 +844,7 @@ export type Database = {
       tenant_invites: {
         Row: {
           code: string
-          created_by: string
+          created_by: string | null
           expires_at: string
           id: string
           role: string
@@ -854,7 +854,7 @@ export type Database = {
         }
         Insert: {
           code: string
-          created_by: string
+          created_by?: string | null
           expires_at: string
           id?: string
           role?: string
@@ -864,7 +864,7 @@ export type Database = {
         }
         Update: {
           code?: string
-          created_by?: string
+          created_by?: string | null
           expires_at?: string
           id?: string
           role?: string

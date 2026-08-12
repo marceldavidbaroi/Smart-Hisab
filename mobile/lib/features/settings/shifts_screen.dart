@@ -134,8 +134,10 @@ class ShiftsScreen extends ConsumerWidget {
                               style: TextStyle(fontSize: 13, color: AppColors.textSecondaryLight),
                             ),
                             const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                             Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
                                 OutlinedButton.icon(
                                   onPressed: () async {
@@ -149,7 +151,6 @@ class ShiftsScreen extends ConsumerWidget {
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
                                 ElevatedButton.icon(
                                   onPressed: () => ShiftFormBottomSheet.show(context),
                                   icon: const Icon(LucideIcons.plus, size: 16),
@@ -198,12 +199,16 @@ class ShiftsScreen extends ConsumerWidget {
                             ),
                             title: Row(
                               children: [
-                                Text(
-                                  shift.name,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                Flexible(
+                                  child: Text(
+                                    shift.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),

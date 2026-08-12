@@ -65,15 +65,21 @@ class ShiftTimelineView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.timeline, size: 18, color: AppColors.primary),
-                  SizedBox(width: 8),
-                  Text(
-                    'Daily Operating Timeline',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(Icons.timeline, size: 18, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Daily Operating Timeline',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

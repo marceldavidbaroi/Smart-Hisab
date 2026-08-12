@@ -51,6 +51,7 @@ class SmartHisabApp extends ConsumerWidget {
 
     return MaterialApp(
       title: 'Smart-Hisab',
+      navigatorKey: ErrorHandlerService.navigatorKey,
       scaffoldMessengerKey: NotificationService.messengerKey,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

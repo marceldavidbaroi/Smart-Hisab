@@ -78,9 +78,9 @@ Maps authenticated users (owners/managers) to canteens. A user can belong to mul
 | `tenant_id` | UUID | NOT NULL, FK → `tenants(id)` ON DELETE CASCADE | |
 | `code` | TEXT | NOT NULL, UNIQUE | 6-digit numeric code |
 | `role` | TEXT | NOT NULL DEFAULT 'manager', CHECK IN ('manager') | Role assigned on join |
-| `created_by` | UUID | NOT NULL, FK → `auth.users(id)` | Owner who generated the code |
-| `expires_at` | TIMESTAMPTZ | NOT NULL | 24 hours from creation |
-| `used_by` | UUID | FK → `auth.users(id)` | NULL until redeemed |
+| `created_by` | UUID | Foreign key to `auth.users(id)` (`ON DELETE SET NULL`). | |
+| `expires_at` | `TIMESTAMPTZ` | Expiration timestamp (24 hrs after creation). | |
+| `used_by` | `UUID` (optional) | Foreign key to `auth.users(id)` (`ON DELETE SET NULL`). | NULL until redeemed |
 | `used_at` | TIMESTAMPTZ | | NULL until redeemed |
 
 ---
