@@ -16,7 +16,9 @@
     "backend:types:local": "sh -c 'npx supabase gen types typescript --local --schema public > supabase/types.ts'",
     "backend:deploy": "bash ./deploy_backend.sh",
     "deploy:backend": "bash ./deploy_backend.sh",
-    "clear-tenant": "bash ./scripts/clear-tenant.sh"
+    "clear-tenant": "bash ./scripts/clear-tenant.sh",
+    "mobile:dev": "cd mobile && flutter run",
+    "mobile:analyze": "cd mobile && flutter analyze"
   },
   "devDependencies": {
     "supabase": "^2.105.0",
