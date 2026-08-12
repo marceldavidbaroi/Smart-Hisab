@@ -64,41 +64,13 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
   CustomersNotifier({this.tenantId}) : super(const CustomersState());
 
-  /// Fetch customer list for current tenant with cache fallback
+  /// Fetch customer list for current tenant with local state fallback
   Future<void> fetchCustomers() async {
     final tId = tenantId ?? 'tenant-demo';
 
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    try {
-      if (SupabaseService.isInitialized) {
-        final res = await SupabaseService.client
-            .from('customers')
-            .select('*, customer_wallets(current_balance)')
-            .eq('tenant_id', tId)
-            .eq('is_active', true)
-            .order('name', ascending: true) as List<dynamic>;
-
-        final fetched = res
-            .map((json) => Customer.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        // Cache fetched list locally wrapped in a map
-        await HiveService.setCache('customers_$tId', {
-          'list': fetched.map((c) => c.toJson()).toList(),
-        });
-
-        state = state.copyWith(
-          customers: fetched,
-          isLoading: false,
-        );
-        return;
-      }
-    } catch (e) {
-      debugPrint('CustomersNotifier fetch error: $e');
-    }
-
-    // Offline / Demo Fallback
+    // Offline / Local Cache Fallback
     final cached = HiveService.getCache('customers_$tId');
     if (cached != null && cached['list'] is List) {
       final rawList = cached['list'] as List;

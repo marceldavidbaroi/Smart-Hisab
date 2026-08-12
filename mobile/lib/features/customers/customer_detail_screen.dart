@@ -5,7 +5,6 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/models/customer.dart';
-import '../../core/services/supabase_service.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
 import 'collect_baki_bottom_sheet.dart';
@@ -36,29 +35,6 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   }
 
   Future<void> _fetchLedgerEntries() async {
-    setState(() => _isLoadingEntries = true);
-    try {
-      if (SupabaseService.isInitialized) {
-        final res = await SupabaseService.client
-            .from('wallet_entries')
-            .select('*, customer_wallets!inner(customer_id)')
-            .eq('customer_wallets.customer_id', widget.customer.id)
-            .order('created_at', ascending: false)
-            .limit(50) as List<dynamic>;
-
-        if (mounted) {
-          setState(() {
-            _entries = res.cast<Map<String, dynamic>>();
-            _isLoadingEntries = false;
-          });
-          return;
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching customer ledger entries: $e');
-    }
-
-    // Mock fallback ledger entries
     if (mounted) {
       setState(() {
         _entries = [

@@ -115,35 +115,12 @@ class StaffNotifier extends StateNotifier<StaffState> {
 
   StaffNotifier({this.tenantId}) : super(const StaffState());
 
-  /// Fetch staff list for current tenant with local Hive fallback
+  /// Fetch staff list for current tenant with local state fallback
   Future<void> fetchStaff() async {
     final tId = tenantId ?? 'tenant-demo';
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    try {
-      if (SupabaseService.isInitialized) {
-        final res = await SupabaseService.client
-            .from('staff_members')
-            .select('*')
-            .eq('tenant_id', tId)
-            .order('name', ascending: true) as List<dynamic>;
-
-        final fetched = res
-            .map((json) => StaffMember.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        await HiveService.setCache('staff_$tId', {
-          'list': fetched.map((s) => s.toJson()).toList(),
-        });
-
-        state = state.copyWith(staffList: fetched, isLoading: false);
-        return;
-      }
-    } catch (e) {
-      debugPrint('StaffNotifier fetch error: $e');
-    }
-
-    // Offline / Demo Fallback
+    // Offline / Local Cache Fallback
     final cached = HiveService.getCache('staff_$tId');
     if (cached != null && cached['list'] is List) {
       final rawList = cached['list'] as List;

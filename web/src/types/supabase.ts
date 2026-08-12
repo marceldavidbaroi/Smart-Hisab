@@ -1290,6 +1290,7 @@ export type Database = {
             }
             Returns: Json
           }
+      delete_canteen: { Args: { p_tenant_id: string }; Returns: Json }
       delete_own_account: { Args: never; Returns: undefined }
       delete_user_account: { Args: never; Returns: Json }
       edit_pos_sale: {
@@ -1495,6 +1496,7 @@ export type Database = {
       is_tenant_member: { Args: { p_tenant_id: string }; Returns: boolean }
       is_tenant_owner: { Args: { p_tenant_id: string }; Returns: boolean }
       join_tenant_by_code: { Args: { p_code: string }; Returns: Json }
+      leave_canteen: { Args: { p_tenant_id: string }; Returns: Json }
       list_active_shifts: {
         Args: { p_device_token: string; p_tenant_id: string }
         Returns: {

@@ -11,6 +11,7 @@ import 'core/auth/auth_state.dart';
 import 'features/app_scaffold.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/onboarding_choice_screen.dart';
+import 'features/auth/login_select_canteen_screen.dart';
 import 'features/splash/splash_screen.dart';
 
 import 'core/theme/theme_notifier.dart';
@@ -78,6 +79,9 @@ class AuthGuard extends ConsumerWidget {
 
       case AuthStatus.authenticatedNoTenant:
         return const OnboardingChoiceScreen();
+
+      case AuthStatus.authenticatedSelectTenant:
+        return const LoginSelectCanteenScreen();
 
       case AuthStatus.unauthenticated:
       case AuthStatus.error:

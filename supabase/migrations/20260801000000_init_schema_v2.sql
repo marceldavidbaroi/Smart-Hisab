@@ -591,6 +591,7 @@ RETURNS JSON AS $$
 DECLARE
   v_invite public.tenant_invites%ROWTYPE;
   v_tenant public.tenants%ROWTYPE;
+  v_existing_role TEXT;
 BEGIN
   SELECT * INTO v_invite FROM public.tenant_invites
   WHERE code = p_code AND used_at IS NULL AND expires_at > now();
@@ -599,9 +600,21 @@ BEGIN
     RAISE EXCEPTION 'Invalid or expired invite code';
   END IF;
 
+  -- Prevent user from re-joining a canteen they are already part of
+  SELECT role INTO v_existing_role
+  FROM public.tenant_members
+  WHERE tenant_id = v_invite.tenant_id AND user_id = auth.uid();
+
+  IF v_existing_role IS NOT NULL THEN
+    IF v_existing_role = 'owner' THEN
+      RAISE EXCEPTION 'You are already the owner of this canteen.';
+    ELSE
+      RAISE EXCEPTION 'You are already a member of this canteen.';
+    END IF;
+  END IF;
+
   INSERT INTO public.tenant_members (tenant_id, user_id, role)
-  VALUES (v_invite.tenant_id, auth.uid(), v_invite.role)
-  ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = EXCLUDED.role;
+  VALUES (v_invite.tenant_id, auth.uid(), v_invite.role);
 
   UPDATE public.tenant_invites
   SET used_by = auth.uid(), used_at = now()

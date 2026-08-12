@@ -18,40 +18,65 @@ Authentication is built directly on Supabase Auth using standard Email & Passwor
 
 ## 2. User Flows
 
-### Flow A: New Owner (First Time)
+### Flow A: Multi-Canteen Login Flow Architecture
 
 ```
-1. Download app
-2. See Landing Page (Features overview)
-3. Tap "Sign Up" -> Choose Email/Password OR Google
-4. No tenant found → Onboarding Choice screen:
-   ┌──────────────────────────────┐
-   │                              │
-   │  🏪  "Create My Canteen"    │
-   │                              │
-   │  🔗  "Join a Canteen"       │
-   │       (I have a code)        │
-   │                              │
-   └──────────────────────────────┘
-5. Tap "Create My Canteen"
-6. Enter canteen name → Done
-7. Lands on Home screen as Owner
+                       ┌─────────────────────────┐
+                       │   User Signs In / App   │
+                       │       Launches          │
+                       └────────────┬────────────┘
+                                    │
+                       Fetch user tenant memberships
+                                    │
+            ┌───────────────────────┼───────────────────────┐
+            ▼                       ▼                       ▼
+      [0 Canteens]            [1 Canteen]             [2+ Canteens]
+            │                       │                       │
+            ▼                       ▼                       ▼
+ ┌─────────────────────┐  ┌───────────────────┐  ┌─────────────────────┐
+ │  Onboarding Choice  │  │  Auto-select &    │  │    Select Canteen   │
+ │   Screen (Create    │  │   Go Straight to  │  │   Screen (List with │
+ │  Canteen / Join as  │  │   Home Dashboard  │  │ OWNER / MANAGER badge│
+ │      Manager)       │  └───────────────────┘  │      per item)      │
+ └─────────────────────┘                         └──────────┬──────────┘
+                                                            │ Tap Canteen
+                                                            ▼
+                                                 ┌─────────────────────┐
+                                                 │    Home Dashboard   │
+                                                 └─────────────────────┘
 ```
 
-### Flow B: Manager Joining an Existing Canteen
+### Flow B: New User / No Canteen (0 Canteens)
 
 ```
-Owner's Phone:
-  1. Settings → "Invite Manager" → System shows 6-digit code (valid 24 hours)
+1. Login (Email/Password or Google Sign-In)
+2. System detects NO tenant for the user (0 tenant memberships)
+3. Directs user to Onboarding Choice screen with options:
+   ┌──────────────────────────────────────────┐
+   │                                          │
+   │  🏪  "Create Canteen" (Owner Flow)       │
+   │                                          │
+   │  🔗  "Join as Manager" (I have a code)   │
+   │                                          │
+   └──────────────────────────────────────────┘
+4. Tap "Create Canteen" → Enter name → Active tenant set → Navigates to Canteen Homepage
+5. Tap "Join as Manager" → Enter join code → Active tenant set → Navigates to Canteen Homepage
+```
 
-Manager's Phone:
-  2. Download app
-  3. See Landing Page -> Tap "Sign Up" (Email/Password OR Google)
-  4. No tenant found → Onboarding Choice screen
-  5. Tap "Join a Canteen"
-  6. Enter 6-digit code
-  7. Joined to owner's canteen as Manager role
-  8. Lands on Home screen
+### Flow C: Existing User with Canteens (1 Canteen vs 2+ Canteens)
+
+```
+Single Canteen (1 Canteen):
+1. Sign In
+2. System detects 1 tenant membership
+3. Auto-selects the canteen & navigates straight to Canteen Homepage
+
+Multiple Canteens (2+ Canteens - Owner or Manager):
+1. Sign In
+2. System detects 2+ tenant memberships → Select Canteen screen (`SelectCanteenScreen`)
+3. View list of all canteens belonging to user, displaying each canteen name with user's role (OWNER or MANAGER) badge
+4. Tap desired canteen → Active tenant context set → Navigates to selected Canteen Homepage
+5. Switch canteens anytime via Settings → "Switch Canteen" (returns to Select Canteen screen)
 ```
 
 ### Flow C: Counter Staff (No App Download Needed)
@@ -67,6 +92,20 @@ At the Counter Device (already signed in under Owner or Manager's Google):
   5. Staff sees avatar grid → taps their name → enters 4-digit PIN
   6. They're clocked in. Can log meals, collect baki.
   7. "Lock" button → returns to PIN gate (for next staff or break)
+```
+
+### Flow D: Logout & Cache Invalidation
+
+```
+1. User taps "Logout" (from Profile / Settings)
+2. Confirmation bottom sheet appears → User confirms logout
+3. Supabase Auth session terminated (`auth.signOut()`)
+4. Local state & cache fully purged:
+   - Clear active tenant context & local storage
+   - Reset Riverpod state/notifiers to initial state
+   - Invalidate any stored user session tokens
+5. App redirects to Auth / Landing screen (`/login`)
+6. On subsequent logins, system starts fresh and follows the exact same tenant evaluation flow (Flow A / Flow B / Flow C).
 ```
 
 **Counter staff never need:**
@@ -148,8 +187,6 @@ A single Google account can be associated with **multiple canteens**:
 ┌─────────────────────────────┐
 │  Active: Rahim's Canteen ✓  │  ← Owner (full access)
 │  ABC Factory Mess           │  ← Manager (invited)
-│  ─────────────────────────  │
-│  ＋ Create New Canteen      │
 └─────────────────────────────┘
 ```
 

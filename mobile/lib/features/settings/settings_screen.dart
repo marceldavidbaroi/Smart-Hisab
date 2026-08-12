@@ -14,6 +14,8 @@ import 'my_profile_screen.dart';
 import 'shifts_and_rates_screen.dart';
 import 'vendors_screen.dart';
 
+import 'switch_canteen_screen.dart';
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -94,6 +96,22 @@ class SettingsScreen extends ConsumerWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const CanteenProfileScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Switch Canteen Tile
+                  _buildTile(
+                    context,
+                    title: 'Switch Canteen',
+                    subtitle: 'Switch active canteen or create/join another',
+                    icon: LucideIcons.arrowLeftRight,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SwitchCanteenScreen()),
                       );
                     },
                   ),

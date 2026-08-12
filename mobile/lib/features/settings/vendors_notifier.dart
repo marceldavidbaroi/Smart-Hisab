@@ -107,29 +107,6 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
   Future<void> fetchVendors() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    try {
-      if (tenantId != null && SupabaseService.isInitialized) {
-        final res = await SupabaseService.client
-            .from('vendors')
-            .select('*')
-            .eq('tenant_id', tenantId!)
-            .order('name', ascending: true) as List<dynamic>;
-
-        final loaded = res
-            .map((e) => Vendor.fromJson(e as Map<String, dynamic>))
-            .toList();
-
-        // Cache locally
-        await HiveService.cacheBox.put(
-            'vendors_$tenantId', loaded.map((e) => e.toJson()).toList());
-
-        state = state.copyWith(isLoading: false, vendors: loaded);
-        return;
-      }
-    } catch (e) {
-      debugPrint('Vendors fetch error: $e');
-    }
-
     // Hive offline / demo fallback
     final cached = HiveService.getCache('vendors_$tenantId') as List<dynamic>?;
     if (cached != null && cached.isNotEmpty) {

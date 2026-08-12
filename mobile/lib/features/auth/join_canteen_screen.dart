@@ -42,6 +42,14 @@ class _JoinCanteenScreenState extends ConsumerState<JoinCanteenScreen> {
       setState(() => _submitting = false);
       if (success) {
         Navigator.pop(context);
+      } else {
+        final err = ref.read(authNotifierProvider).errorMessage ?? 'Failed to join canteen.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
       }
     }
   }

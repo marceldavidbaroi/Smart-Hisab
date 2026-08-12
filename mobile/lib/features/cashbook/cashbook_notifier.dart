@@ -62,29 +62,6 @@ class CashbookNotifier extends StateNotifier<CashbookState> {
     final tId = tenantId ?? 'tenant-demo';
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    try {
-      if (SupabaseService.isInitialized) {
-        final res = await SupabaseService.client
-            .from('day_entries')
-            .select('*')
-            .eq('tenant_id', tId)
-            .order('created_at', ascending: false) as List<dynamic>;
-
-        final fetched = res
-            .map((json) => CashbookEntry.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        await HiveService.setCache('cashbook_$tId', {
-          'list': fetched.map((e) => e.toJson()).toList(),
-        });
-
-        state = state.copyWith(entries: fetched, isLoading: false);
-        return;
-      }
-    } catch (e) {
-      debugPrint('CashbookNotifier fetch error: $e');
-    }
-
     // Offline / Local Cache Fallback
     final cached = HiveService.getCache('cashbook_$tId');
     if (cached != null && cached['list'] is List) {

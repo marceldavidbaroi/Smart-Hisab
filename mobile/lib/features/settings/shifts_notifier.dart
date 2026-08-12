@@ -100,28 +100,6 @@ class ShiftsNotifier extends StateNotifier<ShiftsState> {
   Future<void> fetchShifts() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    try {
-      if (tenantId != null && SupabaseService.isInitialized) {
-        final res = await SupabaseService.client
-            .from('shifts')
-            .select('*')
-            .eq('tenant_id', tenantId!)
-            .order('name', ascending: true) as List<dynamic>;
-
-        final loaded = res
-            .map((e) => CanteenShift.fromJson(e as Map<String, dynamic>))
-            .toList();
-
-        await HiveService.cacheBox.put(
-            'shifts_$tenantId', loaded.map((e) => e.toJson()).toList());
-
-        state = state.copyWith(isLoading: false, shifts: loaded);
-        return;
-      }
-    } catch (e) {
-      debugPrint('Shifts fetch error: $e');
-    }
-
     // Hive offline fallback / Default demo seed
     final cached = HiveService.getCache('shifts_$tenantId') as List<dynamic>?;
     if (cached != null && cached.isNotEmpty) {
