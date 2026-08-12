@@ -10,8 +10,9 @@ import '../../core/widgets/app_safe_area.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
 import 'canteen_profile_screen.dart';
 import 'invite_manager_screen.dart';
+import 'meal_configs_screen.dart';
 import 'my_profile_screen.dart';
-import 'shifts_and_rates_screen.dart';
+import 'shifts_screen.dart';
 import 'vendors_screen.dart';
 
 import 'switch_canteen_screen.dart';
@@ -151,13 +152,28 @@ class SettingsScreen extends ConsumerWidget {
 
                   _buildTile(
                     context,
-                    title: 'Shifts & Meal Configs',
-                    subtitle: 'Breakfast, Lunch, Dinner timings & default rates',
+                    title: 'Shifts Config',
+                    subtitle: 'Operating time windows (Breakfast, Lunch, Dinner)',
                     icon: LucideIcons.clock,
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ShiftsAndRatesScreen()),
+                        MaterialPageRoute(builder: (context) => const ShiftsScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildTile(
+                    context,
+                    title: 'Meal Pricing & Rates',
+                    subtitle: 'Per-shift meal prices & effective date history',
+                    icon: LucideIcons.utensils,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MealConfigsScreen()),
                       );
                     },
                   ),

@@ -9,7 +9,6 @@ import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
 import '../../core/widgets/empty_state_card.dart';
 import 'add_customer_bottom_sheet.dart';
-import 'collect_baki_bottom_sheet.dart';
 import 'customer_detail_screen.dart';
 import 'customers_notifier.dart';
 
@@ -108,6 +107,44 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       tooltip: 'Add Customer',
                     ),
                 ],
+              ),
+              const SizedBox(height: 12),
+
+              // Active Shift Banner
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(LucideIcons.utensils, size: 16, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Active Shift: ${state.activeShiftName}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '${AppFormatters.formatBdt(state.activeShiftRate)}/meal',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -330,7 +367,6 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                         Column(
                                           crossAxisAlignment: CrossAxisAlignment.end,
                                           children: [
-                                            // Rule #7: Secondary metadata >= 12-14
                                             Text(
                                               AppFormatters.formatBdt(balance),
                                               style: TextStyle(
@@ -342,25 +378,38 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                             const SizedBox(height: 6),
                                             InkWell(
                                               onTap: () {
-                                                CollectBakiBottomSheet.show(context, customer);
+                                                ref.read(customersNotifierProvider.notifier).recordMealAttendance(customer.id);
                                               },
                                               borderRadius: BorderRadius.circular(8),
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 4,
-                                                ),
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                                 decoration: BoxDecoration(
-                                                  color: AppColors.success.withValues(alpha: 0.2),
+                                                  color: state.markedCustomerIds.contains(customer.id)
+                                                      ? AppColors.success
+                                                      : AppColors.success.withValues(alpha: 0.1),
                                                   borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: AppColors.success),
                                                 ),
-                                                child: const Text(
-                                                  'Collect Baki',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppColors.success,
-                                                  ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      state.markedCustomerIds.contains(customer.id)
+                                                          ? LucideIcons.checkCircle2
+                                                          : LucideIcons.utensils,
+                                                      size: 12,
+                                                      color: state.markedCustomerIds.contains(customer.id) ? Colors.white : AppColors.success,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      state.markedCustomerIds.contains(customer.id) ? 'Ate' : 'Meal',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: state.markedCustomerIds.contains(customer.id) ? Colors.white : AppColors.success,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ),

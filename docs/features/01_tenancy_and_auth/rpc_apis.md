@@ -12,7 +12,7 @@ Self-service canteen creation.
 |---|---|
 | **Parameters** | `p_name TEXT` |
 | **Returns** | `UUID` (new tenant ID) |
-| **Side effects** | Creates `tenant` + `tenant_member` (role: `owner`) + auto-seeds default shifts |
+| **Side effects** | Creates `tenant` + `tenant_member` (role: `owner`) |
 | **Auth** | Requires `auth.uid()` |
 
 ---

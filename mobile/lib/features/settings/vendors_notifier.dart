@@ -107,45 +107,28 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
   Future<void> fetchVendors() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    // Hive offline / demo fallback
-    final cached = HiveService.getCache('vendors_$tenantId') as List<dynamic>?;
-    if (cached != null && cached.isNotEmpty) {
-      final loaded = cached
-          .map((e) => Vendor.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-      state = state.copyWith(isLoading: false, vendors: loaded);
-      return;
+    try {
+      if (tenantId != null && tenantId!.isNotEmpty && SupabaseService.isInitialized) {
+        final res = await SupabaseService.client
+            .from('vendors')
+            .select()
+            .eq('tenant_id', tenantId!)
+            .order('name', ascending: true);
+
+        final vendors = (res as List<dynamic>)
+            .map((e) => Vendor.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+
+        final jsonList = vendors.map((v) => v.toJson()).toList();
+        await HiveService.setCache('vendors_$tenantId', {'data': jsonList});
+        state = state.copyWith(isLoading: false, vendors: vendors);
+        return;
+      }
+    } catch (e) {
+      debugPrint('fetchVendors error: $e');
     }
 
-    // Default demo data
-    final demoVendors = [
-      Vendor(
-        id: 'ven-001',
-        tenantId: tenantId ?? 'demo-tenant',
-        name: 'Rahim Rice Store',
-        phone: '01711223344',
-        currentBalance: 4500.0,
-        updatedAt: DateTime.now(),
-      ),
-      Vendor(
-        id: 'ven-002',
-        tenantId: tenantId ?? 'demo-tenant',
-        name: 'Dhaka Poultry Enterprise',
-        phone: '01899887766',
-        currentBalance: 8200.0,
-        updatedAt: DateTime.now(),
-      ),
-      Vendor(
-        id: 'ven-003',
-        tenantId: tenantId ?? 'demo-tenant',
-        name: 'Green Super Oil & Spices',
-        phone: '01912345678',
-        currentBalance: 1500.0,
-        updatedAt: DateTime.now(),
-      ),
-    ];
-
-    state = state.copyWith(isLoading: false, vendors: demoVendors);
+    state = state.copyWith(isLoading: false, vendors: []);
   }
 
   /// Add a new vendor with optimistic update

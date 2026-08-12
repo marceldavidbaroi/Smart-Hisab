@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/models/customer.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
+import '../../core/services/supabase_service.dart';
 import 'collect_baki_bottom_sheet.dart';
 import 'customers_notifier.dart';
 import 'edit_customer_bottom_sheet.dart';
@@ -35,31 +36,41 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   }
 
   Future<void> _fetchLedgerEntries() async {
+    if (!mounted) return;
+    setState(() => _isLoadingEntries = true);
+
+    if (SupabaseService.isInitialized) {
+      try {
+        final walletRes = await SupabaseService.client
+            .from('customer_wallets')
+            .select('id')
+            .eq('customer_id', widget.customer.id)
+            .maybeSingle();
+
+        if (walletRes != null && walletRes['id'] != null) {
+          final walletId = walletRes['id'] as String;
+          final entriesRes = await SupabaseService.client
+              .from('wallet_entries')
+              .select('*')
+              .eq('wallet_id', walletId)
+              .order('created_at', ascending: false);
+
+          if (mounted) {
+            setState(() {
+              _entries = List<Map<String, dynamic>>.from(entriesRes as List);
+              _isLoadingEntries = false;
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        debugPrint('_fetchLedgerEntries error: $e');
+      }
+    }
+
     if (mounted) {
       setState(() {
-        _entries = [
-          {
-            'id': 'ent-1',
-            'type': 'payment',
-            'amount': 200.0,
-            'notes': 'Cash payment received',
-            'created_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String(),
-          },
-          {
-            'id': 'ent-2',
-            'type': 'meal_charge',
-            'amount': 150.0,
-            'notes': 'Lunch Meal',
-            'created_at': DateTime.now().subtract(const Duration(hours: 5)).toIso8601String(),
-          },
-          {
-            'id': 'ent-3',
-            'type': 'meal_charge',
-            'amount': 100.0,
-            'notes': 'Breakfast Meal',
-            'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
-          },
-        ];
+        _entries = [];
         _isLoadingEntries = false;
       });
     }

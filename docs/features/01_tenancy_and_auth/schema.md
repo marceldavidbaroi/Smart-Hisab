@@ -13,7 +13,7 @@ auth.users (Supabase Auth — Google Sign-In)
 
 tenants
  └── tenant_invites (6-digit manager join codes)
- └── shifts            (auto-seeded: Breakfast, Lunch, Dinner)
+ └── shifts
 ```
 
 ---
@@ -113,5 +113,4 @@ is_superadmin() → BOOLEAN
 | Trigger | On Table | Event | Action |
 |---|---|---|---|
 | `on_auth_user_created` | `auth.users` | AFTER INSERT | Auto-create `user_profiles` from Google metadata |
-| `auto_seed_default_shifts` | `tenants` | AFTER INSERT | Seed Breakfast (6–9), Lunch (12–15), Dinner (19–22) |
 | `set_updated_at` | `user_profiles` | BEFORE UPDATE | Auto-set `updated_at = now()` |

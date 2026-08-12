@@ -221,7 +221,7 @@ All Supabase PostgreSQL functions (RPCs) MUST follow a unified JSON response env
 
 | RPC Function | Input Parameters | Returns | Key Operations & Side Effects |
 |---|---|---|---|
-| `create_tenant` | `p_name TEXT` | `JSON` | Creates `tenants` row, adds `tenant_members` (role: `owner`), auto-seeds shifts (Breakfast, Lunch, Dinner). |
+| `create_tenant` | `p_name TEXT` | `JSON` | Creates `tenants` row, adds `tenant_members` (role: `owner`). |
 | `generate_invite_code` | `p_tenant_id UUID`, `p_role TEXT` | `JSON` | Generates unique 6-digit string in `tenant_invites` with 24-hour expiry. |
 | `join_tenant_by_code` | `p_code TEXT` | `JSON` | Validates code expiry/usage, creates `tenant_members` (role: `manager`), marks code as used. |
 | `start_business_day` | `p_tenant_id UUID`, `p_opening_cash NUMERIC` | `JSON` | Checks no active day exists, creates new `business_days` row with `status = 'open'`. |

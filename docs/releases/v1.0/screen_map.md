@@ -455,7 +455,7 @@
 **RPCs used**: Supabase `auth.signInWithPassword()` & `auth.signUp()` (Email confirmation sent via SMTP/Resend)
 
 ### Create Canteen
-**RPCs used**: `create_tenant(p_name)` → creates tenant + member (owner) + seeds shifts → Home
+**RPCs used**: `create_tenant(p_name)` → creates tenant + member (owner) → Home
 
 ### Join Canteen
 **RPCs used**: `join_tenant_by_code(p_code)` → creates tenant_member (manager) → Home

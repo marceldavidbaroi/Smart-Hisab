@@ -479,24 +479,6 @@ CREATE TRIGGER auto_create_vendor_wallet
   AFTER INSERT ON public.vendors
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_vendor();
 
--- Trigger 5: Auto-seed default shifts on tenant creation
-CREATE OR REPLACE FUNCTION public.handle_new_tenant()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.shifts (tenant_id, name, start_time, end_time)
-  VALUES
-    (NEW.id, 'Breakfast', '06:00:00', '09:00:00'),
-    (NEW.id, 'Lunch', '12:00:00', '15:00:00'),
-    (NEW.id, 'Dinner', '19:00:00', '22:00:00');
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS auto_seed_default_shifts ON public.tenants;
-CREATE TRIGGER auto_seed_default_shifts
-  AFTER INSERT ON public.tenants
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_tenant();
-
 -- Trigger 6: Update customer wallet balance on wallet_entries insert
 CREATE OR REPLACE FUNCTION public.sync_customer_wallet_balance()
 RETURNS TRIGGER AS $$

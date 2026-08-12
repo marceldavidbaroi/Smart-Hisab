@@ -137,35 +137,7 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
             ),
             const SizedBox(height: 12),
 
-            // Role Dropdown
-            DropdownButtonFormField<StaffRole>(
-              initialValue: _selectedRole,
-              dropdownColor: isDark ? AppColors.cardDark : AppColors.cardLight,
-              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 15, fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                labelText: 'Role',
-                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-                prefixIcon: const Icon(LucideIcons.shield, color: AppColors.primary),
-                filled: true,
-                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-                ),
-              ),
-              items: const [
-                DropdownMenuItem(value: StaffRole.staff, child: Text('Staff / Cook / Helper')),
-                DropdownMenuItem(value: StaffRole.manager, child: Text('Manager')),
-              ],
-              onChanged: (val) {
-                if (val != null) setState(() => _selectedRole = val);
-              },
-            ),
-            const SizedBox(height: 12),
+
 
             // Monthly Salary
             TextFormField(

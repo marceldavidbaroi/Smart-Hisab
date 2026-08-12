@@ -46,7 +46,6 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
   final _phoneController = TextEditingController();
   final _salaryController = TextEditingController();
   final _pinController = TextEditingController();
-  StaffRole _selectedRole = StaffRole.staff;
   bool _isSubmitting = false;
 
   @override
@@ -68,7 +67,7 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
     widget.onAdd(
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
-      role: _selectedRole,
+      role: StaffRole.staff,
       monthlySalary: salary,
       pinCode: pin,
     );
@@ -171,38 +170,7 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
               ),
             ),
           ),
-          const SizedBox(height: 14),
-          Text(
-            'Role Access',
-            style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: StaffRole.values.map((role) {
-              final isSelected = _selectedRole == role;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    label: Text(
-                      role.name.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected ? Colors.white : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-                      ),
-                    ),
-                    selected: isSelected,
-                    selectedColor: AppColors.primary,
-                    backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-                    onSelected: (val) {
-                      if (val) setState(() => _selectedRole = role);
-                    },
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _isSubmitting ? null : _submit,
