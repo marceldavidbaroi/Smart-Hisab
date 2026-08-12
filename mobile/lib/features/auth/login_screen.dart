@@ -6,9 +6,11 @@ import 'package:shimmer/shimmer.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_safe_area.dart';
+import 'account_created_screen.dart';
+import 'verify_email_screen.dart';
 
 /// Clean Email & Password Authentication Screen for Smart-Hisab.
-/// Supports Sign In, Sign Up with Confirm Password, and Confirmation Email notice.
+/// Supports Sign In, Sign Up with Confirm Password, and Confirmation Code OTP verification.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -50,7 +52,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       if (result == SignUpResult.confirmationEmailSent) {
-        _showConfirmationEmailModal(email);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => VerifyEmailScreen(email: email),
+          ),
+        );
+      } else if (result == SignUpResult.successAccountCreated) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AccountCreatedScreen(email: email),
+          ),
+        );
       }
     } else {
       await ref
@@ -61,94 +73,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _handleDemoSignIn() async {
     await ref.read(authNotifierProvider.notifier).signInDemoUser();
-  }
-
-  void _showConfirmationEmailModal(String email) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight).withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  LucideIcons.mailCheck,
-                  size: 44,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Check Your Email',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'We sent a confirmation link to:\n$email\n\nPlease check your inbox and verify your email to activate your account.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      height: 1.4,
-                    ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    setState(() => _isSignUp = false);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Got it, Back to Sign In',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   @override

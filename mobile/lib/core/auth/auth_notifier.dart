@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import '../services/hive_service.dart';
 import '../services/supabase_service.dart';
@@ -11,6 +12,7 @@ final authNotifierProvider =
 });
 
 enum SignUpResult {
+  successAccountCreated,
   successAuthenticated,
   confirmationEmailSent,
   failed,
@@ -90,12 +92,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
           debugPrint('AuthNotifier membership check warning: $e');
         }
 
-        // Authenticated user: If no tenant membership linked yet, default to Bismillah Canteen
-        final role = (userEmail ?? '').toLowerCase().contains('manager') ? 'manager' : 'owner';
-        await setActiveTenant(
-          tenantId: '00000000-0000-0000-0000-000000000001',
-          tenantName: 'Bismillah Canteen',
-          role: role,
+        // Authenticated user with no tenant membership -> OnboardingChoiceScreen
+        state = state.copyWith(
+          status: AuthStatus.authenticatedNoTenant,
+          userId: userId,
+          userEmail: userEmail,
+          isSubmitting: false,
         );
         return;
       }
@@ -151,7 +153,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Sign Up with Email & Password
+  /// Sign Up with Email & Password (Triggers email confirmation code)
   Future<SignUpResult> signUpWithEmail({
     required String email,
     required String password,
@@ -169,7 +171,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             state = state.copyWith(isSubmitting: false);
             return SignUpResult.successAuthenticated;
           } else {
-            // Email confirmation required
+            // Email confirmation code required
             state = state.copyWith(
               status: AuthStatus.unauthenticated,
               isSubmitting: false,
@@ -179,14 +181,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
           }
         }
       }
-      // Demo fallback mode for new user
+      // Demo / fallback mode for confirmation code testing
       state = state.copyWith(
-        status: AuthStatus.authenticatedNoTenant,
+        status: AuthStatus.unauthenticated,
         isSubmitting: false,
-        userId: 'demo-user-new',
-        userEmail: email,
       );
-      return SignUpResult.successAuthenticated;
+      return SignUpResult.confirmationEmailSent;
     } catch (e) {
       debugPrint('Email Sign-Up error: $e');
       state = state.copyWith(
@@ -195,6 +195,72 @@ class AuthNotifier extends StateNotifier<AuthState> {
         errorMessage: _cleanErrorMessage(e),
       );
       return SignUpResult.failed;
+    }
+  }
+
+  /// Verify Email 6-Digit Confirmation OTP Code
+  Future<bool> verifyEmailOtp({
+    required String email,
+    required String token,
+  }) async {
+    state = state.copyWith(isSubmitting: true, errorMessage: null);
+    try {
+      if (SupabaseService.isInitialized) {
+        final res = await SupabaseService.client.auth.verifyOTP(
+          email: email,
+          token: token,
+          type: OtpType.signup,
+        );
+        if (res.session != null || res.user != null) {
+          await initializeAuth();
+          state = state.copyWith(isSubmitting: false);
+          return true;
+        } else {
+          state = state.copyWith(
+            isSubmitting: false,
+            errorMessage: 'Invalid or expired confirmation code.',
+          );
+          return false;
+        }
+      }
+
+      // Demo mode fallback for offline/local testing
+      state = state.copyWith(
+        status: AuthStatus.authenticatedNoTenant,
+        isSubmitting: false,
+        userId: 'demo-user-verified',
+        userEmail: email,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('verifyEmailOtp error: $e');
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: _cleanErrorMessage(e),
+      );
+      return false;
+    }
+  }
+
+  /// Resend 6-Digit Email OTP
+  Future<bool> resendEmailOtp({required String email}) async {
+    state = state.copyWith(isSubmitting: true, errorMessage: null);
+    try {
+      if (SupabaseService.isInitialized) {
+        await SupabaseService.client.auth.resend(
+          email: email,
+          type: OtpType.signup,
+        );
+      }
+      state = state.copyWith(isSubmitting: false);
+      return true;
+    } catch (e) {
+      debugPrint('resendEmailOtp error: $e');
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: _cleanErrorMessage(e),
+      );
+      return false;
     }
   }
 

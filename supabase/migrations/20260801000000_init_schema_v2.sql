@@ -386,12 +386,22 @@ END $$;
 CREATE POLICY user_profiles_select ON public.user_profiles FOR SELECT USING (true);
 CREATE POLICY user_profiles_update ON public.user_profiles FOR UPDATE USING (id = auth.uid());
 
+CREATE OR REPLACE FUNCTION public.get_my_tenant_ids()
+RETURNS SETOF UUID AS $$
+BEGIN
+  RETURN QUERY
+  SELECT tenant_id
+  FROM public.tenant_members
+  WHERE user_id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 CREATE POLICY tenants_select ON public.tenants FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.tenant_members WHERE tenant_id = id AND user_id = auth.uid()) OR public.is_superadmin()
+  public.is_tenant_member(id) OR public.is_superadmin()
 );
 
 CREATE POLICY tenant_members_select ON public.tenant_members FOR SELECT USING (
-  tenant_id IN (SELECT tenant_id FROM public.tenant_members WHERE user_id = auth.uid())
+  user_id = auth.uid() OR tenant_id IN (SELECT public.get_my_tenant_ids())
 );
 
 --------------------------------------------------------------------------------

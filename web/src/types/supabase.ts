@@ -1291,6 +1291,7 @@ export type Database = {
             Returns: Json
           }
       delete_own_account: { Args: never; Returns: undefined }
+      delete_user_account: { Args: never; Returns: Json }
       edit_pos_sale: {
         Args: {
           p_amount: number
@@ -1434,6 +1435,7 @@ export type Database = {
           total_salary_outflow: number
         }[]
       }
+      get_my_tenant_ids: { Args: never; Returns: string[] }
       get_next_device_sl: { Args: { p_tenant_id: string }; Returns: number }
       get_open_session: {
         Args: { p_device_token: string; p_tenant_id: string }

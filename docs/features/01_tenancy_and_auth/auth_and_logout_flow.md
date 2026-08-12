@@ -53,3 +53,43 @@ When the user confirms sign out, `AuthNotifier.signOut()` executes:
 3. **State Mutation**: Resets `authState` to `AuthState(status: AuthStatus.unauthenticated)`.
 4. **Reactive Routing**: `AuthGuard` in `main.dart` reacts to `AuthStatus.unauthenticated` and renders `LoginScreen`.
 5. **User Feedback**: Displays a success snackbar toast via `NotificationService`.
+
+---
+
+## 4. Danger Zone: Profile & Canteen Data Deletion
+
+In `MyProfileScreen` (`lib/features/settings/my_profile_screen.dart`), users can access the **Danger Zone** to permanently purge their account and canteen data:
+
+```mermaid
+graph TD
+    A[User Taps Delete Profile & Canteen] --> B[Modal Bottom Sheet Confirmation]
+    B -- Type DELETE & Confirm --> C[AuthNotifier.deleteAccount]
+    C --> D[RPC public.delete_user_account]
+    D --> E[Cascade Delete Tenants & User Profile]
+    C --> F[Purge Hive Caches & Sign Out]
+    F --> G[Navigate to AccountDeletedScreen]
+    G -- Tap Back to Login --> H[LoginScreen]
+```
+
+### Security & Database Cascade
+- **RPC `delete_user_account()`**: `SECURITY DEFINER` function that identifies the caller (`auth.uid()`), cascade deletes any owned `tenants` (and associated staff, customers, sales, cashbook, shifts, meal configs), removes memberships and `user_profiles`, and purges `auth.users`.
+- **`AccountDeletedScreen`**: Displays permanent deletion confirmation and provides a "Back to Login" action button returning to `LoginScreen`.
+
+---
+
+## 5. Non-Recursive RLS Security
+
+To prevent Postgres infinite recursion (`code: 42P17`) when querying `tenant_members`, a `SECURITY DEFINER` helper function `public.get_my_tenant_ids()` is used in RLS policies:
+
+```sql
+CREATE OR REPLACE FUNCTION public.get_my_tenant_ids()
+RETURNS SETOF UUID AS $$
+BEGIN
+  RETURN QUERY SELECT tenant_id FROM public.tenant_members WHERE user_id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE POLICY tenant_members_select ON public.tenant_members FOR SELECT USING (
+  user_id = auth.uid() OR tenant_id IN (SELECT public.get_my_tenant_ids())
+);
+```

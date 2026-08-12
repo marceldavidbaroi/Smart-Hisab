@@ -168,10 +168,13 @@ sequenceDiagram
   - Default app theme to **Light Theme (White background)** with senior UI/UX Emerald Green (`#059669`) primary palette and Slate surfaces.
   - Implement full adaptive theme support for both Light and Dark modes.
   - Toggle "Dark Mode" switch in Settings. Verify entire UI smoothly switches between Light and Dark themes via Riverpod `themeNotifierProvider` and persists preference in Hive.
-- [x] **6.6 My Profile & Sign Out**
+- [x] **6.6 My Profile, Sign Out & Danger Zone Account Deletion**
   - Open `Settings` -> `My Profile` or `Settings`. View user email, role, and active canteen memberships.
   - Tap "Sign Out" to present the AGENTS.md compliant confirmation modal bottom sheet.
   - Confirm sign out to clear Supabase session, purge Hive cached credentials (`active_tenant`, `active_user`), set `AuthStatus.unauthenticated`, and reactively navigate back to `LoginScreen`.
+  - Open Danger Zone section in `MyProfileScreen` -> tap "Delete Profile & Canteen Data".
+  - Type "DELETE" in confirmation modal bottom sheet -> confirm deletion via RPC `delete_user_account()`.
+  - Verify app navigates to `AccountDeletedScreen` with "Back to Login" action button returning to `LoginScreen`.
 
 
 ---

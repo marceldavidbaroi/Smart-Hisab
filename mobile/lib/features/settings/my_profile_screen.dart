@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/widgets/app_safe_area.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
+import '../auth/account_deleted_screen.dart';
 
 class MyProfileScreen extends ConsumerWidget {
   const MyProfileScreen({super.key});
@@ -296,7 +297,10 @@ class __DeleteAccountBottomSheetState
     if (!mounted) return;
 
     if (success) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AccountDeletedScreen()),
+        (route) => false,
+      );
       NotificationService.showSuccess('Account and all related data deleted');
     } else {
       final err = ref.read(authNotifierProvider).errorMessage ?? 'Failed to delete account';
