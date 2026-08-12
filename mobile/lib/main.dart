@@ -4,7 +4,6 @@ import 'core/config/env.dart';
 import 'core/services/error_handler_service.dart';
 import 'core/services/hive_service.dart';
 import 'core/services/notification_service.dart';
-import 'core/services/outbox_service.dart';
 import 'core/services/supabase_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
@@ -24,9 +23,6 @@ void main() async {
 
   // Initialize Hive Offline Boxes
   await HiveService.initialize();
-
-  // Initialize Offline Outbox Connectivity Listener
-  OutboxService().initialize();
 
   // Initialize Supabase Client with local/env fallback
   try {

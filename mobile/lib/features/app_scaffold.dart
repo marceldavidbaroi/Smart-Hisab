@@ -9,7 +9,7 @@ import 'cashbook/cashbook_screen.dart';
 import 'staff/staff_screen.dart';
 import 'settings/settings_screen.dart';
 
-/// 5-Tab / 3-Tab Application Navigation Scaffold for Smart-Hisab Android
+/// 5-Tab Application Navigation Scaffold for Smart-Hisab
 class AppScaffold extends ConsumerWidget {
   const AppScaffold({super.key});
 
@@ -18,17 +18,15 @@ class AppScaffold extends ConsumerWidget {
     final scaffoldState = ref.watch(scaffoldNotifierProvider);
     final scaffoldNotifier = ref.read(scaffoldNotifierProvider.notifier);
 
-    final screens = [
-      const HomeScreen(),
-      const CustomersScreen(),
-      const CashbookScreen(),
-      if (!scaffoldState.isCounterMode) const StaffScreen(),
-      if (!scaffoldState.isCounterMode) const SettingsScreen(),
+    const screens = [
+      HomeScreen(),
+      CustomersScreen(),
+      CashbookScreen(),
+      StaffScreen(),
+      SettingsScreen(),
     ];
 
-    final currentIndex = scaffoldState.isCounterMode
-        ? scaffoldState.selectedIndex.clamp(0, 2)
-        : scaffoldState.selectedIndex;
+    final currentIndex = scaffoldState.selectedIndex.clamp(0, 4);
 
     return Scaffold(
       backgroundColor: AppColors.bgDark,
@@ -38,9 +36,9 @@ class AppScaffold extends ConsumerWidget {
       ),
       bottomNavigationBar: CustomBottomNav(
         selectedIndex: currentIndex,
-        isCounterMode: scaffoldState.isCounterMode,
         onTabSelected: (index) => scaffoldNotifier.setTab(index),
       ),
     );
   }
 }
+

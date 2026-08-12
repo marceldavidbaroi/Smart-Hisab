@@ -194,21 +194,11 @@ sequenceDiagram
   * **What to change**: Create `lib/features/home/widgets/quick_actions_grid.dart`.
 
 
-**2.4 Counter Mode State**
-- [x] #### 2.4.1 Staff Auth Model
-  * **Goal**: Implement Staff Auth Model
+**2.4 Staff Auth Model**
+- [x] #### 2.4.1 Staff Model
+  * **Goal**: Implement Staff Model
   * **File to create or change**: `lib/core/models/staff_member.dart`
   * **What to change**: Create `lib/core/models/staff_member.dart`.
-
-- [x] #### 2.4.2 PIN Gate UI
-  * **Goal**: Implement PIN Gate UI
-  * **File to create or change**: `lib/features/home/counter_mode_pin_screen.dart`
-  * **What to change**: Create `lib/features/home/counter_mode_pin_screen.dart` (Avatar grid + 4-digit PIN validator).
-
-- [x] #### 2.4.3 Counter Mode Header
-  * **Goal**: Implement Counter Mode Header
-  * **File to create or change**: `lib/features/home/home_screen.dart`
-  * **What to change**: Add logic to display active `staff_id` and "Lock" button in the AppBar when Counter Mode is active.
 
 
 ---

@@ -9,7 +9,6 @@ import '../../core/widgets/app_safe_area.dart';
 import 'canteen_profile_screen.dart';
 import 'invite_manager_screen.dart';
 import 'my_profile_screen.dart';
-import 'offline_storage_screen.dart';
 import 'shifts_and_rates_screen.dart';
 import 'vendors_screen.dart';
 
@@ -106,21 +105,6 @@ class SettingsScreen extends ConsumerWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const VendorsScreen()),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  _buildTile(
-                    context,
-                    title: 'Offline Storage & Outbox',
-                    subtitle: 'View pending offline sync queue',
-                    icon: LucideIcons.database,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const OfflineStorageScreen()),
                       );
                     },
                   ),
