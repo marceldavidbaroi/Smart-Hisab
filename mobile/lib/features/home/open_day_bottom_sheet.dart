@@ -48,6 +48,8 @@ class _OpenDayBottomSheetState extends ConsumerState<OpenDayBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,15 +57,23 @@ class _OpenDayBottomSheetState extends ConsumerState<OpenDayBottomSheet> {
         TextField(
           controller: _cashController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          style: const TextStyle(color: Colors.white, fontSize: 18),
+          style: TextStyle(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+            fontSize: 18,
+          ),
           decoration: InputDecoration(
             labelText: 'Opening Cash Balance (৳)',
-            labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+            labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
             hintText: 'Enter drawer cash e.g. 5000',
             filled: true,
-            fillColor: AppColors.bgDark,
+            fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
             ),
           ),
         ),

@@ -61,6 +61,8 @@ class _AddDayNoteBottomSheetState extends State<AddDayNoteBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -70,17 +72,21 @@ class _AddDayNoteBottomSheetState extends State<AddDayNoteBottomSheet> {
           // Title Input
           TextFormField(
             controller: _titleController,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: 'Note Title / Topic',
               hintText: 'e.g. Market Shopping List for Tomorrow',
-              hintStyle: const TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
           ),
@@ -90,17 +96,21 @@ class _AddDayNoteBottomSheetState extends State<AddDayNoteBottomSheet> {
           TextFormField(
             controller: _contentController,
             maxLines: 4,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 15),
             decoration: InputDecoration(
               labelText: 'Note Content / Items *',
               hintText: 'e.g. Need 10kg Minikit Rice, 5L Soyabean Oil, 2kg Salt...',
-              hintStyle: const TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
             validator: (val) {

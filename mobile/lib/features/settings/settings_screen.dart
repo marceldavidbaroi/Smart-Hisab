@@ -4,8 +4,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/auth/auth_notifier.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/theme/theme_notifier.dart';
 import '../../core/widgets/app_safe_area.dart';
+import '../../core/widgets/custom_modal_bottom_sheet.dart';
 import 'canteen_profile_screen.dart';
 import 'invite_manager_screen.dart';
 import 'my_profile_screen.dart';
@@ -14,6 +16,55 @@ import 'vendors_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
+  void _showSignOutConfirmation(BuildContext context, WidgetRef ref) {
+    CustomModalBottomSheet.show(
+      context: context,
+      title: "Sign Out",
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            "Are you sure you want to sign out of Smart-Hisab?",
+            style: TextStyle(fontSize: 15, color: AppColors.textSecondaryDark),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await ref.read(authNotifierProvider.notifier).signOut();
+                    NotificationService.showSuccess("Signed out successfully");
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Sign Out', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,7 +113,6 @@ class SettingsScreen extends ConsumerWidget {
                       );
                     },
                   ),
-
 
                   const SizedBox(height: 12),
 
@@ -130,8 +180,8 @@ class SettingsScreen extends ConsumerWidget {
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
-                        themeMode == ThemeMode.dark ? 'Dark theme active' : 'Light theme active',
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                        themeMode == ThemeMode.dark ? 'Dark theme active' : 'Light theme (White) active',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 13),
                       ),
                       trailing: Switch(
                         value: themeMode == ThemeMode.dark,
@@ -141,6 +191,18 @@ class SettingsScreen extends ConsumerWidget {
                         },
                       ),
                     ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Sign Out Tile
+                  _buildTile(
+                    context,
+                    title: 'Sign Out',
+                    subtitle: 'Sign out of your Smart-Hisab account',
+                    icon: LucideIcons.logOut,
+                    isDanger: true,
+                    onTap: () => _showSignOutConfirmation(context, ref),
                   ),
                 ],
               ),
@@ -157,28 +219,39 @@ class SettingsScreen extends ConsumerWidget {
     required String subtitle,
     required IconData icon,
     required VoidCallback onTap,
+    bool isDanger = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDanger ? AppColors.danger : AppColors.primary;
+    final titleColor = isDanger
+        ? AppColors.danger
+        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight);
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : Colors.white,
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.cardBorderDark : const Color(0xFFE2E8F0),
+          color: isDanger
+              ? AppColors.danger.withValues(alpha: 0.3)
+              : (isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
         ),
       ),
       child: ListTile(
-        leading: Icon(icon, color: AppColors.primary),
+        leading: Icon(icon, color: iconColor),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: titleColor),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+          style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
         ),
-        trailing: const Icon(LucideIcons.chevronRight, color: AppColors.textSecondaryDark, size: 20),
+        trailing: Icon(
+          LucideIcons.chevronRight,
+          color: isDanger ? AppColors.danger : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+          size: 20,
+        ),
         onTap: onTap,
       ),
     );

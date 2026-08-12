@@ -19,6 +19,8 @@ class StaffDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final staffState = ref.watch(staffNotifierProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     // Find current updated staff object from provider state if updated
     final currentStaff = staffState.staffList.firstWhere(
       (s) => s.id == staff.id,
@@ -28,14 +30,18 @@ class StaffDetailScreen extends ConsumerWidget {
     final payouts = staffState.payoutsMap[currentStaff.id] ?? [];
 
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(currentStaff.name),
-        backgroundColor: AppColors.cardDark,
+        title: Text(currentStaff.name, style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
+        backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
         elevation: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.arrowLeft, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.edit3, color: Colors.white, size: 20),
+            icon: Icon(LucideIcons.edit3, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, size: 20),
             onPressed: () => EditStaffBottomSheet.show(context, currentStaff),
           ),
         ],
@@ -53,9 +59,9 @@ class StaffDetailScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.cardDark,
+                  color: isDark ? AppColors.cardDark : AppColors.cardLight,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.cardBorderDark),
+                  border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
                 child: Column(
                   children: [
@@ -73,7 +79,7 @@ class StaffDetailScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 currentStaff.name,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                               ),
                               const SizedBox(height: 4),
                               Row(
@@ -93,7 +99,7 @@ class StaffDetailScreen extends ConsumerWidget {
                                     const SizedBox(width: 8),
                                     Text(
                                       currentStaff.phone!,
-                                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                                      style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                                     ),
                                   ],
                                 ],
@@ -103,22 +109,22 @@ class StaffDetailScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const Divider(color: AppColors.cardBorderDark, height: 24),
+                    Divider(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight, height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Monthly Salary', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark)),
+                            Text('Monthly Salary', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
                             Text('৳${currentStaff.monthlySalary.toStringAsFixed(0)}',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
                           ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const Text('Paid This Month', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark)),
+                            Text('Paid This Month', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
                             Text('৳${currentStaff.totalPaidThisMonth.toStringAsFixed(0)}',
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
                           ],
@@ -126,7 +132,7 @@ class StaffDetailScreen extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Text('Unpaid Balance', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark)),
+                            Text('Unpaid Balance', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
                             Text('৳${currentStaff.unpaidBalance.toStringAsFixed(0)}',
                                 style: TextStyle(
                                   fontSize: 16,
@@ -144,7 +150,7 @@ class StaffDetailScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Payout History & Ledger', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text('Payout History & Ledger', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
                   ElevatedButton.icon(
                     onPressed: () {
                       RecordSalaryPayoutBottomSheet.show(
@@ -176,9 +182,9 @@ class StaffDetailScreen extends ConsumerWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(LucideIcons.receipt, size: 48, color: AppColors.textSecondaryDark),
+                            Icon(LucideIcons.receipt, size: 48, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                             const SizedBox(height: 12),
-                            const Text('No payouts recorded yet', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14)),
+                            Text('No payouts recorded yet', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14)),
                           ],
                         ),
                       )
@@ -190,16 +196,16 @@ class StaffDetailScreen extends ConsumerWidget {
                           return Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: AppColors.cardDark,
+                              color: isDark ? AppColors.cardDark : AppColors.cardLight,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.cardBorderDark),
+                              border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                             ),
                             child: Row(
                               children: [
-                                const CircleAvatar(
+                                CircleAvatar(
                                   radius: 18,
-                                  backgroundColor: AppColors.bgDark,
-                                  child: Icon(LucideIcons.arrowUpRight, color: AppColors.accent, size: 18),
+                                  backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+                                  child: const Icon(LucideIcons.arrowUpRight, color: AppColors.accent, size: 18),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -207,9 +213,9 @@ class StaffDetailScreen extends ConsumerWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('Payout (${item.paymentMode})',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14)),
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 14)),
                                       if (item.notes != null)
-                                        Text(item.notes!, style: const TextStyle(color: AppColors.textSecondaryDark, fontSize: 12)),
+                                        Text(item.notes!, style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 12)),
                                     ],
                                   ),
                                 ),

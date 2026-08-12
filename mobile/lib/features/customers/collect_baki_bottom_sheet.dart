@@ -69,6 +69,8 @@ class _CollectBakiBottomSheetState extends ConsumerState<CollectBakiBottomSheet>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -80,9 +82,9 @@ class _CollectBakiBottomSheetState extends ConsumerState<CollectBakiBottomSheet>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.bgDark,
+                color: isDark ? AppColors.cardDark : AppColors.cardLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.cardBorderDark),
+                border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
               child: Row(
                 children: [
@@ -105,16 +107,16 @@ class _CollectBakiBottomSheetState extends ConsumerState<CollectBakiBottomSheet>
                       children: [
                         Text(
                           widget.customer.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimaryDark,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                           ),
                         ),
                         if (widget.customer.phone != null)
                           Text(
                             widget.customer.phone!,
-                            style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                            style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                           ),
                       ],
                     ),
@@ -122,9 +124,9 @@ class _CollectBakiBottomSheetState extends ConsumerState<CollectBakiBottomSheet>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text(
+                      Text(
                         'Current Due',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark),
+                        style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                       ),
                       Text(
                         AppFormatters.formatBdt(widget.customer.currentBalance),
@@ -176,16 +178,20 @@ class _CollectBakiBottomSheetState extends ConsumerState<CollectBakiBottomSheet>
             TextFormField(
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 18, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Collected Amount (৳) *',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.banknote, color: AppColors.success),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
               validator: (val) {
@@ -204,16 +210,20 @@ class _CollectBakiBottomSheetState extends ConsumerState<CollectBakiBottomSheet>
             // Notes Input
             TextFormField(
               controller: _notesController,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 15),
               decoration: InputDecoration(
                 labelText: 'Notes / Reference (Optional)',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-                prefixIcon: const Icon(LucideIcons.fileText, color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                prefixIcon: Icon(LucideIcons.fileText, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
             ),

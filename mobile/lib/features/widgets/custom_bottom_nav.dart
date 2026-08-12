@@ -14,36 +14,39 @@ class CustomBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveColor = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+
     return NavigationBar(
       selectedIndex: selectedIndex,
       onDestinationSelected: onTabSelected,
-      backgroundColor: AppColors.cardDark,
-      indicatorColor: AppColors.primary.withValues(alpha: 0.2),
-      elevation: 12,
-      destinations: const [
+      backgroundColor: Theme.of(context).cardColor,
+      indicatorColor: AppColors.primary.withValues(alpha: 0.15),
+      elevation: 8,
+      destinations: [
         NavigationDestination(
-          icon: Icon(LucideIcons.home, color: AppColors.textSecondaryDark),
-          selectedIcon: Icon(LucideIcons.home, color: AppColors.primary),
+          icon: Icon(LucideIcons.home, color: inactiveColor),
+          selectedIcon: const Icon(LucideIcons.home, color: AppColors.primary),
           label: 'Home',
         ),
         NavigationDestination(
-          icon: Icon(LucideIcons.users, color: AppColors.textSecondaryDark),
-          selectedIcon: Icon(LucideIcons.users, color: AppColors.primary),
+          icon: Icon(LucideIcons.users, color: inactiveColor),
+          selectedIcon: const Icon(LucideIcons.users, color: AppColors.primary),
           label: 'Customers',
         ),
         NavigationDestination(
-          icon: Icon(LucideIcons.wallet, color: AppColors.textSecondaryDark),
-          selectedIcon: Icon(LucideIcons.wallet, color: AppColors.primary),
+          icon: Icon(LucideIcons.wallet, color: inactiveColor),
+          selectedIcon: const Icon(LucideIcons.wallet, color: AppColors.primary),
           label: 'Cashbook',
         ),
         NavigationDestination(
-          icon: Icon(LucideIcons.userCheck, color: AppColors.textSecondaryDark),
-          selectedIcon: Icon(LucideIcons.userCheck, color: AppColors.primary),
+          icon: Icon(LucideIcons.userCheck, color: inactiveColor),
+          selectedIcon: const Icon(LucideIcons.userCheck, color: AppColors.primary),
           label: 'Staff',
         ),
         NavigationDestination(
-          icon: Icon(LucideIcons.settings, color: AppColors.textSecondaryDark),
-          selectedIcon: Icon(LucideIcons.settings, color: AppColors.primary),
+          icon: Icon(LucideIcons.settings, color: inactiveColor),
+          selectedIcon: const Icon(LucideIcons.settings, color: AppColors.primary),
           label: 'Settings',
         ),
       ],

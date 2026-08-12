@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/constants/app_colors.dart';
 import 'app_scaffold_notifier.dart';
 import 'widgets/custom_bottom_nav.dart';
 import 'home/home_screen.dart';
@@ -29,7 +28,7 @@ class AppScaffold extends ConsumerWidget {
     final currentIndex = scaffoldState.selectedIndex.clamp(0, 4);
 
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(
         index: currentIndex,
         children: screens,

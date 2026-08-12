@@ -88,6 +88,8 @@ class _RecordSalaryPayoutBottomSheetState extends State<RecordSalaryPayoutBottom
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -97,8 +99,9 @@ class _RecordSalaryPayoutBottomSheetState extends State<RecordSalaryPayoutBottom
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bgDark,
+              color: isDark ? AppColors.bgDark : AppColors.bgLight,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -106,15 +109,15 @@ class _RecordSalaryPayoutBottomSheetState extends State<RecordSalaryPayoutBottom
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Monthly Salary', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 12)),
+                    Text('Monthly Salary', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 12)),
                     Text('৳${widget.staff.monthlySalary.toStringAsFixed(0)}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                        style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontWeight: FontWeight.bold, fontSize: 15)),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('Unpaid Balance', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 12)),
+                    Text('Unpaid Balance', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 12)),
                     Text(
                       '৳${widget.staff.unpaidBalance.toStringAsFixed(0)}',
                       style: TextStyle(
@@ -132,13 +135,20 @@ class _RecordSalaryPayoutBottomSheetState extends State<RecordSalaryPayoutBottom
           TextFormField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: 'Payout Amount (৳) *',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Enter payout amount';
@@ -148,17 +158,17 @@ class _RecordSalaryPayoutBottomSheetState extends State<RecordSalaryPayoutBottom
             },
           ),
           const SizedBox(height: 14),
-          const Text('Payment Mode', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14, fontWeight: FontWeight.w600)),
+          Text('Payment Mode', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: _paymentModes.map((mode) {
               final isSelected = _selectedPaymentMode == mode;
               return ChoiceChip(
-                label: Text(mode, style: TextStyle(color: isSelected ? Colors.white : AppColors.textSecondaryDark, fontSize: 12, fontWeight: FontWeight.bold)),
+                label: Text(mode, style: TextStyle(color: isSelected ? Colors.white : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight), fontSize: 12, fontWeight: FontWeight.bold)),
                 selected: isSelected,
                 selectedColor: AppColors.accent,
-                backgroundColor: AppColors.bgDark,
+                backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 onSelected: (val) {
                   if (val) setState(() => _selectedPaymentMode = mode);
                 },
@@ -168,13 +178,20 @@ class _RecordSalaryPayoutBottomSheetState extends State<RecordSalaryPayoutBottom
           const SizedBox(height: 14),
           TextFormField(
             controller: _notesController,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: 'Notes / Reference (Optional)',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
             ),
           ),
           const SizedBox(height: 24),

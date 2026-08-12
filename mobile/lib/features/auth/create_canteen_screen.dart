@@ -48,6 +48,8 @@ class _CreateCanteenScreenState extends ConsumerState<CreateCanteenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -58,25 +60,32 @@ class _CreateCanteenScreenState extends ConsumerState<CreateCanteenScreen> {
             'Set up a new canteen ledger workspace as owner.',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
             ),
           ),
           const SizedBox(height: 20),
           TextFormField(
             controller: _nameController,
             autofocus: true,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+              fontSize: 16,
+            ),
             decoration: InputDecoration(
               labelText: 'Canteen Name',
               hintText: 'e.g. Dhaka University Central Canteen',
-              labelStyle: TextStyle(color: AppColors.textSecondary),
-              hintStyle: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5)),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+              hintStyle: TextStyle(color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight).withValues(alpha: 0.5)),
               prefixIcon: const Icon(Icons.storefront, color: AppColors.primary),
               filled: true,
-              fillColor: AppColors.surfaceDark.withValues(alpha: 0.6),
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),

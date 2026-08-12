@@ -15,13 +15,14 @@ abstract class CustomModalBottomSheet {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
-      backgroundColor: AppColors.cardDark,
+      backgroundColor: Theme.of(context).bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(32), // Strict Constraint #3
         ),
       ),
       builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return SafeArea(
           child: Padding(
             padding: EdgeInsets.only(
@@ -40,7 +41,7 @@ abstract class CustomModalBottomSheet {
                     width: 48,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: AppColors.textSecondaryDark.withValues(alpha: 0.4),
+                      color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight).withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),

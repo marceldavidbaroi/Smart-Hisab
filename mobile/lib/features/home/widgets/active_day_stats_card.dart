@@ -16,12 +16,14 @@ class ActiveDayStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardDark,
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorderDark),
+        border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,6 +35,7 @@ class ActiveDayStatsCard extends StatelessWidget {
                 'Today Summary',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                     ),
               ),
               OutlinedButton.icon(
@@ -55,13 +58,14 @@ class ActiveDayStatsCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Opening Cash: ${AppFormatters.formatBdt(day.openingCash)}',
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+            style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: _buildMetricTile(
+                  context,
                   'Meals',
                   '${day.todayMeals}',
                   LucideIcons.utensils,
@@ -71,6 +75,7 @@ class ActiveDayStatsCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildMetricTile(
+                  context,
                   'Cash In',
                   AppFormatters.formatBdt(day.todayCash),
                   LucideIcons.banknote,
@@ -80,6 +85,7 @@ class ActiveDayStatsCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildMetricTile(
+                  context,
                   'Baki Given',
                   AppFormatters.formatBdt(day.todayBaki),
                   LucideIcons.receipt,
@@ -94,11 +100,14 @@ class ActiveDayStatsCard extends StatelessWidget {
   }
 
   Widget _buildMetricTile(
+    BuildContext context,
     String label,
     String value,
     IconData icon,
     Color color,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -121,7 +130,7 @@ class ActiveDayStatsCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryDark),
+            style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
           ),
         ],
       ),

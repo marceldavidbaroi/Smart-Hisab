@@ -49,7 +49,7 @@ class HomeScreen extends ConsumerWidget {
 
               // Business Day Banner Card
               if (businessDayState.isLoading)
-                _buildShimmerLoader()
+                _buildShimmerLoader(context)
               else if (!isDayOpen || activeDay == null)
                 _buildStartDayCard(context)
               else
@@ -95,6 +95,9 @@ class HomeScreen extends ConsumerWidget {
     required String canteenName,
     required bool isDayOpen,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -103,16 +106,17 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Text(
               'Smart-Hisab',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                   ),
             ),
             const SizedBox(height: 2),
             Text(
               canteenName,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondaryDark,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                     fontSize: 14,
                   ),
             ),
@@ -144,12 +148,14 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildStartDayCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardDark,
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorderDark),
+        border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
       ),
       child: Column(
         children: [
@@ -160,13 +166,14 @@ class HomeScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                 ),
           ),
           const SizedBox(height: 6),
           Text(
             'Set opening cash and begin recording meals & baki.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondaryDark,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   fontSize: 14,
                 ),
             textAlign: TextAlign.center,
@@ -194,6 +201,8 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildBakiCard(BuildContext context, {required double totalBaki}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -216,9 +225,12 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Total Outstanding Baki',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -237,14 +249,16 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildShimmerLoader() {
+  Widget _buildShimmerLoader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Shimmer.fromColors(
-      baseColor: AppColors.cardDark,
-      highlightColor: AppColors.cardBorderDark,
+      baseColor: isDark ? AppColors.shimmerBaseDark : AppColors.shimmerBaseLight,
+      highlightColor: isDark ? AppColors.shimmerHighlightDark : AppColors.shimmerHighlightLight,
       child: Container(
         height: 140,
         decoration: BoxDecoration(
-          color: AppColors.cardDark,
+          color: isDark ? AppColors.cardDark : AppColors.cardLight,
           borderRadius: BorderRadius.circular(16),
         ),
       ),

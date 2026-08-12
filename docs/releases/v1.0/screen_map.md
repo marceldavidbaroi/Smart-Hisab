@@ -22,8 +22,8 @@
 
 | Role | Auth Method | Layout |
 |---|---|---|
-| **Owner** | Google Sign-In | Full 5-tab layout, all actions |
-| **Manager** | Google Sign-In + 6-digit join code | Same 5-tab layout, restricted Settings |
+| **Owner** | Email & Password | Full 5-tab layout, all actions |
+| **Manager** | Email & Password + 6-digit join code | Same 5-tab layout, restricted Settings |
 
 > Counter Staff does NOT exist in v1.0. No Counter Mode, no PIN login.
 
@@ -451,8 +451,8 @@
 
 ## Onboarding Flow (Pre-Tabs)
 
-### Login → Google Sign-In
-**RPCs used**: Supabase `auth.signInWithOAuth({ provider: 'google' })`
+### Login / Sign Up → Email & Password
+**RPCs used**: Supabase `auth.signInWithPassword()` & `auth.signUp()` (Email confirmation sent via SMTP/Resend)
 
 ### Create Canteen
 **RPCs used**: `create_tenant(p_name)` → creates tenant + member (owner) + seeds shifts → Home

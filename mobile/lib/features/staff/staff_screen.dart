@@ -66,6 +66,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
   Widget build(BuildContext context) {
     final staffState = ref.watch(staffNotifierProvider);
     final staffList = staffState.filteredStaffList;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AppSafeArea(
       child: RefreshIndicator(
@@ -99,19 +100,23 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
               // Search Bar
               TextField(
                 controller: _searchController,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                 onChanged: (val) {
                   ref.read(staffNotifierProvider.notifier).setSearchQuery(val);
                 },
                 decoration: InputDecoration(
                   hintText: 'Search staff by name or role...',
-                  hintStyle: const TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
-                  prefixIcon: const Icon(LucideIcons.search, color: AppColors.textSecondaryDark, size: 18),
+                  hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
+                  prefixIcon: Icon(LucideIcons.search, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, size: 18),
                   filled: true,
-                  fillColor: AppColors.cardDark,
+                  fillColor: isDark ? AppColors.cardDark : AppColors.cardLight,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                    borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                   ),
                 ),
               ),
@@ -121,25 +126,25 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.cardDark,
+                  color: isDark ? AppColors.cardDark : AppColors.cardLight,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.cardBorderDark),
+                  border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Column(
                       children: [
-                        const Text('Monthly Payroll', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark)),
+                        Text('Monthly Payroll', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
                         const SizedBox(height: 2),
                         Text('৳${staffState.totalMonthlyPayroll.toStringAsFixed(0)}',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
                       ],
                     ),
-                    Container(height: 30, width: 1, color: AppColors.cardBorderDark),
+                    Container(height: 30, width: 1, color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                     Column(
                       children: [
-                        const Text('Paid This Month', style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark)),
+                        Text('Paid This Month', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
                         const SizedBox(height: 2),
                         Text('৳${staffState.totalPaidPayrollThisMonth.toStringAsFixed(0)}',
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
@@ -157,12 +162,12 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                         itemCount: 4,
                         separatorBuilder: (ctx, idx) => const SizedBox(height: 10),
                         itemBuilder: (ctx, idx) => Shimmer.fromColors(
-                          baseColor: AppColors.cardDark,
-                          highlightColor: AppColors.cardBorderDark,
+                          baseColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+                          highlightColor: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
                           child: Container(
                             height: 80,
                             decoration: BoxDecoration(
-                              color: AppColors.cardDark,
+                              color: isDark ? AppColors.cardDark : AppColors.cardLight,
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
@@ -173,9 +178,9 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(LucideIcons.users, size: 48, color: AppColors.textSecondaryDark),
+                                Icon(LucideIcons.users, size: 48, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                                 const SizedBox(height: 12),
-                                const Text('No staff members found', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 16)),
+                                Text('No staff members found', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 16)),
                                 const SizedBox(height: 16),
                                 ElevatedButton.icon(
                                   onPressed: _openAddStaffModal,
@@ -217,9 +222,9 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: AppColors.cardDark,
+                                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: AppColors.cardBorderDark),
+                                      border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                                     ),
                                     child: Row(
                                       children: [
@@ -234,7 +239,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                                             children: [
                                               Text(
                                                 item.name,
-                                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimaryDark),
+                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                                               ),
                                               const SizedBox(height: 2),
                                               Row(
@@ -253,7 +258,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                                                   const SizedBox(width: 8),
                                                   Text(
                                                     '৳${item.monthlySalary.toStringAsFixed(0)}/mo',
-                                                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                                                    style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                                                   ),
                                                 ],
                                               ),

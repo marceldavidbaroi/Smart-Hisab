@@ -27,24 +27,28 @@ class QuickActionsGrid extends StatelessWidget {
       childAspectRatio: 1.5,
       children: [
         _buildActionButton(
+          context,
           'Mark Meals',
           LucideIcons.utensilsCrossed,
           AppColors.primary,
           onMarkMeals,
         ),
         _buildActionButton(
+          context,
           'Collect Baki',
           LucideIcons.wallet,
           AppColors.success,
           onCollectBaki,
         ),
         _buildActionButton(
+          context,
           'Add Expense',
           LucideIcons.shoppingBag,
           AppColors.warning,
           onAddExpense,
         ),
         _buildActionButton(
+          context,
           'Day Notes',
           LucideIcons.fileText,
           AppColors.accent,
@@ -55,20 +59,23 @@ class QuickActionsGrid extends StatelessWidget {
   }
 
   Widget _buildActionButton(
+    BuildContext context,
     String label,
     IconData icon,
     Color color,
     VoidCallback onTap,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.cardDark,
+          color: isDark ? AppColors.cardDark : AppColors.cardLight,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.cardBorderDark),
+          border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -77,10 +84,10 @@ class QuickActionsGrid extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimaryDark,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
             ),
           ],

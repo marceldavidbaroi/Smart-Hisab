@@ -43,17 +43,19 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     await ref.read(customersNotifierProvider.notifier).fetchCustomers();
   }
 
-  Widget _buildShimmerLoader() {
+  Widget _buildShimmerLoader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Shimmer.fromColors(
-      baseColor: AppColors.cardDark,
-      highlightColor: AppColors.cardBorderDark,
+      baseColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+      highlightColor: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
       child: ListView.separated(
         itemCount: 6,
         separatorBuilder: (context, index) => const SizedBox(height: 10),
         itemBuilder: (context, index) => Container(
           height: 80,
           decoration: BoxDecoration(
-            color: AppColors.cardDark,
+            color: isDark ? AppColors.cardDark : AppColors.cardLight,
             borderRadius: BorderRadius.circular(16),
           ),
         ),
@@ -66,6 +68,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     final state = ref.watch(customersNotifierProvider);
     final filtered = state.filteredCustomers;
     final isListEmpty = state.customers.isEmpty;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AppSafeArea(
       child: RefreshIndicator(
@@ -86,13 +89,14 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         'Customer Directory',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                             ),
                       ),
                       Text(
                         'Total: ${state.customers.length} Diners',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondaryDark,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                         ),
                       ),
                     ],
@@ -114,7 +118,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                   gradient: LinearGradient(
                     colors: [
                       AppColors.danger.withValues(alpha: 0.2),
-                      AppColors.cardDark,
+                      isDark ? AppColors.cardDark : AppColors.cardLight,
                     ],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
@@ -125,16 +129,16 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(LucideIcons.wallet, color: AppColors.danger, size: 20),
-                        SizedBox(width: 10),
+                        const Icon(LucideIcons.wallet, color: AppColors.danger, size: 20),
+                        const SizedBox(width: 10),
                         Text(
                           'Total Baki Outstanding',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimaryDark,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                           ),
                         ),
                       ],
@@ -156,14 +160,14 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               TextField(
                 controller: _searchController,
                 onChanged: _onSearchChanged,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
+                style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 15),
                 decoration: InputDecoration(
                   hintText: 'Search by customer name, phone, or hostel...',
-                  hintStyle: const TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
-                  prefixIcon: const Icon(LucideIcons.search, color: AppColors.textSecondaryDark),
+                  hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
+                  prefixIcon: Icon(LucideIcons.search, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(LucideIcons.x, color: AppColors.textSecondaryDark, size: 18),
+                          icon: Icon(LucideIcons.x, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, size: 18),
                           onPressed: () {
                             _searchController.clear();
                             _onSearchChanged('');
@@ -171,15 +175,15 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         )
                       : null,
                   filled: true,
-                  fillColor: AppColors.cardDark,
+                  fillColor: isDark ? AppColors.cardDark : AppColors.cardLight,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                    borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                    borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                   ),
                 ),
               ),
@@ -188,7 +192,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               // Main Customer List, Shimmer Loading, or Empty State
               Expanded(
                 child: state.isLoading
-                    ? _buildShimmerLoader() // Rule #2: Skeleton / Shimmer loaders
+                    ? _buildShimmerLoader(context) // Rule #2: Skeleton / Shimmer loaders
                     : filtered.isEmpty
                         ? EmptyStateCard(
                             // Rule #6: Primary action directly inside empty state container
@@ -237,11 +241,11 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                   return await showDialog<bool>(
                                         context: context,
                                         builder: (ctx) => AlertDialog(
-                                          backgroundColor: AppColors.cardDark,
-                                          title: const Text('Delete Customer', style: TextStyle(color: Colors.white)),
+                                          backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+                                          title: Text('Delete Customer', style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
                                           content: Text(
                                             'Are you sure you want to remove ${customer.name}?',
-                                            style: const TextStyle(color: AppColors.textSecondaryDark),
+                                            style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                                           ),
                                           actions: [
                                             TextButton(
@@ -276,9 +280,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: AppColors.cardDark,
+                                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: AppColors.cardBorderDark),
+                                      border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                                     ),
                                     child: Row(
                                       children: [
@@ -302,10 +306,10 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                               // Rule #7: Main title >= 16 bold
                                               Text(
                                                 customer.name,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
-                                                  color: AppColors.textPrimaryDark,
+                                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -313,9 +317,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                               const SizedBox(height: 2),
                                               Text(
                                                 customer.institution ?? customer.phone ?? 'No phone',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 13,
-                                                  color: AppColors.textSecondaryDark,
+                                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,

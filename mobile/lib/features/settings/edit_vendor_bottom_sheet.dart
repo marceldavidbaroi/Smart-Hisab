@@ -70,6 +70,8 @@ class _EditVendorBottomSheetState extends ConsumerState<EditVendorBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -80,16 +82,20 @@ class _EditVendorBottomSheetState extends ConsumerState<EditVendorBottomSheet> {
             TextFormField(
               controller: _nameController,
               textCapitalization: TextCapitalization.words,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Supplier / Store Name *',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.store, color: AppColors.primary),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
               validator: (val) => (val == null || val.trim().isEmpty) ? 'Enter vendor name' : null,
@@ -98,16 +104,20 @@ class _EditVendorBottomSheetState extends ConsumerState<EditVendorBottomSheet> {
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Phone Number',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.phone, color: AppColors.primary),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
             ),
@@ -118,11 +128,11 @@ class _EditVendorBottomSheetState extends ConsumerState<EditVendorBottomSheet> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.cardBorderDark),
+                      side: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 16)),
+                    child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 16)),
                   ),
                 ),
                 const SizedBox(width: 12),

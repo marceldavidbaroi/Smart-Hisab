@@ -21,14 +21,18 @@ class EmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Container(
         margin: const EdgeInsets.all(24),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.cardDark,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.cardBorderDark),
+          border: Border.all(
+            color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -36,7 +40,7 @@ class EmptyStateCard extends StatelessWidget {
             Icon(
               icon,
               size: 48,
-              color: AppColors.textSecondaryDark,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
             ),
             const SizedBox(height: 16),
             Text(

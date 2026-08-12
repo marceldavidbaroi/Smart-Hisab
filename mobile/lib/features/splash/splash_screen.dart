@@ -4,11 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/auth/auth_notifier.dart';
-import '../../core/auth/auth_state.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_safe_area.dart';
-import '../app_scaffold.dart';
-import '../auth/login_screen.dart';
 
 /// Animated Splash (Flash) Screen for Smart-Hisab.
 /// Initializes app services, checks auth & tenant state,
@@ -50,56 +47,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _controller.forward();
 
-    // 2. Trigger Auth Check after initial animation start
+    // 2. Trigger Auth Check after initial animation start (AuthGuard will declaratively route)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Ensure minimum display time for smooth user experience (1.5 seconds)
-      final animationFuture = Future.delayed(const Duration(milliseconds: 1500));
-      final authFuture = ref.read(authNotifierProvider.notifier).initializeAuth();
-
-      await Future.wait([animationFuture, authFuture]);
-
+      await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
-
-      _navigateBasedOnStatus();
+      ref.read(authNotifierProvider.notifier).initializeAuth();
     });
-  }
-
-  void _navigateBasedOnStatus() {
-    final authState = ref.read(authNotifierProvider);
-
-    // Route based on auth & tenant status
-    switch (authState.status) {
-      case AuthStatus.authenticatedWithTenant:
-      case AuthStatus.authenticatedNoTenant:
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const AppScaffold(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        );
-        break;
-
-      case AuthStatus.unauthenticated:
-      case AuthStatus.error:
-      default:
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const LoginScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        );
-        break;
-    }
   }
 
   @override
@@ -111,9 +64,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: AppSafeArea(
         child: Column(
           children: [
@@ -165,7 +119,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimaryDark,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -176,7 +130,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       'Your Canteen\'s Digital Hisab',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 14,
-                        color: AppColors.textSecondaryDark,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                       ),
                     ),
                   ],
@@ -190,12 +144,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 64),
               child: Shimmer.fromColors(
-                baseColor: AppColors.shimmerBase,
-                highlightColor: AppColors.shimmerHighlight,
+                baseColor: isDark ? AppColors.shimmerBaseDark : AppColors.shimmerBaseLight,
+                highlightColor: isDark ? AppColors.shimmerHighlightDark : AppColors.shimmerHighlightLight,
                 child: Container(
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.shimmerBase,
+                    color: isDark ? AppColors.shimmerBaseDark : AppColors.shimmerBaseLight,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -208,7 +162,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               'v1.0.0 (Free Tier)',
               style: theme.textTheme.labelSmall?.copyWith(
                 fontSize: 12,
-                color: AppColors.textSecondaryDark.withValues(alpha: 0.6),
+                color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight).withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 16),

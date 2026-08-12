@@ -2,19 +2,72 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/widgets/app_safe_area.dart';
+import '../../core/widgets/custom_modal_bottom_sheet.dart';
 import 'create_canteen_screen.dart';
 import 'join_canteen_screen.dart';
 
 class OnboardingChoiceScreen extends ConsumerWidget {
   const OnboardingChoiceScreen({super.key});
 
+  void _showSignOutConfirmation(BuildContext context, WidgetRef ref) {
+    CustomModalBottomSheet.show(
+      context: context,
+      title: "Sign Out",
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            "Are you sure you want to sign out of Smart-Hisab?",
+            style: TextStyle(fontSize: 15, color: AppColors.textSecondaryDark),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await ref.read(authNotifierProvider.notifier).signOut();
+                    NotificationService.showSuccess("Signed out successfully");
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Sign Out', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: AppSafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -25,19 +78,17 @@ class OnboardingChoiceScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Welcome!',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.logout, color: AppColors.textSecondary),
-                    onPressed: () {
-                      ref.read(authNotifierProvider.notifier).signOut();
-                    },
+                    icon: Icon(Icons.logout, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                    onPressed: () => _showSignOutConfirmation(context, ref),
                   ),
                 ],
               ),
@@ -45,16 +96,16 @@ class OnboardingChoiceScreen extends ConsumerWidget {
                 authState.userEmail ?? 'Signed In User',
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textSecondary,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 ),
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 'Choose how you want to proceed:',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                 ),
               ),
               const SizedBox(height: 20),
@@ -120,6 +171,8 @@ class _ChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -128,10 +181,10 @@ class _ChoiceCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.surfaceDark,
+            color: isDark ? AppColors.cardDark : AppColors.cardLight,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppColors.surfaceLight,
+              color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
               width: 1,
             ),
           ),
@@ -155,7 +208,7 @@ class _ChoiceCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
+                      color: isDark ? AppColors.cardBorderDark : AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -172,10 +225,10 @@ class _ChoiceCard extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                 ),
               ),
               const SizedBox(height: 6),
@@ -183,7 +236,7 @@ class _ChoiceCard extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   height: 1.4,
                 ),
               ),

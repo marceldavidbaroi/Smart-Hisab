@@ -159,7 +159,7 @@ class _InviteManagerScreenState extends ConsumerState<InviteManagerScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardDark : Colors.white,
+                  color: isDark ? AppColors.cardDark : AppColors.cardLight,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: AppColors.primary.withValues(alpha: 0.5),
@@ -236,7 +236,7 @@ class _InviteManagerScreenState extends ConsumerState<InviteManagerScreen> {
                 onPressed: _isGenerating ? null : _generateCode,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: AppColors.cardBorderDark),
+                  side: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

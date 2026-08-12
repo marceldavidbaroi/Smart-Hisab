@@ -17,7 +17,8 @@
     "backend:deploy": "bash ./deploy_backend.sh",
     "deploy:backend": "bash ./deploy_backend.sh",
     "clear-tenant": "bash ./scripts/clear-tenant.sh",
-    "mobile:dev": "cd mobile && flutter run",
+    "mobile:dev": "cd mobile && flutter run -d android",
+    "web:dev": "cd mobile && flutter run -d chrome",
     "mobile:analyze": "cd mobile && flutter analyze",
     "mobile:clean": "cd mobile && flutter clean && flutter pub get"
   },

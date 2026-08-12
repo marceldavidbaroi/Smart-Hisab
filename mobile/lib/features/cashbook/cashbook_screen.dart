@@ -51,6 +51,7 @@ class CashbookScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cashbookState = ref.watch(cashbookNotifierProvider);
     final notifier = ref.read(cashbookNotifierProvider.notifier);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AppSafeArea(
       child: RefreshIndicator(
@@ -67,7 +68,7 @@ class CashbookScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -75,15 +76,15 @@ class CashbookScreen extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimaryDark,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'Daily inflow, market expense & notes',
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondaryDark,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                         ),
                       ),
                     ],
@@ -124,19 +125,19 @@ class CashbookScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Day Transactions',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimaryDark,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                     ),
                   ),
                   Text(
                     '${cashbookState.entries.length} entries',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondaryDark,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                     ),
                   ),
                 ],

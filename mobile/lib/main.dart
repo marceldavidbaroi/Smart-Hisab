@@ -9,7 +9,7 @@ import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
 import 'core/auth/auth_state.dart';
 import 'features/app_scaffold.dart';
-import 'features/auth/landing_screen.dart';
+import 'features/auth/login_screen.dart';
 import 'features/auth/onboarding_choice_screen.dart';
 import 'features/splash/splash_screen.dart';
 
@@ -70,6 +70,7 @@ class AuthGuard extends ConsumerWidget {
 
     switch (authState.status) {
       case AuthStatus.initial:
+      case AuthStatus.loading:
         return const SplashScreen();
 
       case AuthStatus.authenticatedWithTenant:
@@ -80,8 +81,7 @@ class AuthGuard extends ConsumerWidget {
 
       case AuthStatus.unauthenticated:
       case AuthStatus.error:
-      default:
-        return const LandingScreen();
+        return const LoginScreen();
     }
   }
 }

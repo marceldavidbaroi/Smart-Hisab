@@ -86,6 +86,8 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -95,16 +97,20 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
           // Category Selector Dropdown
           DropdownButtonFormField<String>(
             initialValue: _selectedCategory,
-            dropdownColor: AppColors.cardDark,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            dropdownColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: 'Expense Category',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
             items: _categories.map((cat) {
@@ -124,17 +130,21 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
           // Expense Title / Description
           TextFormField(
             controller: _titleController,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: 'Title / Description (Optional)',
               hintText: 'e.g. Kawran bazar vegetables',
-              hintStyle: const TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
           ),
@@ -144,16 +154,16 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
           TextFormField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
             decoration: InputDecoration(
               labelText: 'Amount (৳) *',
               hintText: '0.00',
-              hintStyle: const TextStyle(color: AppColors.textSecondaryDark),
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               prefixText: '৳ ',
               prefixStyle: const TextStyle(
                 color: AppColors.danger,
@@ -161,10 +171,14 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                 fontWeight: FontWeight.bold,
               ),
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
             validator: (val) {
@@ -184,15 +198,19 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
           TextFormField(
             controller: _notesController,
             maxLines: 2,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 14),
             decoration: InputDecoration(
               labelText: 'Notes / Voucher Info (Optional)',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.cardBorderDark),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
           ),

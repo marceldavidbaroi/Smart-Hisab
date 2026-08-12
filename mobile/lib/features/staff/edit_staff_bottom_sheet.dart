@@ -80,6 +80,8 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -91,16 +93,20 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
             TextFormField(
               controller: _nameController,
               textCapitalization: TextCapitalization.words,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Full Name *',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.user, color: AppColors.primary),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
               validator: (val) => (val == null || val.trim().isEmpty) ? 'Enter staff name' : null,
@@ -111,16 +117,20 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Phone Number *',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.phone, color: AppColors.primary),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
               validator: (val) => (val == null || val.trim().isEmpty) ? 'Enter phone number' : null,
@@ -130,17 +140,21 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
             // Role Dropdown
             DropdownButtonFormField<StaffRole>(
               initialValue: _selectedRole,
-              dropdownColor: AppColors.cardDark,
-              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+              dropdownColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 15, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Role',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.shield, color: AppColors.primary),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
               items: const [
@@ -157,16 +171,20 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
             TextFormField(
               controller: _salaryController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Monthly Base Salary (৳)',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.banknote, color: AppColors.success),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
             ),
@@ -178,11 +196,11 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.cardBorderDark),
+                      side: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 16)),
+                    child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 16)),
                   ),
                 ),
                 const SizedBox(width: 12),

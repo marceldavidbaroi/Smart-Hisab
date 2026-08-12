@@ -48,6 +48,8 @@ class _JoinCanteenScreenState extends ConsumerState<JoinCanteenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -58,7 +60,7 @@ class _JoinCanteenScreenState extends ConsumerState<JoinCanteenScreen> {
             'Enter 6-digit invite code provided by your canteen owner.',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
             ),
           ),
           const SizedBox(height: 20),
@@ -68,8 +70,8 @@ class _JoinCanteenScreenState extends ConsumerState<JoinCanteenScreen> {
             keyboardType: TextInputType.number,
             maxLength: 6,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               fontSize: 24,
               fontWeight: FontWeight.bold,
               letterSpacing: 8,
@@ -78,14 +80,18 @@ class _JoinCanteenScreenState extends ConsumerState<JoinCanteenScreen> {
               hintText: '123456',
               counterText: '',
               hintStyle: TextStyle(
-                color: AppColors.textSecondary.withValues(alpha: 0.3),
+                color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight).withValues(alpha: 0.3),
                 letterSpacing: 8,
               ),
               filled: true,
-              fillColor: AppColors.surfaceDark.withValues(alpha: 0.6),
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),

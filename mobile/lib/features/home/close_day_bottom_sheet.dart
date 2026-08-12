@@ -68,6 +68,8 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
     final actualClosing = double.tryParse(_cashController.text) ?? expectedCash;
     final variance = actualClosing - expectedCash;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -76,20 +78,21 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bgDark,
+              color: isDark ? AppColors.bgDark : AppColors.bgLight,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Expected Cash:',
-                  style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
+                  style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
                 ),
                 Text(
                   AppFormatters.formatBdt(expectedCash),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -101,15 +104,20 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
           TextField(
             controller: _cashController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(color: Colors.white, fontSize: 18),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 18),
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               labelText: 'Actual Closing Cash in Drawer (৳)',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
           ),
@@ -117,9 +125,9 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Variance:',
-                style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
+                style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
               ),
               Text(
                 AppFormatters.formatBdt(variance),
@@ -135,15 +143,20 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
           TextField(
             controller: _notesController,
             maxLines: 2,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 14),
             decoration: InputDecoration(
               labelText: 'Day Notes / Variance Reason',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               hintText: 'e.g. Unrecorded tea expense ৳200',
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
           ),

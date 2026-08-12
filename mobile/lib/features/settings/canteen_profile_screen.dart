@@ -17,6 +17,7 @@ class CanteenProfileScreen extends ConsumerStatefulWidget {
 class _CanteenProfileScreenState extends ConsumerState<CanteenProfileScreen> {
   void _showEditCanteenSheet(BuildContext context, String currentName) {
     final nameController = TextEditingController(text: currentName);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     CustomModalBottomSheet.show(
       context: context,
@@ -28,16 +29,20 @@ class _CanteenProfileScreenState extends ConsumerState<CanteenProfileScreen> {
           TextField(
             controller: nameController,
             textCapitalization: TextCapitalization.words,
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               labelText: 'Canteen / Business Name *',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               prefixIcon: const Icon(LucideIcons.store, color: AppColors.primary),
               filled: true,
-              fillColor: AppColors.bgDark,
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
             ),
           ),
@@ -67,6 +72,7 @@ class _CanteenProfileScreenState extends ConsumerState<CanteenProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -81,11 +87,13 @@ class _CanteenProfileScreenState extends ConsumerState<CanteenProfileScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
+                      : const [Color(0xFFFFFFFF), Color(0xFFF1F5F9)],
                 ),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.cardBorderDark),
+                border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
               child: Column(
                 children: [
@@ -95,9 +103,9 @@ class _CanteenProfileScreenState extends ConsumerState<CanteenProfileScreen> {
                     child: Icon(LucideIcons.store, size: 36, color: Colors.white),
                   ),
                   const SizedBox(height: 14),
-                  const Text(
+                  Text(
                     "Rahim's Canteen",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                   ),
                   const SizedBox(height: 6),
                   Container(
@@ -120,35 +128,35 @@ class _CanteenProfileScreenState extends ConsumerState<CanteenProfileScreen> {
             // Metadata List
             Container(
               decoration: BoxDecoration(
-                color: AppColors.cardDark,
+                color: isDark ? AppColors.cardDark : AppColors.cardLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.cardBorderDark),
+                border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
               ),
               child: Column(
                 children: [
                   ListTile(
                     leading: const Icon(LucideIcons.store, color: AppColors.primary),
-                    title: const Text('Canteen Name', style: TextStyle(fontSize: 14, color: AppColors.textSecondaryDark)),
-                    subtitle: const Text("Rahim's Canteen", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    title: Text('Canteen Name', style: TextStyle(fontSize: 14, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
+                    subtitle: Text("Rahim's Canteen", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
                     trailing: IconButton(
                       icon: const Icon(LucideIcons.edit2, size: 18, color: AppColors.primary),
                       onPressed: () => _showEditCanteenSheet(context, "Rahim's Canteen"),
                     ),
                   ),
-                  const Divider(color: AppColors.cardBorderDark, height: 1),
+                  Divider(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight, height: 1),
                   ListTile(
                     leading: const Icon(LucideIcons.shieldCheck, color: AppColors.warning),
-                    title: const Text('Your Role', style: TextStyle(fontSize: 14, color: AppColors.textSecondaryDark)),
+                    title: Text('Your Role', style: TextStyle(fontSize: 14, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
                     subtitle: Text(
                       authState.role?.toUpperCase() ?? 'OWNER',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                     ),
                   ),
-                  const Divider(color: AppColors.cardBorderDark, height: 1),
+                  Divider(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight, height: 1),
                   ListTile(
                     leading: const Icon(LucideIcons.users, color: AppColors.info),
-                    title: const Text('Subscription Limit', style: TextStyle(fontSize: 14, color: AppColors.textSecondaryDark)),
-                    subtitle: const Text('Max 50 Customers • Max 3 Staff', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                    title: Text('Subscription Limit', style: TextStyle(fontSize: 14, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
+                    subtitle: Text('Max 50 Customers • Max 3 Staff', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
                   ),
                 ],
               ),

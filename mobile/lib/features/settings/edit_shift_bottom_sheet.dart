@@ -76,6 +76,8 @@ class _EditShiftBottomSheetState extends ConsumerState<EditShiftBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -88,16 +90,20 @@ class _EditShiftBottomSheetState extends ConsumerState<EditShiftBottomSheet> {
                 Expanded(
                   child: TextFormField(
                     controller: _startTimeController,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
                     decoration: InputDecoration(
                       labelText: 'Start Time *',
-                      labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                      labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                       prefixIcon: const Icon(LucideIcons.clock, color: AppColors.primary),
                       filled: true,
-                      fillColor: AppColors.bgDark,
+                      fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                        borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                       ),
                     ),
                     validator: (val) => (val == null || val.trim().isEmpty) ? 'Required' : null,
@@ -107,16 +113,20 @@ class _EditShiftBottomSheetState extends ConsumerState<EditShiftBottomSheet> {
                 Expanded(
                   child: TextFormField(
                     controller: _endTimeController,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
                     decoration: InputDecoration(
                       labelText: 'End Time *',
-                      labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                      labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                       prefixIcon: const Icon(LucideIcons.clock, color: AppColors.primary),
                       filled: true,
-                      fillColor: AppColors.bgDark,
+                      fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                        borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                       ),
                     ),
                     validator: (val) => (val == null || val.trim().isEmpty) ? 'Required' : null,
@@ -130,18 +140,22 @@ class _EditShiftBottomSheetState extends ConsumerState<EditShiftBottomSheet> {
             TextFormField(
               controller: _priceController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 18, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Default Meal Price (৳) *',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.banknote, color: AppColors.success),
                 prefixText: '৳ ',
                 prefixStyle: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 18),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
               validator: (val) {
@@ -158,11 +172,11 @@ class _EditShiftBottomSheetState extends ConsumerState<EditShiftBottomSheet> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.cardBorderDark),
+                      side: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 16)),
+                    child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 16)),
                   ),
                 ),
                 const SizedBox(width: 12),

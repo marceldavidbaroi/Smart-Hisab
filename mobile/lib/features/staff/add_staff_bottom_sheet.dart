@@ -80,6 +80,8 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -88,13 +90,20 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
         children: [
           TextFormField(
             controller: _nameController,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: 'Full Name *',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
             ),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter staff name' : null,
           ),
@@ -102,13 +111,20 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
           TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: 'Phone Number *',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
             ),
             validator: (v) => (v == null || v.trim().length < 6) ? 'Please enter valid phone' : null,
           ),
@@ -116,13 +132,20 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
           TextFormField(
             controller: _salaryController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: 'Monthly Salary (৳)',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -131,20 +154,27 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
             keyboardType: TextInputType.number,
             maxLength: 4,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
               labelText: '4-Digit Counter Mode PIN (Optional)',
-              labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+              labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               counterText: '',
               filled: true,
-              fillColor: AppColors.bgDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Role Access',
-            style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14, fontWeight: FontWeight.w600),
+            style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Row(
@@ -159,12 +189,12 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: isSelected ? Colors.white : AppColors.textSecondaryDark,
+                        color: isSelected ? Colors.white : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                       ),
                     ),
                     selected: isSelected,
                     selectedColor: AppColors.primary,
-                    backgroundColor: AppColors.bgDark,
+                    backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                     onSelected: (val) {
                       if (val) setState(() => _selectedRole = role);
                     },

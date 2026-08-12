@@ -31,6 +31,9 @@ This file outlines the core rules and constraints that the AI agent must adhere 
 ### 8. Swipeable Row Actions
 * Prefer Dismissible / Swipeable rows for item/entity list management (Edit & Delete actions) to keep list card surfaces clean.
 
+### 9. Target Platform: Android Only
+* **Strict Constraint**: The target environment for this application is Android only (Android mobile devices & emulators). Prioritize Android design patterns, touch targets, and Android system behavior.
+
 ## Data Management & API Optimization (Mobile & Backend)
 
 ### 1. Prevent Redundant Calls

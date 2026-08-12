@@ -12,6 +12,7 @@ enum AuthStatus {
 @immutable
 class AuthState {
   final AuthStatus status;
+  final bool isSubmitting;
   final String? userId;
   final String? userEmail;
   final String? tenantId;
@@ -21,6 +22,7 @@ class AuthState {
 
   const AuthState({
     this.status = AuthStatus.initial,
+    this.isSubmitting = false,
     this.userId,
     this.userEmail,
     this.tenantId,
@@ -37,6 +39,7 @@ class AuthState {
 
   AuthState copyWith({
     AuthStatus? status,
+    bool? isSubmitting,
     String? userId,
     String? userEmail,
     String? tenantId,
@@ -46,6 +49,7 @@ class AuthState {
   }) {
     return AuthState(
       status: status ?? this.status,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
       userId: userId ?? this.userId,
       userEmail: userEmail ?? this.userEmail,
       tenantId: tenantId ?? this.tenantId,

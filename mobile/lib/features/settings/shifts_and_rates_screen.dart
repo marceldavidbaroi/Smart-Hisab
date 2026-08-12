@@ -55,10 +55,10 @@ class ShiftsAndRatesScreen extends ConsumerWidget {
                         final shift = shiftsState.shifts[index];
                         return Container(
                           decoration: BoxDecoration(
-                            color: isDark ? AppColors.cardDark : Colors.white,
+                            color: isDark ? AppColors.cardDark : AppColors.cardLight,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: isDark ? AppColors.cardBorderDark : const Color(0xFFE2E8F0),
+                              color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
                             ),
                           ),
                           child: ListTile(
@@ -73,13 +73,13 @@ class ShiftsAndRatesScreen extends ConsumerWidget {
                             ),
                             title: Text(
                               shift.name,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
                                 '${shift.startTime} - ${shift.endTime}',
-                                style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                                style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                               ),
                             ),
                             trailing: Row(

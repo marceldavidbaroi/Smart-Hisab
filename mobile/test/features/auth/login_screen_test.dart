@@ -21,13 +21,17 @@ void main() {
     expect(find.text('Smart-Hisab'), findsOneWidget);
     expect(find.text('Your Canteen\'s Digital Hisab'), findsOneWidget);
 
-    // Verify feature highlight cards
-    expect(find.text('Fast Counter Meal Logging'), findsOneWidget);
-    expect(find.text('Cashbook & Baki Tracking'), findsOneWidget);
-    expect(find.text('Offline Ready Sync'), findsOneWidget);
+    // Verify Auth Toggle Tabs and Submit Button
+    expect(find.text('Sign In'), findsNWidgets(2));
+    expect(find.text('Create Account'), findsOneWidget);
 
-    // Verify Google Sign-In button and Demo button
-    expect(find.text('Continue with Google'), findsOneWidget);
+    // Verify form input fields
+    expect(find.text('Email Address'), findsOneWidget);
+    expect(find.text('Password'), findsOneWidget);
+
+    // Verify quick fill test buttons and Demo button
+    expect(find.text('Owner'), findsOneWidget);
+    expect(find.text('Manager'), findsOneWidget);
     expect(find.text('⚡ Try Demo Mode (Simulator Quick Entry)'), findsOneWidget);
   });
 }

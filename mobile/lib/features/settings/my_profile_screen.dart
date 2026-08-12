@@ -41,7 +41,7 @@ class MyProfileScreen extends ConsumerWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () async {
-                    Navigator.pop(context); // Close bottom sheet
+                    Navigator.pop(context);
                     await ref.read(authNotifierProvider.notifier).signOut();
                     NotificationService.showSuccess("Signed out successfully");
                   },
@@ -57,6 +57,14 @@ class MyProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDeleteAccountConfirmation(BuildContext context) {
+    CustomModalBottomSheet.show(
+      context: context,
+      title: "Delete Account & Canteen",
+      child: const _DeleteAccountBottomSheet(),
     );
   }
 
@@ -118,16 +126,16 @@ class MyProfileScreen extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               // Active Canteen Info Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardDark : Colors.white,
+                  color: isDark ? AppColors.cardDark : AppColors.cardLight,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? AppColors.cardBorderDark : const Color(0xFFE2E8F0),
+                    color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
                   ),
                 ),
                 child: Row(
@@ -145,14 +153,14 @@ class MyProfileScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Active Canteen',
-                            style: TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                            style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             authState.tenantName ?? 'My Canteen',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                           ),
                         ],
                       ),
@@ -163,27 +171,257 @@ class MyProfileScreen extends ConsumerWidget {
 
               const Spacer(),
 
+              // Danger Zone Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.danger.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.danger.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(LucideIcons.alertOctagon, color: AppColors.danger, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Danger Zone',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.danger,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Permanently delete your user account, canteen database, and all associated financial records.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showDeleteAccountConfirmation(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.danger,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: const Icon(LucideIcons.trash2, color: Colors.white, size: 18),
+                        label: const Text(
+                          'Delete Profile & Canteen Data',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
               // Sign Out Button
               ElevatedButton.icon(
                 onPressed: () => _showSignOutConfirmation(context, ref),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.danger.withValues(alpha: 0.15),
+                  backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: AppColors.danger),
+                    side: BorderSide(
+                      color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                    ),
                   ),
                 ),
-                icon: const Icon(LucideIcons.logOut, color: AppColors.danger, size: 20),
-                label: const Text(
+                icon: Icon(LucideIcons.logOut, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, size: 20),
+                label: Text(
                   'Sign Out',
-                  style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 16),
+                  style: TextStyle(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DeleteAccountBottomSheet extends ConsumerStatefulWidget {
+  const _DeleteAccountBottomSheet();
+
+  @override
+  ConsumerState<_DeleteAccountBottomSheet> createState() =>
+      __DeleteAccountBottomSheetState();
+}
+
+class __DeleteAccountBottomSheetState
+    extends ConsumerState<_DeleteAccountBottomSheet> {
+  final _textController = TextEditingController();
+  bool _canDelete = false;
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged(String val) {
+    setState(() {
+      _canDelete = val.trim() == 'DELETE';
+    });
+  }
+
+  Future<void> _handleDelete() async {
+    if (!_canDelete) return;
+
+    final success = await ref.read(authNotifierProvider.notifier).deleteAccount();
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.of(context).pop();
+      NotificationService.showSuccess('Account and all related data deleted');
+    } else {
+      final err = ref.read(authNotifierProvider).errorMessage ?? 'Failed to delete account';
+      NotificationService.showError(err);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final authState = ref.watch(authNotifierProvider);
+
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(LucideIcons.alertTriangle, color: AppColors.danger, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Permanent Action',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.danger,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Deleting your profile will permanently purge your account, active canteen database, staff accounts, sales, and customer ledgers.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Type DELETE below to confirm:',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _textController,
+            onChanged: _onTextChanged,
+            style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+            decoration: InputDecoration(
+              hintText: 'DELETE',
+              filled: true,
+              fillColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.danger, width: 2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: authState.isSubmitting ? null : () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: (_canDelete && !authState.isSubmitting) ? _handleDelete : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    disabledBackgroundColor: AppColors.danger.withValues(alpha: 0.3),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: authState.isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Delete Profile',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
       ),
     );
   }

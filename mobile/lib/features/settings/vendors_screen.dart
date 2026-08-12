@@ -197,17 +197,20 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
+                          : const [Color(0xFFFFFFFF), Color(0xFFF1F5F9)],
                     ),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Total Accounts Payable',
-                        style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 14),
+                        style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -227,16 +230,22 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                 // Search Bar
                 TextField(
                   controller: _searchController,
+                  style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                   onChanged: (val) => setState(() => _searchQuery = val),
                   decoration: InputDecoration(
                     hintText: 'Search vendors by name or phone...',
-                    prefixIcon: const Icon(LucideIcons.search, size: 18),
+                    hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
+                    prefixIcon: Icon(LucideIcons.search, size: 18, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                     ),
                     filled: true,
-                    fillColor: isDark ? AppColors.cardDark : Colors.white,
+                    fillColor: isDark ? AppColors.cardDark : AppColors.cardLight,
                   ),
                 ),
 
@@ -285,10 +294,10 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: isDark ? AppColors.cardDark : Colors.white,
+                              color: isDark ? AppColors.cardDark : AppColors.cardLight,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isDark ? AppColors.cardBorderDark : const Color(0xFFE2E8F0),
+                                color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
                               ),
                             ),
                             child: ListTile(
@@ -301,11 +310,11 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                               ),
                               title: Text(
                                 vendor.name,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                               ),
                               subtitle: Text(
                                 vendor.phone.isNotEmpty ? vendor.phone : 'No phone listed',
-                                style: const TextStyle(fontSize: 13, color: AppColors.textSecondaryDark),
+                                style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                               ),
                               trailing: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -319,9 +328,9 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                                       color: vendor.currentBalance > 0 ? AppColors.danger : AppColors.success,
                                     ),
                                   ),
-                                  const Text(
+                                  Text(
                                     'Tap details',
-                                    style: TextStyle(fontSize: 11, color: AppColors.textSecondaryDark),
+                                    style: TextStyle(fontSize: 11, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                                   ),
                                 ],
                               ),

@@ -23,8 +23,10 @@ class TransactionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (isLoading && entries.isEmpty) {
-      return _buildSkeletonLoader();
+      return _buildSkeletonLoader(context);
     }
 
     if (entries.isEmpty) {
@@ -64,9 +66,9 @@ class TransactionList extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cardDark,
+              color: isDark ? AppColors.cardDark : AppColors.cardLight,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.cardBorderDark),
+              border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
             ),
             child: Row(
               children: [
@@ -85,18 +87,18 @@ class TransactionList extends StatelessWidget {
                     children: [
                       Text(
                         item.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimaryDark,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${item.category} • ${AppFormatters.formatTimeOnly(item.createdAt)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondaryDark,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                         ),
                       ),
                       if (item.notes != null && item.notes!.isNotEmpty) ...[
@@ -104,14 +106,14 @@ class TransactionList extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.bgDark,
+                            color: isDark ? AppColors.bgDark : AppColors.bgLight,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             item.notes!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondaryDark,
+                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -154,15 +156,17 @@ class TransactionList extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(20),
           margin: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: AppColors.cardDark,
+            color: isDark ? AppColors.cardDark : AppColors.cardLight,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.cardBorderDark),
+            border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -180,21 +184,21 @@ class TransactionList extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'No Cashbook Entries Today',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimaryDark,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Record your daily market expenses or market shopping lists to keep your canteen hisab accurate.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.textSecondaryDark,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 ),
               ),
               const SizedBox(height: 16),
@@ -237,10 +241,12 @@ class TransactionList extends StatelessWidget {
     );
   }
 
-  Widget _buildSkeletonLoader() {
+  Widget _buildSkeletonLoader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Shimmer.fromColors(
-      baseColor: AppColors.cardDark,
-      highlightColor: AppColors.bgDark,
+      baseColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+      highlightColor: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
       child: ListView.builder(
         itemCount: 4,
         itemBuilder: (_, index) => Padding(
@@ -248,7 +254,7 @@ class TransactionList extends StatelessWidget {
           child: Container(
             height: 72,
             decoration: BoxDecoration(
-              color: AppColors.cardDark,
+              color: isDark ? AppColors.cardDark : AppColors.cardLight,
               borderRadius: BorderRadius.circular(16),
             ),
           ),

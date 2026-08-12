@@ -1,19 +1,18 @@
 # Smart-Hisab — Simplified Auth & App Flow (v2)
 
-> This document replaces the legacy device-pairing terminal model with a unified Google Sign-In + role-based layout approach.
+> This document outlines the primary Email & Password sign-in system with Email Confirmation (Resend/SMTP), replacing OAuth dependencies.
 
 ---
 
-## 1. Auth Method: Dual Auth (Email/Password + Google Sign-In)
+## 1. Auth Method: Email & Password (with Email Confirmation)
 
-Dual authentication ensures zero-friction development testing (Email/Password) while offering a seamless social login experience in production (Google Sign-In). 
-The initial app screen is a Landing Page highlighting core features, providing "Sign In" and "Sign Up" options.
+Authentication is built directly on Supabase Auth using standard Email & Password. On signup, a confirmation link is delivered via Resend/SMTP to verify user ownership without external OAuth setup friction.
 
 | User Type | Auth Method | What They See |
 |---|---|---|
-| **Owner** | Email/Password OR Google | Full access — all tabs, settings, staff/customer management |
-| **Manager** | Email/Password OR Google + Join Code | Management access — day control, reports, counter mode (no tenant/billing settings) |
-| **Counter Staff** | 4-digit PIN on shared device | Counter mode only — meal toggle, baki collection. **No email or Google account needed.** |
+| **Owner** | Email/Password (Confirmed) | Full access — all tabs, settings, staff/customer management |
+| **Manager** | Email/Password (Confirmed) + Join Code | Management access — day control, reports, counter mode (no tenant/billing settings) |
+| **Counter Staff** | 4-digit PIN on shared device | Counter mode only — meal toggle, baki collection. **No email account needed.** |
 
 ---
 

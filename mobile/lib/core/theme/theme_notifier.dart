@@ -8,18 +8,24 @@ final themeNotifierProvider =
 });
 
 class ThemeNotifier extends StateNotifier<ThemeMode> {
-  ThemeNotifier() : super(ThemeMode.dark) {
+  ThemeNotifier() : super(ThemeMode.light) {
     _loadSavedTheme();
   }
 
   void _loadSavedTheme() {
-    final savedTheme = HiveService.cacheBox.get('theme_mode') as String?;
-    if (savedTheme == 'light') {
+    try {
+      final savedTheme = HiveService.cacheBox.get('theme_mode') as String?;
+      if (savedTheme == 'light') {
+        state = ThemeMode.light;
+      } else if (savedTheme == 'dark') {
+        state = ThemeMode.dark;
+      } else if (savedTheme == 'system') {
+        state = ThemeMode.system;
+      } else {
+        state = ThemeMode.light; // Default to Light mode (White)
+      }
+    } catch (_) {
       state = ThemeMode.light;
-    } else if (savedTheme == 'dark') {
-      state = ThemeMode.dark;
-    } else if (savedTheme == 'system') {
-      state = ThemeMode.system;
     }
   }
 

@@ -25,7 +25,6 @@ void main() {
     expect(find.byType(Shimmer), findsOneWidget);
 
     // Advance animation and navigation timers
-    await tester.pump(const Duration(milliseconds: 1600));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 2000));
   });
 }

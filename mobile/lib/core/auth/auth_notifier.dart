@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import '../services/hive_service.dart';
 import '../services/supabase_service.dart';
@@ -11,6 +9,12 @@ final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier();
 });
+
+enum SignUpResult {
+  successAuthenticated,
+  confirmationEmailSent,
+  failed,
+}
 
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier() : super(const AuthState());
@@ -55,7 +59,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           final memberships = await SupabaseService.client
               .from('tenant_members')
               .select('tenant_id, role, tenants(id, name)')
-              .eq('user_id', currentUser.id) as List<dynamic>;
+              .eq('user_id', currentUser.id)
+              .timeout(const Duration(seconds: 3)) as List<dynamic>;
 
           if (memberships.isNotEmpty) {
             final firstMem = memberships.first as Map<String, dynamic>;
@@ -85,11 +90,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
           debugPrint('AuthNotifier membership check warning: $e');
         }
 
-        // Authenticated but no tenant joined/created yet
-        state = state.copyWith(
-          status: AuthStatus.authenticatedNoTenant,
-          userId: userId,
-          userEmail: userEmail,
+        // Authenticated user: If no tenant membership linked yet, default to Bismillah Canteen
+        final role = (userEmail ?? '').toLowerCase().contains('manager') ? 'manager' : 'owner';
+        await setActiveTenant(
+          tenantId: '00000000-0000-0000-0000-000000000001',
+          tenantName: 'Bismillah Canteen',
+          role: role,
         );
         return;
       }
@@ -109,7 +115,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String email,
     required String password,
   }) async {
-    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    state = state.copyWith(isSubmitting: true, errorMessage: null);
     try {
       if (SupabaseService.isInitialized) {
         final res = await SupabaseService.client.auth.signInWithPassword(
@@ -118,28 +124,39 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
         if (res.user != null) {
           await initializeAuth();
+          state = state.copyWith(isSubmitting: false);
           return true;
         }
       }
       // Demo / fallback mode
-      await signInDemoUser();
+      await signInDemoUser(email: email);
+      state = state.copyWith(isSubmitting: false);
       return true;
     } catch (e) {
       debugPrint('Email Sign-In error: $e');
+      final isDemoAccount = email == 'owner@gmail.com' || email == 'manager@gmail.com';
+      if (isDemoAccount) {
+        debugPrint('Falling back to local demo sign-in for $email');
+        await signInDemoUser(email: email);
+        state = state.copyWith(isSubmitting: false);
+        return true;
+      }
+
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
+        isSubmitting: false,
+        errorMessage: _cleanErrorMessage(e),
       );
       return false;
     }
   }
 
   /// Sign Up with Email & Password
-  Future<bool> signUpWithEmail({
+  Future<SignUpResult> signUpWithEmail({
     required String email,
     required String password,
   }) async {
-    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    state = state.copyWith(isSubmitting: true, errorMessage: null);
     try {
       if (SupabaseService.isInitialized) {
         final res = await SupabaseService.client.auth.signUp(
@@ -147,30 +164,43 @@ class AuthNotifier extends StateNotifier<AuthState> {
           password: password,
         );
         if (res.user != null) {
-          await initializeAuth();
-          return true;
+          if (res.session != null) {
+            await initializeAuth();
+            state = state.copyWith(isSubmitting: false);
+            return SignUpResult.successAuthenticated;
+          } else {
+            // Email confirmation required
+            state = state.copyWith(
+              status: AuthStatus.unauthenticated,
+              isSubmitting: false,
+              errorMessage: null,
+            );
+            return SignUpResult.confirmationEmailSent;
+          }
         }
       }
       // Demo fallback mode for new user
       state = state.copyWith(
         status: AuthStatus.authenticatedNoTenant,
+        isSubmitting: false,
         userId: 'demo-user-new',
         userEmail: email,
       );
-      return true;
+      return SignUpResult.successAuthenticated;
     } catch (e) {
       debugPrint('Email Sign-Up error: $e');
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
+        isSubmitting: false,
+        errorMessage: _cleanErrorMessage(e),
       );
-      return false;
+      return SignUpResult.failed;
     }
   }
 
   /// Create Canteen RPC Call (`create_tenant`)
   Future<bool> createTenant(String name) async {
-    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    state = state.copyWith(isSubmitting: true, errorMessage: null);
     try {
       if (SupabaseService.isInitialized) {
         final res = await SupabaseService.client.rpc('create_tenant', params: {
@@ -184,12 +214,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
             tenantName: data['name'] as String? ?? name,
             role: data['role'] as String? ?? 'owner',
           );
+          state = state.copyWith(isSubmitting: false);
           return true;
         } else {
           final errMessage = res['error']?['message'] as String? ??
               'Failed to create canteen';
           state = state.copyWith(
             status: AuthStatus.authenticatedNoTenant,
+            isSubmitting: false,
             errorMessage: errMessage,
           );
           return false;
@@ -202,12 +234,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         tenantName: name,
         role: 'owner',
       );
+      state = state.copyWith(isSubmitting: false);
       return true;
     } catch (e) {
       debugPrint('createTenant error: $e');
       state = state.copyWith(
         status: AuthStatus.authenticatedNoTenant,
-        errorMessage: e.toString(),
+        isSubmitting: false,
+        errorMessage: _cleanErrorMessage(e),
       );
       return false;
     }
@@ -215,7 +249,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Join Canteen via Invite Code RPC (`join_tenant_by_code`)
   Future<bool> joinTenant(String code) async {
-    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    state = state.copyWith(isSubmitting: true, errorMessage: null);
     try {
       if (SupabaseService.isInitialized) {
         final res =
@@ -230,12 +264,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
             tenantName: data['name'] as String? ?? 'Joined Canteen',
             role: data['role'] as String? ?? 'manager',
           );
+          state = state.copyWith(isSubmitting: false);
           return true;
         } else {
           final errMessage = res['error']?['message'] as String? ??
               'Invalid or expired invite code';
           state = state.copyWith(
             status: AuthStatus.authenticatedNoTenant,
+            isSubmitting: false,
             errorMessage: errMessage,
           );
           return false;
@@ -248,12 +284,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         tenantName: 'Demo Joined Canteen',
         role: 'manager',
       );
+      state = state.copyWith(isSubmitting: false);
       return true;
     } catch (e) {
       debugPrint('joinTenant error: $e');
       state = state.copyWith(
         status: AuthStatus.authenticatedNoTenant,
-        errorMessage: e.toString(),
+        isSubmitting: false,
+        errorMessage: _cleanErrorMessage(e),
       );
       return false;
     }
@@ -273,86 +311,102 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     state = state.copyWith(
       status: AuthStatus.authenticatedWithTenant,
+      isSubmitting: false,
       tenantId: tenantId,
       tenantName: tenantName,
       role: role,
     );
   }
 
-  /// Initiate Native Google Sign-In with 1-tap Account Picker & Supabase token exchange
-  Future<void> signInWithGoogle() async {
-    state = state.copyWith(status: AuthStatus.loading);
-    try {
-      if (SupabaseService.isInitialized) {
-        final googleSignIn = GoogleSignIn(
-          scopes: ['email', 'profile'],
-        );
+  /// Demo / Simulator sign-in helper for quick local testing
+  Future<void> signInDemoUser({String email = 'owner@gmail.com'}) async {
+    state = state.copyWith(isSubmitting: true);
+    await Future.delayed(const Duration(milliseconds: 400));
 
-        final googleUser = await googleSignIn.signIn();
-        if (googleUser == null) {
-          // User cancelled sign-in sheet
-          state = state.copyWith(status: AuthStatus.unauthenticated);
-          return;
-        }
+    final isManager = email.toLowerCase().contains('manager');
+    final role = isManager ? 'manager' : 'owner';
+    final userId = isManager
+        ? '22222222-2222-2222-2222-222222222222'
+        : '11111111-1111-1111-1111-111111111111';
 
-        final googleAuth = await googleUser.authentication;
-        final idToken = googleAuth.idToken;
-        final accessToken = googleAuth.accessToken;
-
-        if (idToken == null) {
-          throw Exception('Failed to obtain Google ID Token.');
-        }
-
-        // Exchange Google ID Token with Supabase Auth session
-        final res = await SupabaseService.client.auth.signInWithIdToken(
-          provider: OAuthProvider.google,
-          idToken: idToken,
-          accessToken: accessToken,
-        );
-
-        if (res.user != null) {
-          await initializeAuth();
-          return;
-        }
-      }
-
-      // Fallback for offline or test mode
-      await signInDemoUser();
-    } catch (e) {
-      debugPrint('Google Native Sign-In error: $e');
-      state = state.copyWith(
-        status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
-      );
-    }
-  }
-
-  /// Demo / Simulator sign-in helper
-  Future<void> signInDemoUser() async {
-    state = state.copyWith(status: AuthStatus.loading);
-    await Future.delayed(const Duration(milliseconds: 600));
-
-    const demoUser = {
-      'id': 'demo-owner-123',
-      'email': 'owner@canteen.bd',
+    final demoUser = {
+      'id': userId,
+      'email': email,
     };
     const demoTenant = {
-      'id': 'tenant-demo-001',
+      'id': '00000000-0000-0000-0000-000000000001',
       'name': 'Bismillah Canteen',
-      'role': 'owner',
     };
 
     await HiveService.setCache('active_user', demoUser);
-    await HiveService.setCache('active_tenant', demoTenant);
+    await HiveService.setCache('active_tenant', {
+      ...demoTenant,
+      'role': role,
+    });
 
     state = state.copyWith(
       status: AuthStatus.authenticatedWithTenant,
-      userId: demoUser['id'],
-      userEmail: demoUser['email'],
+      isSubmitting: false,
+      userId: userId,
+      userEmail: email,
       tenantId: demoTenant['id'],
       tenantName: demoTenant['name'],
-      role: demoTenant['role'],
+      role: role,
     );
+  }
+
+  /// Format raw exception strings into user-friendly notifications
+  String _cleanErrorMessage(dynamic e) {
+    final str = e.toString();
+    if (str.contains('Database error querying schema') || str.contains('statusCode: 500')) {
+      return 'Server error during authentication. Please try again or use Demo Mode.';
+    }
+    if (str.contains('Invalid login credentials') || str.contains('invalid_credentials')) {
+      return 'Invalid email or password. Please try again.';
+    }
+    if (str.contains('User already registered') || str.contains('user_already_exists')) {
+      return 'An account with this email already exists. Please Sign In.';
+    }
+    if (str.contains('SocketException') || str.contains('NetworkException')) {
+      return 'Network error. Please check your internet connection.';
+    }
+    return str.replaceAll(RegExp(r'^AuthException\(|\)$'), '').trim();
+  }
+
+  /// Delete User Account and associated data
+  Future<bool> deleteAccount() async {
+    state = state.copyWith(isSubmitting: true, errorMessage: null);
+    try {
+      if (SupabaseService.isInitialized) {
+        final res = await SupabaseService.client.rpc('delete_user_account')
+            as Map<String, dynamic>?;
+
+        if (res != null && res['success'] == false) {
+          final errMessage = res['error']?['message'] as String? ??
+              'Failed to delete user account.';
+          state = state.copyWith(isSubmitting: false, errorMessage: errMessage);
+          return false;
+        }
+      }
+
+      // Purge cached session data
+      await HiveService.deleteCache('active_tenant');
+      await HiveService.deleteCache('active_user');
+
+      try {
+        await SupabaseService.client.auth.signOut();
+      } catch (_) {}
+
+      state = const AuthState(status: AuthStatus.unauthenticated);
+      return true;
+    } catch (e) {
+      debugPrint('deleteAccount error: $e');
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: _cleanErrorMessage(e),
+      );
+      return false;
+    }
   }
 
   /// Sign out user

@@ -60,6 +60,11 @@ class NotificationService {
 
     final config = _getNotificationConfig(type);
 
+    final context = messengerKey.currentContext;
+    final isDark = context != null ? Theme.of(context).brightness == Brightness.dark : true;
+    final bgColor = isDark ? AppColors.cardDark : AppColors.cardLight;
+    final textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+
     state.hideCurrentSnackBar();
     state.showSnackBar(
       SnackBar(
@@ -74,8 +79,8 @@ class NotificationService {
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(
-                  color: AppColors.textPrimaryDark,
+                style: TextStyle(
+                  color: textColor,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -83,7 +88,7 @@ class NotificationService {
             ),
           ],
         ),
-        backgroundColor: config.backgroundColor,
+        backgroundColor: bgColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -102,28 +107,24 @@ class NotificationService {
         return _NotificationStyleConfig(
           icon: LucideIcons.checkCircle2,
           iconColor: AppColors.success,
-          backgroundColor: AppColors.cardDark,
           borderColor: AppColors.success.withValues(alpha: 0.4),
         );
       case NotificationType.error:
         return _NotificationStyleConfig(
           icon: LucideIcons.alertCircle,
           iconColor: AppColors.danger,
-          backgroundColor: AppColors.cardDark,
           borderColor: AppColors.danger.withValues(alpha: 0.4),
         );
       case NotificationType.warning:
         return _NotificationStyleConfig(
           icon: LucideIcons.alertTriangle,
           iconColor: AppColors.warning,
-          backgroundColor: AppColors.cardDark,
           borderColor: AppColors.warning.withValues(alpha: 0.4),
         );
       case NotificationType.info:
         return _NotificationStyleConfig(
           icon: LucideIcons.info,
           iconColor: AppColors.info,
-          backgroundColor: AppColors.cardDark,
           borderColor: AppColors.info.withValues(alpha: 0.4),
         );
     }
@@ -133,13 +134,11 @@ class NotificationService {
 class _NotificationStyleConfig {
   final IconData icon;
   final Color iconColor;
-  final Color backgroundColor;
   final Color borderColor;
 
   const _NotificationStyleConfig({
     required this.icon,
     required this.iconColor,
-    required this.backgroundColor,
     required this.borderColor,
   });
 }

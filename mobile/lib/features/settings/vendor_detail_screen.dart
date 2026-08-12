@@ -16,6 +16,8 @@ class VendorDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vendorsState = ref.watch(vendorsNotifierProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final vendor = vendorsState.vendors.firstWhere(
       (v) => v.id == vendorId,
       orElse: () => Vendor(
@@ -29,12 +31,18 @@ class VendorDetailScreen extends ConsumerWidget {
     );
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(vendor.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(vendor.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
         centerTitle: true,
+        backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+        leading: IconButton(
+          icon: Icon(LucideIcons.arrowLeft, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.edit3, size: 20),
+            icon: Icon(LucideIcons.edit3, size: 20, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
             onPressed: () => EditVendorBottomSheet.show(context, vendor),
           ),
         ],
@@ -50,11 +58,13 @@ class VendorDetailScreen extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
+                        : const [Color(0xFFFFFFFF), Color(0xFFF1F5F9)],
                   ),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.cardBorderDark),
+                  border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
                 child: Column(
                   children: [
@@ -69,24 +79,24 @@ class VendorDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                     Text(
                       vendor.name,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(LucideIcons.phone, size: 14, color: AppColors.textSecondaryDark),
+                        Icon(LucideIcons.phone, size: 14, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                         const SizedBox(width: 6),
                         Text(
                           vendor.phone.isNotEmpty ? vendor.phone : 'No phone listed',
-                          style: const TextStyle(fontSize: 14, color: AppColors.textSecondaryDark),
+                          style: TextStyle(fontSize: 14, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    const Divider(color: AppColors.cardBorderDark),
+                    Divider(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                     const SizedBox(height: 16),
-                    const Text('We Owe This Vendor', style: TextStyle(fontSize: 13, color: AppColors.textSecondaryDark)),
+                    Text('We Owe This Vendor', style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
                     const SizedBox(height: 4),
                     Text(
                       '৳${vendor.currentBalance.toStringAsFixed(2)}',
@@ -102,9 +112,9 @@ class VendorDetailScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 'Transaction History',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
               ),
               const SizedBox(height: 12),
 
@@ -114,9 +124,9 @@ class VendorDetailScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.cardDark,
+                    color: isDark ? AppColors.cardDark : AppColors.cardLight,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.cardBorderDark),
+                    border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                   ),
                   child: Column(
                     children: [
@@ -126,14 +136,14 @@ class VendorDetailScreen extends ConsumerWidget {
                           backgroundColor: Color(0x1A10B981),
                           child: Icon(LucideIcons.checkCircle, color: AppColors.success, size: 20),
                         ),
-                        title: const Text('Vendor Account Initialized', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        title: Text('Vendor Account Initialized', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
                         subtitle: Text(
                           'Recorded ${vendor.updatedAt.toString().substring(0, 10)}',
-                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondaryDark),
+                          style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                         ),
                         trailing: Text(
                           '৳${vendor.currentBalance.toStringAsFixed(2)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                         ),
                       ),
                     ],

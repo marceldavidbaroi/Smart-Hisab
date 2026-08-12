@@ -83,6 +83,8 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -94,16 +96,20 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
             TextFormField(
               controller: _nameController,
               textCapitalization: TextCapitalization.words,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Customer Name *',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.user, color: AppColors.primary),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
               validator: (val) {
@@ -119,16 +125,20 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 labelText: 'Phone Number *',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.phone, color: AppColors.primary),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
               validator: (val) {
@@ -143,16 +153,20 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
             // Institution Input
             TextFormField(
               controller: _institutionController,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 15),
               decoration: InputDecoration(
                 labelText: 'Institution / Hostel (Optional)',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-                prefixIcon: const Icon(LucideIcons.building, color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                prefixIcon: Icon(LucideIcons.building, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
             ),
@@ -161,16 +175,20 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
             // Address Input
             TextFormField(
               controller: _addressController,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 15),
               decoration: InputDecoration(
                 labelText: 'Address (Optional)',
-                labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-                prefixIcon: const Icon(LucideIcons.mapPin, color: AppColors.textSecondaryDark),
+                labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                prefixIcon: Icon(LucideIcons.mapPin, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 filled: true,
-                fillColor: AppColors.bgDark,
+                fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
               ),
             ),
@@ -183,11 +201,11 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.cardBorderDark),
+                      side: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondaryDark, fontSize: 16)),
+                    child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 16)),
                   ),
                 ),
                 const SizedBox(width: 12),

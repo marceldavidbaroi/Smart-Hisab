@@ -51,296 +51,127 @@ sequenceDiagram
 
 ---
 
-## 2. Implementation Tasks Checklist
+## 2. v1.0 Feature Testing & QA Checklist
 
-### Phase 1: Core Auth & Tenant Onboarding Flow (Micro-Tasks) [COMPLETED]
-
-**1.1 Data Layer & Services**
-- [x] #### 1.1.1 Config & Env
-  * **Goal**: Implement Config & Env
-  * **File to create or change**: `lib/core/config/env.dart`
-  * **What to change**: Setup Supabase URL/Anon Key in `lib/core/config/env.dart` and initialize in `main.dart`.
-
-- [x] #### 1.1.2 Hive Service
-  * **Goal**: Implement Hive Service
-  * **File to create or change**: `lib/core/services/hive_service.dart`
-  * **What to change**: Create `lib/core/services/hive_service.dart` for local auth/tenant caching.
-
-- [x] #### 1.1.3 Supabase Service
-  * **Goal**: Implement Supabase Service
-  * **File to create or change**: `lib/core/services/supabase_service.dart`
-  * **What to change**: Create `lib/core/services/supabase_service.dart` wrapper.
-
-- [x] #### 1.1.4 Auth State Model
-  * **Goal**: Implement Auth State Model
-  * **File to create or change**: `lib/core/auth/auth_state.dart`
-  * **What to change**: Create `lib/core/auth/auth_state.dart` (status, userId, tenantId, role).
-
-- [x] #### 1.1.5 Auth Notifier
-  * **Goal**: Implement Auth Notifier
-  * **File to create or change**: `lib/core/auth/auth_notifier.dart`
-  * **What to change**: Create `lib/core/auth/auth_notifier.dart` (Google Sign-In, Email Sign-In/Up methods).
-
-
-**1.2 Startup & Splash UI**
-- [x] #### 1.2.1 Splash UI
-  * **Goal**: Implement Splash UI
-  * **File to create or change**: `lib/features/splash/splash_screen.dart`
-  * **What to change**: Create `lib/features/splash/splash_screen.dart` with logo and loading indicator.
-
-- [x] #### 1.2.2 Splash Routing
-  * **Goal**: Implement Splash Routing
-  * **File to create or change**: `TBD / Multiple`
-  * **What to change**: Implement session check in Splash; route to `LandingScreen` or `AppScaffold`.
-
-
-**1.3 Landing & Auth UI**
-- [x] #### 1.3.1 Landing UI
-  * **Goal**: Implement Landing UI
-  * **File to create or change**: `lib/features/auth/landing_screen.dart`
-  * **What to change**: Create `lib/features/auth/landing_screen.dart` featuring app value proposition.
-
-- [x] #### 1.3.2 Auth Form Widget
-  * **Goal**: Implement Auth Form Widget
-  * **File to create or change**: `lib/features/auth/widgets/email_auth_form.dart`
-  * **What to change**: Create `lib/features/auth/widgets/email_auth_form.dart` (Email/Pass + Sign In/Up toggle).
-
-- [x] #### 1.3.3 Social Auth Widget
-  * **Goal**: Implement Social Auth Widget
-  * **File to create or change**: `lib/features/auth/widgets/social_auth_button.dart`
-  * **What to change**: Create `lib/features/auth/widgets/social_auth_button.dart` (Continue with Google).
-
-- [x] #### 1.3.4 Integration
-  * **Goal**: Implement Integration
-  * **File to create or change**: `landing_screen.dart`
-  * **What to change**: Combine widgets in `landing_screen.dart` to trigger `auth_notifier` methods.
-
-
-**1.4 Canteen Onboarding UI**
-- [x] #### 1.4.1 Choice Screen
-  * **Goal**: Implement Choice Screen
-  * **File to create or change**: `lib/features/auth/onboarding_choice_screen.dart`
-  * **What to change**: Create `lib/features/auth/onboarding_choice_screen.dart` (Create vs Join cards).
-
-- [x] #### 1.4.2 Create Canteen
-  * **Goal**: Implement Create Canteen
-  * **File to create or change**: `lib/features/auth/create_canteen_screen.dart`
-  * **What to change**: Create `lib/features/auth/create_canteen_screen.dart` (Input + `create_tenant` RPC).
-
-- [x] #### 1.4.3 Join Canteen
-  * **Goal**: Implement Join Canteen
-  * **File to create or change**: `lib/features/auth/join_canteen_screen.dart`
-  * **What to change**: Create `lib/features/auth/join_canteen_screen.dart` (PIN Input + `join_tenant` RPC).
-
-
+### Phase 1: Auth & Onboarding Flow Testing
+- [ ] **1.1 Splash Screen & Session Check**
+  - Verify app displays splash screen branding on launch.
+  - Verify unauthenticated user is navigated to `LandingScreen`.
+  - Verify returning authenticated user is navigated directly to `AppScaffold` (Home Dashboard).
+- [ ] **1.3 Email Confirmation & Password Auth**
+  - Test Sign Up with new email and password, verifying email confirmation notice modal.
+  - Test Sign In with confirmed email and password credentials.
+- [ ] **1.4 Canteen Creation (Owner)**
+  - Select "Create My Canteen" on onboarding choice screen.
+  - Enter canteen name and tap submit.
+  - Verify RPC `create_tenant` executes and routes user to Home as `owner`.
+- [ ] **1.5 Canteen Joining (Manager)**
+  - Select "Join a Canteen".
+  - Enter valid 6-digit invite code.
+  - Verify RPC `join_tenant_by_code` executes and assigns `manager` role.
+  - Test entering an invalid/expired 6-digit code and verify error feedback.
 
 ---
 
-### Phase 2: Navigation & Home Dashboard (Micro-Tasks) [COMPLETED]
-
-**2.1 App Scaffold & Routing**
-- [x] #### 2.1.1 Scaffold State
-  * **Goal**: Implement Scaffold State
-  * **File to create or change**: `lib/features/app_scaffold_notifier.dart`
-  * **What to change**: Create `lib/features/app_scaffold_notifier.dart` to manage active tab index and Counter Mode toggle.
-
-- [x] #### 2.1.2 Bottom Nav Widget
-  * **Goal**: Implement Bottom Nav Widget
-  * **File to create or change**: `lib/features/widgets/custom_bottom_nav.dart`
-  * **What to change**: Create `lib/features/widgets/custom_bottom_nav.dart` with role-gated tabs (5 tabs for normal, 3 for Counter Mode).
-
-- [x] #### 2.1.3 Main Scaffold UI
-  * **Goal**: Implement Main Scaffold UI
-  * **File to create or change**: `lib/features/app_scaffold.dart`
-  * **What to change**: Create `lib/features/app_scaffold.dart` integrating the `IndexedStack` and bottom nav.
-
-
-**2.2 Business Day State**
-- [x] #### 2.2.1 Business Day Model
-  * **Goal**: Implement Business Day Model
-  * **File to create or change**: `lib/core/models/business_day.dart`
-  * **What to change**: Create `lib/core/models/business_day.dart` data class.
-
-- [x] #### 2.2.2 Business Day Notifier
-  * **Goal**: Implement Business Day Notifier
-  * **File to create or change**: `lib/features/home/business_day_notifier.dart`
-  * **What to change**: Create `lib/features/home/business_day_notifier.dart` (fetch active day, start day, end day methods).
-
-- [x] #### 2.2.3 Home UI Container
-  * **Goal**: Implement Home UI Container
-  * **File to create or change**: `lib/features/home/home_screen.dart`
-  * **What to change**: Create `lib/features/home/home_screen.dart` that conditionally renders Day Open vs Day Closed widget.
-
-
-**2.3 Day Operations UI**
-- [x] #### 2.3.1 Start Day Sheet
-  * **Goal**: Implement Start Day Sheet
-  * **File to create or change**: `lib/features/home/open_day_bottom_sheet.dart`
-  * **What to change**: Create `lib/features/home/open_day_bottom_sheet.dart` (cash input).
-
-- [x] #### 2.3.2 End Day Sheet
-  * **Goal**: Implement End Day Sheet
-  * **File to create or change**: `lib/features/home/close_day_bottom_sheet.dart`
-  * **What to change**: Create `lib/features/home/close_day_bottom_sheet.dart` (cash variance input).
-
-- [x] #### 2.3.3 Active Day Stats
-  * **Goal**: Implement Active Day Stats
-  * **File to create or change**: `lib/features/home/widgets/active_day_stats_card.dart`
-  * **What to change**: Create `lib/features/home/widgets/active_day_stats_card.dart`.
-
-- [x] #### 2.3.4 Quick Actions
-  * **Goal**: Implement Quick Actions
-  * **File to create or change**: `lib/features/home/widgets/quick_actions_grid.dart`
-  * **What to change**: Create `lib/features/home/widgets/quick_actions_grid.dart`.
-
-
-**2.4 Staff Auth Model**
-- [x] #### 2.4.1 Staff Model
-  * **Goal**: Implement Staff Model
-  * **File to create or change**: `lib/core/models/staff_member.dart`
-  * **What to change**: Create `lib/core/models/staff_member.dart`.
-
+### Phase 2: Business Day & Home Dashboard Testing
+- [ ] **2.1 Day Status Verification**
+  - Verify Home header displays "🟡 Day Closed" status chip when no active day exists.
+  - Verify "Start Today's Day" CTA card is shown when day is closed.
+- [ ] **2.2 Opening a Business Day**
+  - Tap "Start Today's Day", enter opening drawer cash (e.g. ৳5,000), and confirm.
+  - Verify RPC `start_business_day` runs and UI status updates to "🟢 Day Open".
+  - Verify `ActiveDayStatsCard` shows active date, opening cash, meals count, cash collected, and outstanding baki.
+- [ ] **2.3 Day Refresh & Pull-To-Refresh**
+  - Perform pull-to-refresh (`RefreshIndicator`) on Home screen.
+  - Verify active day stats re-fetch seamlessly without UI flicker.
+- [ ] **2.4 Closing a Business Day**
+  - Tap "Close Today's Day" button.
+  - Enter actual closing cash drawer amount and notes in modal bottom sheet.
+  - Confirm RPC `end_business_day` calculates expected cash, computes cash variance, and closes the day.
 
 ---
 
-### Phase 3: Customers (Micro-Tasks) [COMPLETED]
-
-**3.1 Models & Data**
-- [x] #### 3.1.1 Customer Model
-  * **Goal**: Implement Customer Model
-  * **File to create or change**: `lib/core/models/customer.dart`
-  * **What to change**: Create `lib/core/models/customer.dart`.
-
-- [x] #### 3.1.2 Customers Provider
-  * **Goal**: Implement Customers Provider
-  * **File to create or change**: `lib/features/customers/customers_notifier.dart`
-  * **What to change**: Create `lib/features/customers/customers_notifier.dart` (fetch, add, update methods).
-
-
-**3.2 UI Screens**
-- [x] #### 3.2.1 Directory Screen
-  * **Goal**: Implement Directory Screen
-  * **File to create or change**: `lib/features/customers/customers_screen.dart`
-  * **What to change**: Create `lib/features/customers/customers_screen.dart` (ListView, search bar, active shift banner).
-
-- [x] #### 3.2.2 Customer Detail
-  * **Goal**: Implement Customer Detail
-  * **File to create or change**: `lib/features/customers/customer_detail_screen.dart`
-  * **What to change**: Create `lib/features/customers/customer_detail_screen.dart` (wallet balance header, infinite list).
-
-
-**3.3 Interaction Bottom Sheets**
-- [x] #### 3.3.1 Add Customer
-  * **Goal**: Implement Add Customer
-  * **File to create or change**: `lib/features/customers/add_customer_bottom_sheet.dart`
-  * **What to change**: Create `lib/features/customers/add_customer_bottom_sheet.dart` (Name, Phone inputs).
-
-- [x] #### 3.3.2 Collect Baki
-  * **Goal**: Implement Collect Baki
-  * **File to create or change**: `lib/features/customers/collect_baki_bottom_sheet.dart`
-  * **What to change**: Create `lib/features/customers/collect_baki_bottom_sheet.dart` (Amount input, optimistic update).
-
+### Phase 3: Customers & Baki (AR) Testing
+- [ ] **3.1 Customer Directory Listing**
+  - Open `Customers` tab. Verify active shift banner displays current meal window & default rate.
+  - Test search input debouncing (type name/phone/institution and confirm list filters cleanly after 300ms).
+  - Verify pull-to-refresh reloads customer list.
+- [ ] **3.2 Add New Customer**
+  - Tap "+ Add Customer" button (or empty state CTA card).
+  - Enter Name, Phone, Institution, and Address in modal bottom sheet.
+  - Submit and verify customer appears immediately (optimistic update) and persists to backend.
+  - Test 50-customer free tier limit indicator.
+- [ ] **3.3 Meal Attendance Marking**
+  - Toggle meal checkbox `[🍽️]` on customer card.
+  - Verify RPC `record_meal_attendance` charges customer balance and updates stats card instantly.
+  - Toggle off to unmark meal and verify balance deduction reverts.
+- [ ] **3.4 Collect Baki Payment**
+  - Swipe left on customer card or tap "Collect Payment" on detail page.
+  - Enter collection amount in modal bottom sheet (with quick preset chips ৳100, ৳200, ৳500).
+  - Submit and verify RPC `record_baki_payment` updates customer wallet balance and records transaction entry.
+- [ ] **3.5 Customer Detail Page**
+  - Tap customer tile to open detail view.
+  - Verify outstanding balance header card and infinite scroll transaction history ledger.
 
 ---
 
-### Phase 4: Cashbook (Micro-Tasks) [COMPLETED]
-
-**4.1 Cashbook UI**
-- [x] #### 4.1.1 Main Screen
-  * **Goal**: Implement Main Screen
-  * **File to create or change**: `lib/features/cashbook/cashbook_screen.dart`
-  * **What to change**: Create `lib/features/cashbook/cashbook_screen.dart` (Summary header: Inflow/Outflow/Net).
-
-- [x] #### 4.1.2 Transactions List
-  * **Goal**: Implement Transactions List
-  * **File to create or change**: `lib/features/cashbook/widgets/transaction_list.dart`
-  * **What to change**: Create `lib/features/cashbook/widgets/transaction_list.dart` rendering `day_entries`.
-
-
-**4.2 Cashbook Forms**
-- [x] #### 4.2.1 Add Expense
-  * **Goal**: Implement Add Expense
-  * **File to create or change**: `lib/features/cashbook/add_expense_bottom_sheet.dart`
-  * **What to change**: Create `lib/features/cashbook/add_expense_bottom_sheet.dart` (Category dropdown, amount, note).
-
-- [x] #### 4.2.2 Add Note
-  * **Goal**: Implement Add Note
-  * **File to create or change**: `lib/features/cashbook/add_day_note_bottom_sheet.dart`
-  * **What to change**: Create `lib/features/cashbook/add_day_note_bottom_sheet.dart` (Text area for market lists).
-
+### Phase 4: Cashbook & Bazar (AP) Testing
+- [ ] **4.1 Cashbook Dashboard**
+  - Open `Cashbook` tab. Verify top summary header displays Inflow, Outflow, and Net cash calculation.
+  - Verify list renders today's transaction entries (`day_entries`) categorized by type.
+- [ ] **4.2 Record Expense / Market Cost**
+  - Tap "+ Expense" button. Select category (e.g. `market_cost` / `canteen_expense`), enter amount, optional vendor, and note.
+  - Submit and verify expense entry records as cash outflow and updates vendor balance if vendor was selected.
+- [ ] **4.3 Record Misc Income**
+  - Tap "+ Income" button. Enter amount and note.
+  - Verify entry records as cash inflow and updates cashbook summary header.
+- [ ] **4.4 Add Day Note / Market List**
+  - Tap "+ Note" button. Select type (`market_list` / `general_note` / `issue`) and enter content.
+  - Submit and verify note displays in Day Notes section.
 
 ---
 
-### Phase 5: Staff (Micro-Tasks) [COMPLETED]
-
-**5.1 Staff Core**
-- [x] #### 5.1.1 Staff Provider
-  * **Goal**: Implement Staff Provider
-  * **File to create or change**: `lib/features/staff/staff_notifier.dart`
-  * **What to change**: Create `lib/features/staff/staff_notifier.dart` (fetch staff list).
-
-
-**5.2 Staff UI**
-- [x] #### 5.2.1 Staff List
-  * **Goal**: Implement Staff List
-  * **File to create or change**: `lib/features/staff/staff_screen.dart`
-  * **What to change**: Create `lib/features/staff/staff_screen.dart` (Staff avatars, role badges, swipe to pay).
-
-- [x] #### 5.2.2 Staff Detail
-  * **Goal**: Implement Staff Detail
-  * **File to create or change**: `lib/features/staff/staff_detail_screen.dart`
-  * **What to change**: Create `lib/features/staff/staff_detail_screen.dart` (Ledger and payout history).
-
-
-**5.3 Staff Forms**
-- [x] #### 5.3.1 Add Staff
-  * **Goal**: Implement Add Staff
-  * **File to create or change**: `lib/features/staff/add_staff_bottom_sheet.dart`
-  * **What to change**: Create `lib/features/staff/add_staff_bottom_sheet.dart` (Name, Role picker, Phone).
-
-- [x] #### 5.3.2 Salary Payout
-  * **Goal**: Implement Salary Payout
-  * **File to create or change**: `lib/features/staff/record_salary_payout_bottom_sheet.dart`
-  * **What to change**: Create `lib/features/staff/record_salary_payout_bottom_sheet.dart` (Amount, Payment Mode).
-
-
+### Phase 5: Staff & Payroll Testing
+- [ ] **5.1 Staff Directory Listing**
+  - Open `Staff` tab. Verify staff list renders staff avatars, role badges, and phone metadata.
+  - Test 3-staff free tier limit indicator.
+- [ ] **5.2 Add New Staff Member**
+  - Tap "+ Add Staff" button. Enter Name, Role picker (`Cook`, `Cashier`, `Cleaner`), and Phone.
+  - Submit and verify staff member appears in directory.
+- [ ] **5.3 Record Salary Payout**
+  - Swipe left on staff row and select "Pay", or tap "Record Salary Payout" on Staff Detail.
+  - Enter payout amount, payment mode (`cash` / `bank` / `mobile_money`), and notes.
+  - Submit and verify RPC `record_salary_payout` inserts outflow transaction and updates staff total paid ledger.
+- [ ] **5.4 Staff Detail Page**
+  - Tap staff card to view monthly salary overview card and payout history list.
 
 ---
 
-### Phase 6: Settings (Micro-Tasks) [COMPLETED]
-
-**6.1 Core Settings UI**
-- [x] #### 6.1.1 Theme Provider
-  * **Goal**: Implement Theme Provider
-  * **File to create or change**: `lib/core/theme/theme_notifier.dart`
-  * **What to change**: Create `lib/core/theme/theme_notifier.dart` (Light default, toggle dark mode).
-
-- [x] #### 6.1.2 Settings Main
-  * **Goal**: Implement Settings Main
-  * **File to create or change**: `lib/features/settings/settings_screen.dart`
-  * **What to change**: Create `lib/features/settings/settings_screen.dart` (Menu list: Profile, Shifts, Vendors, Invites, Theme).
-
-
-**6.2 Settings Details**
-- [x] #### 6.2.1 Invite Manager
-  * **Goal**: Implement Invite Manager
-  * **File to create or change**: `lib/features/settings/invite_manager_screen.dart`
-  * **What to change**: Create `lib/features/settings/invite_manager_screen.dart` (RPC generate code, UI countdown).
-
-- [x] #### 6.2.2 Shifts & Rates
-  * **Goal**: Implement Shifts & Rates
-  * **File to create or change**: `lib/features/settings/shifts_and_rates_screen.dart`
-  * **What to change**: Create `lib/features/settings/shifts_and_rates_screen.dart` (Shift time window editor).
-
-- [x] #### 6.2.3 Vendors
-  * **Goal**: Implement Vendors
-  * **File to create or change**: `lib/features/settings/vendors_screen.dart`
-  * **What to change**: Create `lib/features/settings/vendors_screen.dart` (Accounts payable).
-
-- [x] #### 6.2.4 Profile
-  * **Goal**: Implement Profile
-  * **File to create or change**: `lib/features/settings/my_profile_screen.dart`
-  * **What to change**: Create `lib/features/settings/my_profile_screen.dart` (Sign-out logic, switch tenant).
+### Phase 6: Settings & Configuration Testing
+- [ ] **6.1 Canteen Profile**
+  - Open `Settings` -> `Canteen Profile`. View canteen name, creation date, and subscription tier status (`Free`).
+  - Test editing canteen name and saving changes.
+- [ ] **6.2 Shifts & Meal Rates**
+  - Open `Settings` -> `Shifts & Meal Configs`. View Breakfast, Lunch, and Dinner shift time windows & rates.
+  - Tap "Edit" on a shift, modify rate/timings in bottom sheet, and submit.
+  - Verify new `meal_configs` row is created with effective timestamp.
+- [ ] **6.3 Invite Manager**
+  - Open `Settings` -> `Invite Manager`. Tap "Generate Code".
+  - Verify RPC `generate_invite_code` produces a unique 6-digit code with 24-hour countdown timer.
+  - Test "Copy" and "Share" actions.
+- [ ] **6.4 Vendors Directory & Ledger**
+  - Open `Settings` -> `Vendors`. View supplier list with outstanding AP balances.
+  - Tap "+ Add Vendor" to create new supplier profile.
+  - Swipe left / tap "Pay Vendor" to record vendor settlement via `record_vendor_payment`.
+  - Tap vendor card to view detailed transaction ledger.
+- [ ] **6.5 Theme System & Switcher (Light Default & Dark Mode)**
+  - Default app theme to **Light Theme (White background)** with senior UI/UX Emerald Green (`#059669`) primary palette and Slate surfaces.
+  - Implement full adaptive theme support for both Light and Dark modes.
+  - Toggle "Dark Mode" switch in Settings. Verify entire UI smoothly switches between Light and Dark themes via Riverpod `themeNotifierProvider` and persists preference in Hive.
+- [x] **6.6 My Profile & Sign Out**
+  - Open `Settings` -> `My Profile` or `Settings`. View user email, role, and active canteen memberships.
+  - Tap "Sign Out" to present the AGENTS.md compliant confirmation modal bottom sheet.
+  - Confirm sign out to clear Supabase session, purge Hive cached credentials (`active_tenant`, `active_user`), set `AuthStatus.unauthenticated`, and reactively navigate back to `LoginScreen`.
 
 
 ---
