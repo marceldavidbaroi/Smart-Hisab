@@ -5,13 +5,12 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/models/customer.dart';
+import '../../core/services/supabase_service.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
-import '../../core/services/supabase_service.dart';
-import 'collect_baki_bottom_sheet.dart';
+import 'customer_quick_action_grid.dart';
 import 'customers_notifier.dart';
 import 'edit_customer_bottom_sheet.dart';
-
 
 class CustomerDetailScreen extends ConsumerStatefulWidget {
   final Customer customer;
@@ -84,13 +83,13 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
       highlightColor: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
       child: Column(
         children: List.generate(
-          5,
+          4,
           (index) => Container(
             height: 64,
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
               color: isDark ? AppColors.cardDark : AppColors.cardLight,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
         ),
@@ -101,13 +100,12 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Watch customer state for real-time updated balance
     final customersState = ref.watch(customersNotifierProvider);
     final activeCustomer = customersState.customers.firstWhere(
       (c) => c.id == widget.customer.id,
       orElse: () => widget.customer,
     );
+    final isMarkedToday = customersState.markedCustomerIds.contains(activeCustomer.id);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -130,6 +128,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           IconButton(
             icon: Icon(LucideIcons.edit3, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, size: 20),
             onPressed: () => EditCustomerBottomSheet.show(context, activeCustomer),
+            tooltip: 'Edit Profile',
           ),
         ],
       ),
@@ -141,9 +140,9 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Customer Profile Header Card
+              // Customer Profile Card
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.cardDark : AppColors.cardLight,
                   borderRadius: BorderRadius.circular(20),
@@ -154,18 +153,14 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                     Row(
                       children: [
                         CircleAvatar(
-                          radius: 28,
+                          radius: 26,
                           backgroundColor: AppColors.primary.withValues(alpha: 0.2),
                           child: Text(
                             activeCustomer.name.isNotEmpty ? activeCustomer.name[0].toUpperCase() : 'C',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,33 +174,17 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                 ),
                               ),
                               if (activeCustomer.phone != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(LucideIcons.phone, size: 14, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      activeCustomer.phone!,
-                                      style: TextStyle(fontSize: 14, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-                                    ),
-                                  ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  activeCustomer.phone!,
+                                  style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                                 ),
                               ],
                               if (activeCustomer.institution != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(LucideIcons.building, size: 14, color: AppColors.primary),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      activeCustomer.institution!,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  activeCustomer.institution!,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
                                 ),
                               ],
                             ],
@@ -214,7 +193,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                       ],
                     ),
                     Divider(height: 24, color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-                    // Wallet Balance Section
+
+                    // Outstanding Balance Hero Row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -236,19 +216,19 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                             ),
                           ],
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            CollectBakiBottomSheet.show(context, activeCustomer);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.success,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: (activeCustomer.currentBalance > 0 ? AppColors.danger : AppColors.success).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          icon: const Icon(LucideIcons.banknote, color: Colors.white, size: 18),
-                          label: const Text(
-                            'Collect Baki',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                          child: Text(
+                            activeCustomer.currentBalance > 0 ? 'Baki Due' : 'Cleared',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: activeCustomer.currentBalance > 0 ? AppColors.danger : AppColors.success,
+                            ),
                           ),
                         ),
                       ],
@@ -256,20 +236,37 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              // Ledger Section Title
+              // 4-Button Quick Actions Grid
               Text(
-                'Transaction History',
+                'Customer Actions',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                ),
+              ),
+              const SizedBox(height: 10),
+              CustomerQuickActionGrid(
+                customer: activeCustomer,
+                isMarkedToday: isMarkedToday,
+                onActionCompleted: _fetchLedgerEntries,
+              ),
+              const SizedBox(height: 20),
+
+              // Activity Header
+              Text(
+                'Transaction Ledger',
+                style: TextStyle(
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                 ),
               ),
               const SizedBox(height: 12),
 
-              // Ledger List or Loading Shimmer
+              // Activity Content List
               if (_isLoadingEntries)
                 _buildShimmerLoading(context)
               else if (_entries.isEmpty)
@@ -282,7 +279,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      'No transaction history available.',
+                      'No transaction history recorded yet.',
                       style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                     ),
                   ),
@@ -292,18 +289,23 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _entries.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 10),
+                  separatorBuilder: (context, index) => const SizedBox(height: 8),
                   itemBuilder: (ctx, idx) {
                     final entry = _entries[idx];
                     final isPayment = entry['type'] == 'payment';
+                    final isAdjustment = entry['type'] == 'adjustment';
                     final amount = (entry['amount'] as num?)?.toDouble() ?? 0.0;
                     final notes = entry['notes'] as String? ?? (isPayment ? 'Baki Payment' : 'Meal Charge');
                     final dateStr = entry['created_at'] != null
                         ? AppFormatters.formatDateTime(DateTime.parse(entry['created_at'].toString()))
                         : '';
 
+                    final iconColor = isPayment
+                        ? AppColors.success
+                        : (isAdjustment ? AppColors.warning : AppColors.danger);
+
                     return Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isDark ? AppColors.cardDark : AppColors.cardLight,
                         borderRadius: BorderRadius.circular(14),
@@ -312,11 +314,14 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                       child: Row(
                         children: [
                           CircleAvatar(
-                            backgroundColor: (isPayment ? AppColors.success : AppColors.danger).withValues(alpha: 0.2),
+                            radius: 18,
+                            backgroundColor: iconColor.withValues(alpha: 0.15),
                             child: Icon(
-                              isPayment ? LucideIcons.arrowDownLeft : LucideIcons.utensils,
-                              color: isPayment ? AppColors.success : AppColors.danger,
-                              size: 18,
+                              isPayment
+                                  ? LucideIcons.arrowDownLeft
+                                  : (isAdjustment ? LucideIcons.plusCircle : LucideIcons.utensils),
+                              color: iconColor,
+                              size: 16,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -327,7 +332,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                 Text(
                                   notes,
                                   style: TextStyle(
-                                    fontSize: 15,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                                   ),
@@ -343,7 +348,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                           Text(
                             '${isPayment ? '-' : '+'}${AppFormatters.formatBdt(amount)}',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: isPayment ? AppColors.success : AppColors.danger,
                             ),

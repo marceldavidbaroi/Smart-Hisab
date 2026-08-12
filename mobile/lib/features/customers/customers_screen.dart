@@ -9,7 +9,7 @@ import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
 import '../../core/widgets/empty_state_card.dart';
 import 'add_customer_bottom_sheet.dart';
-import 'customer_detail_screen.dart';
+import 'customer_list_item_card.dart';
 import 'customers_notifier.dart';
 
 class CustomersScreen extends ConsumerStatefulWidget {
@@ -32,7 +32,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
   void _onSearchChanged(String query) {
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-    // Rule #9: Debounce inputs for search queries
+    // Rule #4: Debounce inputs for search queries
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       ref.read(customersNotifierProvider.notifier).setSearchQuery(query);
     });
@@ -77,7 +77,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Header Row (Rule #6: Hide top add button if list is empty)
+              // Header Row (Screen Map v1.0: Customers (count/limit) + [+ Add])
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -85,14 +85,14 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Customer Directory',
+                        'Customers (${state.customers.length}/50)',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                             ),
                       ),
                       Text(
-                        'Total: ${state.customers.length} Diners',
+                        'Meal attendance & Baki ledger',
                         style: TextStyle(
                           fontSize: 13,
                           color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -112,7 +112,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
               // Active Shift Banner
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -154,7 +154,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.danger.withValues(alpha: 0.2),
+                      AppColors.danger.withValues(alpha: 0.15),
                       isDark ? AppColors.cardDark : AppColors.cardLight,
                     ],
                     begin: Alignment.centerLeft,
@@ -171,7 +171,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         const Icon(LucideIcons.wallet, color: AppColors.danger, size: 20),
                         const SizedBox(width: 10),
                         Text(
-                          'Total Baki Outstanding',
+                          'Total Outstanding Baki',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -229,10 +229,10 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               // Main Customer List, Shimmer Loading, or Empty State
               Expanded(
                 child: state.isLoading
-                    ? _buildShimmerLoader(context) // Rule #2: Skeleton / Shimmer loaders
+                    ? _buildShimmerLoader(context) // Rule #2: Skeleton / Shimmer loader
                     : filtered.isEmpty
                         ? EmptyStateCard(
-                            // Rule #6: Primary action directly inside empty state container
+                            // Rule #6: Primary action directly inside empty state container when empty
                             icon: LucideIcons.users,
                             title: state.searchQuery.isNotEmpty ? 'No Matching Customers' : 'No Customers Found',
                             description: state.searchQuery.isNotEmpty
@@ -246,179 +246,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                             separatorBuilder: (context, index) => const SizedBox(height: 10),
                             itemBuilder: (ctx, idx) {
                               final customer = filtered[idx];
-                              final balance = customer.currentBalance;
-
-                              return Dismissible(
-                                // Rule #8: Swipeable row actions for item/entity list management
-                                key: Key(customer.id),
-                                direction: DismissDirection.endToStart,
-                                background: Container(
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.only(right: 20),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.danger,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Delete',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      SizedBox(width: 8),
-                                      Icon(LucideIcons.trash2, color: Colors.white),
-                                    ],
-                                  ),
-                                ),
-                                confirmDismiss: (direction) async {
-                                  return await showDialog<bool>(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
-                                          title: Text('Delete Customer', style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
-                                          content: Text(
-                                            'Are you sure you want to remove ${customer.name}?',
-                                            style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(ctx, false),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () => Navigator.pop(ctx, true),
-                                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-                                              child: const Text('Delete', style: TextStyle(color: Colors.white)),
-                                            ),
-                                          ],
-                                        ),
-                                      ) ??
-                                      false;
-                                },
-                                onDismissed: (_) {
-                                  ref
-                                      .read(customersNotifierProvider.notifier)
-                                      .deleteCustomer(customer.id);
-                                },
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => CustomerDetailScreen(customer: customer),
-                                      ),
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 22,
-                                          backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-                                          child: Text(
-                                            customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'C',
-                                            style: const TextStyle(
-                                              color: AppColors.primary,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              // Rule #7: Main title >= 16 bold
-                                              Text(
-                                                customer.name,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                customer.institution ?? customer.phone ?? 'No phone',
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              AppFormatters.formatBdt(balance),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                                color: balance > 0 ? AppColors.danger : AppColors.success,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            InkWell(
-                                              onTap: () {
-                                                ref.read(customersNotifierProvider.notifier).recordMealAttendance(customer.id);
-                                              },
-                                              borderRadius: BorderRadius.circular(8),
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  color: state.markedCustomerIds.contains(customer.id)
-                                                      ? AppColors.success
-                                                      : AppColors.success.withValues(alpha: 0.1),
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  border: Border.all(color: AppColors.success),
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Icon(
-                                                      state.markedCustomerIds.contains(customer.id)
-                                                          ? LucideIcons.checkCircle2
-                                                          : LucideIcons.utensils,
-                                                      size: 12,
-                                                      color: state.markedCustomerIds.contains(customer.id) ? Colors.white : AppColors.success,
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      state.markedCustomerIds.contains(customer.id) ? 'Ate' : 'Meal',
-                                                      style: TextStyle(
-                                                        fontSize: 11,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: state.markedCustomerIds.contains(customer.id) ? Colors.white : AppColors.success,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                              return CustomerListItemCard(
+                                customer: customer,
+                                isMarked: state.markedCustomerIds.contains(customer.id),
                               );
                             },
                           ),

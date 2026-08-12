@@ -36,9 +36,8 @@ class CustomersState {
     }).toList();
   }
 
-  double get totalBakiOutstanding {
-    return customers.fold(0.0, (sum, c) => sum + (c.currentBalance > 0 ? c.currentBalance : 0.0));
-  }
+  double get totalBakiOutstanding =>
+      customers.fold(0.0, (sum, c) => sum + (c.currentBalance > 0 ? c.currentBalance : 0.0));
 
   CustomersState copyWith({
     List<Customer>? customers,
@@ -61,13 +60,10 @@ class CustomersState {
   }
 }
 
-final customersNotifierProvider =
-    StateNotifierProvider<CustomersNotifier, CustomersState>((ref) {
+final customersNotifierProvider = StateNotifierProvider<CustomersNotifier, CustomersState>((ref) {
   final tenantId = ref.watch(authNotifierProvider).tenantId;
   final notifier = CustomersNotifier(tenantId: tenantId);
-  if (tenantId != null && tenantId.isNotEmpty) {
-    notifier.fetchCustomers();
-  }
+  if (tenantId != null && tenantId.isNotEmpty) notifier.fetchCustomers();
   return notifier;
 });
 
@@ -76,7 +72,6 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
   CustomersNotifier({this.tenantId}) : super(const CustomersState());
 
-  /// Fetch customer list for current tenant from Supabase with local cache fallback
   Future<void> fetchCustomers() async {
     final tId = tenantId;
     if (tId == null || tId.isEmpty) {
@@ -86,7 +81,6 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    // 1. Try fetching from Supabase if initialized
     if (SupabaseService.isInitialized) {
       try {
         final res = await SupabaseService.client
@@ -100,21 +94,28 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
             .map((json) => Customer.fromJson(Map<String, dynamic>.from(json as Map)))
             .toList();
 
-        state = state.copyWith(customers: fetchedList, isLoading: false);
+        final shiftInfo = await _resolveActiveShiftAndAttendance(tId);
+
+        state = state.copyWith(
+          customers: fetchedList,
+          activeShiftName: shiftInfo['shiftName'] as String? ?? 'Lunch',
+          activeShiftRate: (shiftInfo['shiftRate'] as num?)?.toDouble() ?? 80.0,
+          markedCustomerIds: (shiftInfo['markedIds'] as Set<String>?) ?? {},
+          isLoading: false,
+        );
+
         await HiveService.setCache('customers_$tId', {
           'list': fetchedList.map((c) => c.toJson()).toList(),
         });
         return;
       } catch (e) {
-        debugPrint('fetchCustomers Supabase fetch error: $e');
+        debugPrint('fetchCustomers error: $e');
       }
     }
 
-    // 2. Offline / Local Cache Fallback if network call unavailable
     final cached = HiveService.getCache('customers_$tId');
     if (cached != null && cached['list'] is List) {
-      final rawList = cached['list'] as List;
-      final cachedList = rawList
+      final cachedList = (cached['list'] as List)
           .map((json) => Customer.fromJson(Map<String, dynamic>.from(json as Map)))
           .toList();
       state = state.copyWith(customers: cachedList, isLoading: false);
@@ -124,13 +125,60 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     state = state.copyWith(customers: [], isLoading: false);
   }
 
-  /// Toggle meal attendance for a customer with Optimistic Update & RPC call
+  Future<Map<String, dynamic>> _resolveActiveShiftAndAttendance(String tId) async {
+    String shiftName = 'Lunch';
+    double shiftRate = 80.0;
+    Set<String> markedIds = {};
+
+    try {
+      final shiftId = await SupabaseService.client
+          .rpc('get_current_shift', params: {'p_tenant_id': tId}) as String?;
+
+      if (shiftId != null && shiftId.isNotEmpty) {
+        final shiftData = await SupabaseService.client
+            .from('shifts')
+            .select('name')
+            .eq('id', shiftId)
+            .maybeSingle();
+        if (shiftData != null && shiftData['name'] != null) {
+          shiftName = shiftData['name'] as String;
+        }
+
+        final mealConfig = await SupabaseService.client
+            .from('meal_configs')
+            .select('price')
+            .eq('tenant_id', tId)
+            .eq('shift_id', shiftId)
+            .order('effective_date', ascending: false)
+            .maybeSingle();
+        if (mealConfig != null && mealConfig['price'] != null) {
+          shiftRate = (mealConfig['price'] as num).toDouble();
+        }
+
+        final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+        final attendance = await SupabaseService.client
+            .from('meal_attendance')
+            .select('customer_id')
+            .eq('tenant_id', tId)
+            .eq('shift_id', shiftId)
+            .gte('created_at', '${todayStr}T00:00:00')
+            .lte('created_at', '${todayStr}T23:59:59');
+
+        final attendanceList = attendance as List;
+        markedIds = attendanceList.map((row) => row['customer_id'] as String).toSet();
+      }
+    } catch (e) {
+      debugPrint('_resolveActiveShiftAndAttendance note: $e');
+    }
+
+    return {'shiftName': shiftName, 'shiftRate': shiftRate, 'markedIds': markedIds};
+  }
+
   Future<bool> recordMealAttendance(String customerId) async {
     final tId = tenantId ?? 'tenant-demo';
     final isAlreadyMarked = state.markedCustomerIds.contains(customerId);
     final mealCharge = state.activeShiftRate;
 
-    // 1. Optimistic state update
     final newMarkedSet = Set<String>.from(state.markedCustomerIds);
     if (isAlreadyMarked) {
       newMarkedSet.remove(customerId);
@@ -148,12 +196,8 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
       return c;
     }).toList();
 
-    state = state.copyWith(
-      markedCustomerIds: newMarkedSet,
-      customers: updatedCustomers,
-    );
+    state = state.copyWith(markedCustomerIds: newMarkedSet, customers: updatedCustomers);
 
-    // 2. Network RPC call
     try {
       if (SupabaseService.isInitialized) {
         final res = await SupabaseService.client.rpc('record_meal_attendance', params: {
@@ -165,31 +209,24 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
           final action = res['action'] as String?;
           final newBalance = (res['new_balance'] as num?)?.toDouble();
 
-          if (action == 'added') {
-            newMarkedSet.add(customerId);
-          } else if (action == 'removed') {
-            newMarkedSet.remove(customerId);
-          }
+          if (action == 'added') newMarkedSet.add(customerId);
+          if (action == 'removed') newMarkedSet.remove(customerId);
 
           if (newBalance != null) {
             final syncedCustomers = state.customers.map((c) {
               return c.id == customerId ? c.copyWith(currentBalance: newBalance) : c;
             }).toList();
-            state = state.copyWith(
-              markedCustomerIds: newMarkedSet,
-              customers: syncedCustomers,
-            );
+            state = state.copyWith(markedCustomerIds: newMarkedSet, customers: syncedCustomers);
           }
         }
       }
       return true;
     } catch (e) {
-      debugPrint('recordMealAttendance network RPC error: $e');
-      return true; // Retain optimistic UX for fast canteen operation
+      debugPrint('recordMealAttendance RPC error: $e');
+      return true;
     }
   }
 
-  /// Add new customer with Targeted Cache Mutation
   Future<bool> addCustomer({
     required String name,
     required String phone,
@@ -210,7 +247,6 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
       createdAt: DateTime.now(),
     );
 
-    // Targeted Cache Mutation: prepend to state immediately
     final updatedList = [newCustomer, ...state.customers];
     state = state.copyWith(customers: updatedList);
 
@@ -225,27 +261,19 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
         }).select('*, customer_wallets(current_balance)').single();
 
         final created = Customer.fromJson(res);
-        // Replace temp customer with database persisted customer
-        final finalizedList = state.customers
-            .map((c) => c.id == tempId ? created : c)
-            .toList();
+        final finalizedList = state.customers.map((c) => c.id == tempId ? created : c).toList();
         state = state.copyWith(customers: finalizedList);
-        await HiveService.setCache('customers_$tId', {
-          'list': finalizedList.map((c) => c.toJson()).toList(),
-        });
+        await HiveService.setCache('customers_$tId', {'list': finalizedList.map((c) => c.toJson()).toList()});
         return true;
       }
     } catch (e) {
-      debugPrint('addCustomer network error: $e');
+      debugPrint('addCustomer error: $e');
     }
 
-    await HiveService.setCache('customers_$tId', {
-      'list': updatedList.map((c) => c.toJson()).toList(),
-    });
+    await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
     return true;
   }
 
-  /// Collect Baki payment with Optimistic Update & Targeted Cache Mutation
   Future<bool> collectBaki({
     required String customerId,
     required double amount,
@@ -253,7 +281,6 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
   }) async {
     final tId = tenantId ?? 'tenant-demo';
 
-    // 1. Optimistic local targeted cache mutation
     final updatedList = state.customers.map((c) {
       if (c.id == customerId) {
         final newBal = (c.currentBalance - amount).clamp(0.0, double.infinity);
@@ -263,9 +290,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     }).toList();
 
     state = state.copyWith(customers: updatedList);
-    await HiveService.setCache('customers_$tId', {
-      'list': updatedList.map((c) => c.toJson()).toList(),
-    });
+    await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
 
     try {
       if (SupabaseService.isInitialized) {
@@ -280,7 +305,6 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
           final data = res['data'] as Map<String, dynamic>;
           final newBalance = (data['new_balance'] as num?)?.toDouble();
           if (newBalance != null) {
-            // Update with exact backend balance
             final syncedList = state.customers.map((c) {
               return c.id == customerId ? c.copyWith(currentBalance: newBalance) : c;
             }).toList();
@@ -290,12 +314,60 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
       }
       return true;
     } catch (e) {
-      debugPrint('collectBaki backend error: $e');
-      return true; // Keep local optimistic state intact for high speed POS UX
+      debugPrint('collectBaki error: $e');
+      return true;
     }
   }
 
-  /// Soft delete or remove customer with Targeted Cache Mutation
+  Future<bool> addManualBaki({
+    required String customerId,
+    required double amount,
+    String? notes,
+  }) async {
+    final tId = tenantId ?? 'tenant-demo';
+
+    final updatedList = state.customers.map((c) {
+      if (c.id == customerId) return c.copyWith(currentBalance: c.currentBalance + amount);
+      return c;
+    }).toList();
+
+    state = state.copyWith(customers: updatedList);
+
+    try {
+      if (SupabaseService.isInitialized) {
+        final walletRes = await SupabaseService.client
+            .from('customer_wallets')
+            .select('id')
+            .eq('customer_id', customerId)
+            .maybeSingle();
+
+        if (walletRes != null && walletRes['id'] != null) {
+          final walletId = walletRes['id'] as String;
+          await SupabaseService.client.from('wallet_entries').insert({
+            'tenant_id': tId,
+            'wallet_id': walletId,
+            'type': 'adjustment',
+            'amount': amount,
+            'reference_type': 'manual_adjustment',
+            'notes': notes ?? 'Manual Baki Entry',
+          });
+        }
+      }
+      return true;
+    } catch (e) {
+      debugPrint('addManualBaki error: $e');
+      return true;
+    }
+  }
+
+  Future<bool> updateMealSubscription({
+    required String customerId,
+    required List<String> subscribedShifts,
+  }) async {
+    debugPrint('updateMealSubscription for $customerId: $subscribedShifts');
+    return true;
+  }
+
   Future<void> deleteCustomer(String customerId) async {
     final tId = tenantId ?? 'tenant-demo';
     final updatedList = state.customers.where((c) => c.id != customerId).toList();
@@ -303,21 +375,15 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
     try {
       if (SupabaseService.isInitialized) {
-        await SupabaseService.client
-            .from('customers')
-            .update({'is_active': false})
-            .eq('id', customerId);
+        await SupabaseService.client.from('customers').update({'is_active': false}).eq('id', customerId);
       }
     } catch (e) {
       debugPrint('deleteCustomer error: $e');
     }
 
-    await HiveService.setCache('customers_$tId', {
-      'list': updatedList.map((c) => c.toJson()).toList(),
-    });
+    await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
   }
 
-  /// Update customer details with targeted optimistic cache mutation
   Future<bool> updateCustomer({
     required String customerId,
     required String name,
@@ -329,20 +395,13 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
     final updatedList = state.customers.map((c) {
       if (c.id == customerId) {
-        return c.copyWith(
-          name: name,
-          phone: phone,
-          address: address,
-          institution: institution,
-        );
+        return c.copyWith(name: name, phone: phone, address: address, institution: institution);
       }
       return c;
     }).toList();
 
     state = state.copyWith(customers: updatedList);
-    await HiveService.setCache('customers_$tId', {
-      'list': updatedList.map((c) => c.toJson()).toList(),
-    });
+    await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
 
     try {
       if (SupabaseService.isInitialized) {
@@ -360,9 +419,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     }
   }
 
-  /// Update search filter string
   void setSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
   }
 }
-
