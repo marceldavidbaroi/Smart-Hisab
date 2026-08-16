@@ -196,38 +196,39 @@
 
 ---
 
-## Tab 3: 💰 Cashbook
+## Tab 3: 💰 Cashbook & Bazar Hub
 
 ```
 ┌──────────────────────────────────────┐
-│  💰 Cashbook           📅 Today      │
+│  💰 Finances           📅 Today      │
+│  ┌────────────────────────────────┐  │
+│  │ [ 💵 Cashbook ] [ 🛒 Bazar/Baki]│  │  <-- Segmented Sub-View Switch
+│  └────────────────────────────────┘  │
+│                                      │
+│  [💵 Cashbook Sub-View]:             │
 │  ┌────────┬────────┬────────┐        │
 │  │ Inflow │ Outflow│ Net    │        │
 │  │ ৳8,200 │ ৳3,500 │ ৳4,700 │        │
 │  └────────┴────────┴────────┘        │
-│  [+ Expense] [+ Income] [+ Note]    │
-├──────────────────────────────────────┤
-│  Today's Entries:                    │
+│  [+ Income] [+ Expense] [+ Note]     │
+│  Day Transactions List (In/Out)      │
+│                                      │
+│  [🛒 Bazar & Vendor Baki Sub-View]:  │
 │  ┌──────────────────────────────┐    │
-│  │ 💵 Customer Payment   +৳500 │    │
-│  │ 🛒 Market Cost        -৳800 │    │
-│  │    Rice (Rahim Vendor)       │    │
-│  │ 💵 Customer Payment   +৳300 │    │
-│  │ 🏠 Canteen Expense    -৳200 │    │
-│  │    Gas cylinder              │    │
+│  │ Total We Owe (Payable):      │    │
+│  │ ৳14,500                      │    │
 │  └──────────────────────────────┘    │
-│  Day Notes:                          │
-│  ┌──────────────────────────────┐    │
-│  │ 📝 Buy 5kg onion tomorrow   │    │
-│  │ ⚠️ Stove needs repair        │    │
-│  └──────────────────────────────┘    │
+│  [🔍 Search Vendors...]  [+ Vendor]  │
+│  Vendor Cards (Swipe to Pay / View)  │
 └──────────────────────────────────────┘
 ```
 
-**RPCs used**:
+**RPCs & APIs used**:
 - `calculate_expected_cash(day_id)` → live inflow/outflow stats
-- `record_expense(tenant_id, category, amount, vendor_id, null, notes)` → Add Expense sheet
-- `record_misc_income(tenant_id, amount, null, notes)` → Add Income sheet ⚠️
+- `record_expense_v2` / `record_expense` → Add Expense sheet
+- `record_misc_income` → Add Income sheet
+- `record_vendor_payment` → Pay Vendor action / Swipe-to-pay
+- `get_vendor_statement` → Vendor detailed ledger
 - Direct DB insert for `day_notes` → Add Day Note sheet
 
 ---

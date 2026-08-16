@@ -30,6 +30,7 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
   late final TextEditingController _phoneController;
   late final TextEditingController _salaryController;
   late StaffRole _selectedRole;
+  late SalaryType _selectedSalaryType;
   bool _isSubmitting = false;
 
   @override
@@ -39,6 +40,7 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
     _phoneController = TextEditingController(text: widget.staff.phone ?? '');
     _salaryController = TextEditingController(text: widget.staff.monthlySalary.toStringAsFixed(0));
     _selectedRole = widget.staff.role;
+    _selectedSalaryType = widget.staff.salaryType;
   }
 
   @override
@@ -61,6 +63,7 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
           role: _selectedRole,
+          salaryType: _selectedSalaryType,
           monthlySalary: salary,
         );
 
@@ -137,15 +140,117 @@ class _EditStaffBottomSheetState extends ConsumerState<EditStaffBottomSheet> {
             ),
             const SizedBox(height: 12),
 
+            // Payment Frequency / Salary Type Selector
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Payment Frequency *',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _selectedSalaryType = SalaryType.monthly),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _selectedSalaryType == SalaryType.monthly
+                                ? AppColors.primary.withValues(alpha: 0.15)
+                                : (isDark ? AppColors.bgDark : AppColors.bgLight),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _selectedSalaryType == SalaryType.monthly
+                                  ? AppColors.primary
+                                  : (isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                              width: _selectedSalaryType == SalaryType.monthly ? 1.5 : 1.0,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.calendar_month_rounded,
+                                size: 16,
+                                color: _selectedSalaryType == SalaryType.monthly ? AppColors.primary : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Monthly Salary',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _selectedSalaryType == SalaryType.monthly ? AppColors.primary : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _selectedSalaryType = SalaryType.daily),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _selectedSalaryType == SalaryType.daily
+                                ? AppColors.primary.withValues(alpha: 0.15)
+                                : (isDark ? AppColors.bgDark : AppColors.bgLight),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _selectedSalaryType == SalaryType.daily
+                                  ? AppColors.primary
+                                  : (isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                              width: _selectedSalaryType == SalaryType.daily ? 1.5 : 1.0,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.today_rounded,
+                                size: 16,
+                                color: _selectedSalaryType == SalaryType.daily ? AppColors.primary : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Daily Wage (হাজিরা)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _selectedSalaryType == SalaryType.daily ? AppColors.primary : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
 
-
-            // Monthly Salary
+            // Salary Input
             TextFormField(
               controller: _salaryController,
               keyboardType: TextInputType.number,
               style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
-                labelText: 'Monthly Base Salary (৳)',
+                labelText: _selectedSalaryType == SalaryType.daily ? 'Daily Wage Rate (৳/day)' : 'Monthly Base Salary (৳/month)',
                 labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                 prefixIcon: const Icon(LucideIcons.banknote, color: AppColors.success),
                 filled: true,

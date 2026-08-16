@@ -6,7 +6,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/models/staff_member.dart';
 import '../../core/widgets/app_safe_area.dart';
 import 'add_staff_bottom_sheet.dart';
-import 'record_salary_payout_bottom_sheet.dart';
 import 'staff_detail_screen.dart';
 import 'staff_notifier.dart';
 
@@ -33,6 +32,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
         required name,
         required phone,
         required role,
+        required salaryType,
         required monthlySalary,
         pinCode,
       }) {
@@ -40,23 +40,9 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
               name: name,
               phone: phone,
               role: role,
+              salaryType: salaryType,
               monthlySalary: monthlySalary,
               pinCode: pinCode,
-            );
-      },
-    );
-  }
-
-  void _openSalaryPayoutModal(StaffMember staff) {
-    RecordSalaryPayoutBottomSheet.show(
-      context,
-      staff: staff,
-      onConfirm: ({required amount, required paymentMode, required staffId, notes}) {
-        ref.read(staffNotifierProvider.notifier).recordSalaryPayout(
-              staffId: staffId,
-              amount: amount,
-              paymentMode: paymentMode,
-              notes: notes,
             );
       },
     );
@@ -84,15 +70,16 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Staff Management', style: Theme.of(context).textTheme.titleLarge),
-                  ElevatedButton.icon(
-                    onPressed: _openAddStaffModal,
-                    icon: const Icon(LucideIcons.userPlus, size: 16, color: Colors.white),
-                    label: const Text('Add Staff', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  if (staffList.isNotEmpty)
+                    ElevatedButton.icon(
+                      onPressed: _openAddStaffModal,
+                      icon: const Icon(LucideIcons.userPlus, size: 16, color: Colors.white),
+                      label: const Text('Add Staff', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -241,8 +228,11 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                                                 item.name,
                                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
                                               ),
-                                              const SizedBox(height: 2),
-                                              Row(
+                                              const SizedBox(height: 4),
+                                              Wrap(
+                                                spacing: 6,
+                                                runSpacing: 4,
+                                                crossAxisAlignment: WrapCrossAlignment.center,
                                                 children: [
                                                   Container(
                                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -252,27 +242,36 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                                                     ),
                                                     child: Text(
                                                       item.role.name.toUpperCase(),
-                                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 8),
                                                   Text(
-                                                    '৳${item.monthlySalary.toStringAsFixed(0)}/mo',
+                                                    item.salaryType == SalaryType.daily
+                                                        ? '৳${item.monthlySalary.toStringAsFixed(0)}/d'
+                                                        : '৳${item.monthlySalary.toStringAsFixed(0)}/mo',
                                                     style: TextStyle(fontSize: 13, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                                                   ),
+                                                  if (item.totalAdvanceThisMonth > 0)
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors.warning.withValues(alpha: 0.15),
+                                                        borderRadius: BorderRadius.circular(4),
+                                                      ),
+                                                      child: Text(
+                                                        'Adv: ৳${item.totalAdvanceThisMonth.toStringAsFixed(0)}',
+                                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.warning),
+                                                      ),
+                                                    ),
                                                 ],
                                               ),
                                             ],
                                           ),
                                         ),
-                                        ElevatedButton(
-                                          onPressed: () => _openSalaryPayoutModal(item),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.accent,
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          ),
-                                          child: const Text('Pay Salary', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold)),
+                                        Icon(
+                                          LucideIcons.chevronRight,
+                                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                          size: 20,
                                         ),
                                       ],
                                     ),

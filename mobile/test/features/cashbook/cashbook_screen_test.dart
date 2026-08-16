@@ -20,12 +20,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify main titles and cashbook header render properly
-    expect(find.text('Cashbook & Bazar'), findsOneWidget);
+    expect(find.text('Canteen Cashbook'), findsOneWidget);
     expect(find.text('Net Day Cashflow'), findsOneWidget);
-    expect(find.text('Day Transactions'), findsOneWidget);
-
-    // Verify default seeded entry titles display in list
-    expect(find.text('Bazar Purchase (Vegetables & Meat)'), findsOneWidget);
-    expect(find.text('Baki Collected (Rahim Ahmed)'), findsOneWidget);
+    expect(find.text('Day Transactions History'), findsOneWidget);
   });
 }

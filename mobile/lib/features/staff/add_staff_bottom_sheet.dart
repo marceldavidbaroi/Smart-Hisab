@@ -9,6 +9,7 @@ class AddStaffBottomSheet extends StatefulWidget {
     required String name,
     required String phone,
     required StaffRole role,
+    required SalaryType salaryType,
     required double monthlySalary,
     String? pinCode,
   }) onAdd;
@@ -18,13 +19,13 @@ class AddStaffBottomSheet extends StatefulWidget {
     required this.onAdd,
   });
 
-
   static void show(
     BuildContext context, {
     required Function({
       required String name,
       required String phone,
       required StaffRole role,
+      required SalaryType salaryType,
       required double monthlySalary,
       String? pinCode,
     }) onAdd,
@@ -46,6 +47,7 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
   final _phoneController = TextEditingController();
   final _salaryController = TextEditingController();
   final _pinController = TextEditingController();
+  SalaryType _selectedSalaryType = SalaryType.monthly;
   bool _isSubmitting = false;
 
   @override
@@ -68,6 +70,7 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       role: StaffRole.staff,
+      salaryType: _selectedSalaryType,
       monthlySalary: salary,
       pinCode: pin,
     );
@@ -128,12 +131,117 @@ class _AddStaffBottomSheetState extends State<AddStaffBottomSheet> {
             validator: (v) => (v == null || v.trim().length < 6) ? 'Please enter valid phone' : null,
           ),
           const SizedBox(height: 14),
+
+          // Payment Frequency / Salary Type Selector
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Payment Frequency *',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedSalaryType = SalaryType.monthly),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _selectedSalaryType == SalaryType.monthly
+                              ? AppColors.primary.withValues(alpha: 0.15)
+                              : (isDark ? AppColors.bgDark : AppColors.bgLight),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _selectedSalaryType == SalaryType.monthly
+                                ? AppColors.primary
+                                : (isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                            width: _selectedSalaryType == SalaryType.monthly ? 1.5 : 1.0,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.calendar_month_rounded,
+                              size: 16,
+                              color: _selectedSalaryType == SalaryType.monthly ? AppColors.primary : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Monthly Salary',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: _selectedSalaryType == SalaryType.monthly ? AppColors.primary : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedSalaryType = SalaryType.daily),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _selectedSalaryType == SalaryType.daily
+                              ? AppColors.primary.withValues(alpha: 0.15)
+                              : (isDark ? AppColors.bgDark : AppColors.bgLight),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _selectedSalaryType == SalaryType.daily
+                                ? AppColors.primary
+                                : (isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+                            width: _selectedSalaryType == SalaryType.daily ? 1.5 : 1.0,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.today_rounded,
+                              size: 16,
+                              color: _selectedSalaryType == SalaryType.daily ? AppColors.primary : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Daily Wage (হাজিরা)',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: _selectedSalaryType == SalaryType.daily ? AppColors.primary : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
           TextFormField(
             controller: _salaryController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 16),
             decoration: InputDecoration(
-              labelText: 'Monthly Salary (৳)',
+              labelText: _selectedSalaryType == SalaryType.daily ? 'Daily Wage Rate (৳/day)' : 'Monthly Salary (৳/month)',
               labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
               filled: true,
               fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,

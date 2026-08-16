@@ -23,14 +23,26 @@ class Vendor {
   });
 
   factory Vendor.fromJson(Map<String, dynamic> json) {
+    // Check if current_balance is embedded from vendor_wallets join or flat field
+    double balance = 0.0;
+    if (json['vendor_wallets'] != null) {
+      if (json['vendor_wallets'] is List && (json['vendor_wallets'] as List).isNotEmpty) {
+        balance = (json['vendor_wallets'][0]['current_balance'] as num?)?.toDouble() ?? 0.0;
+      } else if (json['vendor_wallets'] is Map) {
+        balance = (json['vendor_wallets']['current_balance'] as num?)?.toDouble() ?? 0.0;
+      }
+    } else if (json['current_balance'] != null) {
+      balance = (json['current_balance'] as num?)?.toDouble() ?? 0.0;
+    }
+
     return Vendor(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       tenantId: json['tenant_id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
-      currentBalance: (json['current_balance'] as num?)?.toDouble() ?? 0.0,
+      currentBalance: balance,
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }
@@ -47,14 +59,16 @@ class Vendor {
   }
 
   Vendor copyWith({
+    String? id,
+    String? tenantId,
     String? name,
     String? phone,
     double? currentBalance,
     DateTime? updatedAt,
   }) {
     return Vendor(
-      id: id,
-      tenantId: tenantId,
+      id: id ?? this.id,
+      tenantId: tenantId ?? this.tenantId,
       name: name ?? this.name,
       phone: phone ?? this.phone,
       currentBalance: currentBalance ?? this.currentBalance,
@@ -105,54 +119,88 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
   }
 
   Future<void> fetchVendors() async {
+    final tId = tenantId;
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    try {
-      if (tenantId != null && tenantId!.isNotEmpty && SupabaseService.isInitialized) {
-        final res = await SupabaseService.client
-            .from('vendors')
-            .select()
-            .eq('tenant_id', tenantId!)
-            .order('name', ascending: true);
-
-        final vendors = (res as List<dynamic>)
+    if (tId != null && tId.isNotEmpty) {
+      // Local Hive cache fallback
+      final cached = HiveService.getCache('vendors_$tId');
+      if (cached != null && cached['data'] is List) {
+        final raw = cached['data'] as List;
+        final list = raw
             .map((e) => Vendor.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
-
-        final jsonList = vendors.map((v) => v.toJson()).toList();
-        await HiveService.setCache('vendors_$tenantId', {'data': jsonList});
-        state = state.copyWith(isLoading: false, vendors: vendors);
-        return;
+        if (list.isNotEmpty) {
+          state = state.copyWith(vendors: list, isLoading: false);
+        }
       }
-    } catch (e) {
-      debugPrint('fetchVendors error: $e');
+
+      if (SupabaseService.isInitialized) {
+        try {
+          final res = await SupabaseService.client
+              .from('vendors')
+              .select('*, vendor_wallets(current_balance)')
+              .eq('tenant_id', tId)
+              .eq('is_active', true)
+              .order('name', ascending: true);
+
+          final vendors = (res as List<dynamic>)
+              .map((e) => Vendor.fromJson(Map<String, dynamic>.from(e as Map)))
+              .toList();
+
+          final jsonList = vendors.map((v) => v.toJson()).toList();
+          await HiveService.setCache('vendors_$tId', {'data': jsonList});
+          state = state.copyWith(isLoading: false, vendors: vendors);
+          return;
+        } catch (e) {
+          debugPrint('fetchVendors error: $e');
+        }
+      }
     }
 
-    state = state.copyWith(isLoading: false, vendors: []);
+    state = state.copyWith(isLoading: false);
   }
 
-  /// Add a new vendor with optimistic update
+  /// Add a new vendor with backend insert and optimistic cache update
   Future<bool> addVendor({required String name, required String phone}) async {
+    final tId = tenantId ?? 'demo-tenant';
+    final tempId = 'ven-${DateTime.now().millisecondsSinceEpoch}';
+
     final newVendor = Vendor(
-      id: 'ven-${DateTime.now().millisecondsSinceEpoch}',
-      tenantId: tenantId ?? 'demo-tenant',
+      id: tempId,
+      tenantId: tId,
       name: name,
       phone: phone,
       currentBalance: 0.0,
       updatedAt: DateTime.now(),
     );
 
-    state = state.copyWith(vendors: [newVendor, ...state.vendors]);
+    // Optimistic cache mutation
+    final updatedVendors = [newVendor, ...state.vendors];
+    state = state.copyWith(vendors: updatedVendors);
 
     try {
       if (tenantId != null && SupabaseService.isInitialized) {
-        await SupabaseService.client.from('vendors').insert(newVendor.toJson());
+        final res = await SupabaseService.client.from('vendors').insert({
+          'tenant_id': tId,
+          'name': name,
+          'phone': phone.isEmpty ? null : phone,
+          'is_active': true,
+        }).select().maybeSingle();
+
+        if (res != null && res['id'] != null) {
+          fetchVendors();
+          return true;
+        }
       }
-      return true;
     } catch (e) {
       debugPrint('addVendor error: $e');
-      return true; // Keep local optimistic state
     }
+
+    await HiveService.setCache('vendors_$tId', {
+      'data': updatedVendors.map((v) => v.toJson()).toList(),
+    });
+    return true;
   }
 
   /// Record payment to vendor (`record_vendor_payment` RPC) with optimistic update
@@ -183,11 +231,12 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
           'p_amount': amount,
           'p_notes': notes ?? '',
         });
+        fetchVendors();
       }
       return true;
     } catch (e) {
       debugPrint('recordVendorPayment RPC error: $e');
-      return true; // Retain local optimistic balance
+      return true;
     }
   }
 
@@ -214,8 +263,9 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
       if (tenantId != null && SupabaseService.isInitialized) {
         await SupabaseService.client
             .from('vendors')
-            .update({'name': name, 'phone': phone})
+            .update({'name': name, 'phone': phone.isEmpty ? null : phone})
             .eq('id', vendorId);
+        fetchVendors();
       }
       return true;
     } catch (e) {
@@ -224,4 +274,3 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
     }
   }
 }
-

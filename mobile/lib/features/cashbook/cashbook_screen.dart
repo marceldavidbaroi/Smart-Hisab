@@ -1,54 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_safe_area.dart';
-import 'add_day_note_bottom_sheet.dart';
-import 'add_expense_bottom_sheet.dart';
-import 'add_income_bottom_sheet.dart';
+import '../settings/vendors_notifier.dart';
 import 'cashbook_notifier.dart';
+import 'widgets/bazar_hub_view.dart';
 import 'widgets/cashbook_summary_header.dart';
+import 'widgets/cashbook_wallet_selector.dart';
 import 'widgets/transaction_list.dart';
 
-class CashbookScreen extends ConsumerWidget {
+class CashbookScreen extends ConsumerStatefulWidget {
   const CashbookScreen({super.key});
 
-  void _openAddExpenseModal(BuildContext context, WidgetRef ref) {
-    AddExpenseBottomSheet.show(
-      context,
-      onSubmit: ({
-        required String title,
-        required String category,
-        required double amount,
-        String? notes,
-      }) {
-        ref.read(cashbookNotifierProvider.notifier).addExpense(
-              title: title,
-              category: category,
-              amount: amount,
-              notes: notes,
-            );
-      },
-    );
-  }
+  @override
+  ConsumerState<CashbookScreen> createState() => _CashbookScreenState();
+}
 
-  void _openAddNoteModal(BuildContext context, WidgetRef ref) {
-    AddDayNoteBottomSheet.show(
-      context,
-      onSubmit: ({
-        required String title,
-        required String content,
-      }) {
-        ref.read(cashbookNotifierProvider.notifier).addDayNote(
-              title: title,
-              content: content,
-            );
-      },
-    );
-  }
+class _CashbookScreenState extends ConsumerState<CashbookScreen> {
+  int _selectedSubTab = 0; // 0 = Cashbook, 1 = Bazar
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final cashbookState = ref.watch(cashbookNotifierProvider);
     final notifier = ref.read(cashbookNotifierProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -56,7 +28,12 @@ class CashbookScreen extends ConsumerWidget {
     return AppSafeArea(
       child: RefreshIndicator(
         onRefresh: () async {
-          await notifier.fetchCashbookEntries();
+          if (_selectedSubTab == 0) {
+            await notifier.fetchAccountsAndEntries();
+          } else {
+            await ref.read(vendorsNotifierProvider.notifier).fetchVendors();
+            await notifier.fetchCashbookEntries();
+          }
         },
         color: AppColors.primary,
         child: Padding(
@@ -64,7 +41,7 @@ class CashbookScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row
+              // Header Row (Clean, no entry buttons)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -72,7 +49,7 @@ class CashbookScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Cashbook & Bazar',
+                        _selectedSubTab == 0 ? 'Canteen Cashbook' : 'Bazar Hub',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -81,7 +58,9 @@ class CashbookScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Daily inflow, market expense & notes',
+                        _selectedSubTab == 0
+                            ? 'Physical drawer & digital wallet cashflow history'
+                            : 'Supplier management & market grocery notes',
                         style: TextStyle(
                           fontSize: 13,
                           color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -89,72 +68,153 @@ class CashbookScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip: 'Record Misc Income',
-                        icon: const Icon(LucideIcons.arrowDownLeft, color: AppColors.success),
-                        onPressed: () => AddIncomeBottomSheet.show(context),
-                      ),
-                      IconButton(
-                        tooltip: 'Add Day Note',
-                        icon: const Icon(LucideIcons.fileText, color: AppColors.info),
-                        onPressed: () => _openAddNoteModal(context, ref),
-                      ),
-                      IconButton(
-                        tooltip: 'Record Expense',
-                        icon: const Icon(LucideIcons.plusCircle, color: AppColors.danger),
-                        onPressed: () => _openAddExpenseModal(context, ref),
-                      ),
-                    ],
-                  ),
-
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Cashflow Summary Header
-              CashbookSummaryHeader(
-                totalInflow: cashbookState.totalInflow,
-                totalOutflow: cashbookState.totalOutflow,
-                netBalance: cashbookState.netBalance,
-              ),
-              const SizedBox(height: 16),
-
-              // Transaction List Header Title
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Day Transactions',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                    ),
+              // Segmented Sub-View Switch
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.cardDark : AppColors.cardBorderLight.withAlpha(120),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
                   ),
-                  Text(
-                    '${cashbookState.entries.length} entries',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                ),
+                padding: const EdgeInsets.all(4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _SubTabButton(
+                        label: '💵 Cashbook (হিসাব খাতা)',
+                        isSelected: _selectedSubTab == 0,
+                        onTap: () => setState(() => _selectedSubTab = 0),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // Day Transactions List
-              Expanded(
-                child: TransactionList(
-                  entries: cashbookState.entries,
-                  isLoading: cashbookState.isLoading,
-                  onDelete: (id) => notifier.deleteEntry(id),
-                  onAddExpense: () => _openAddExpenseModal(context, ref),
-                  onAddNote: () => _openAddNoteModal(context, ref),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: _SubTabButton(
+                        label: '🛒 Bazar (বাজার খাতা)',
+                        isSelected: _selectedSubTab == 1,
+                        onTap: () => setState(() => _selectedSubTab = 1),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 14),
+
+              // Active View
+              Expanded(
+                child: _selectedSubTab == 0
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Cashflow Summary Header with Total Wallets Balance
+                          CashbookSummaryHeader(
+                            totalInflow: cashbookState.totalInflow,
+                            totalOutflow: cashbookState.totalOutflow,
+                            netBalance: cashbookState.netBalance,
+                            totalWalletsBalance: cashbookState.totalWalletsBalance,
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Canteen Wallets Channel Filter Selector
+                          if (cashbookState.accounts.isNotEmpty) ...[
+                            CashbookWalletSelector(
+                              accounts: cashbookState.accounts,
+                              selectedAccountId: cashbookState.selectedAccountId,
+                              onAccountSelected: (accId) => notifier.selectAccountFilter(accId),
+                            ),
+                            const SizedBox(height: 14),
+                          ],
+
+                          // Transaction List Header Title
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Day Transactions History',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                ),
+                              ),
+                              Text(
+                                '${cashbookState.filteredEntries.length} entries',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Day Transactions List
+                          Expanded(
+                            child: TransactionList(
+                              entries: cashbookState.filteredEntries,
+                              isLoading: cashbookState.isLoading,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const BazarHubView(),
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SubTabButton extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _SubTabButton({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? AppColors.surfaceDark : Colors.white)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(isDark ? 50 : 15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected
+                ? AppColors.primary
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
           ),
         ),
       ),

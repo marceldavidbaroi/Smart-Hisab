@@ -116,29 +116,45 @@ class StaffDetailScreen extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Monthly Salary', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
-                            Text('৳${currentStaff.monthlySalary.toStringAsFixed(0)}',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)),
+                            Text(
+                              currentStaff.salaryType == SalaryType.daily ? 'Daily Wage' : 'Monthly Salary',
+                              style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                            ),
+                            Text(
+                              currentStaff.salaryType == SalaryType.daily
+                                  ? '৳${currentStaff.monthlySalary.toStringAsFixed(0)}/d'
+                                  : '৳${currentStaff.monthlySalary.toStringAsFixed(0)}/mo',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                            ),
                           ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text('Paid This Month', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
-                            Text('৳${currentStaff.totalPaidThisMonth.toStringAsFixed(0)}',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
+                            Text('Advance Taken', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
+                            Text(
+                              '৳${currentStaff.totalAdvanceThisMonth.toStringAsFixed(0)}',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.warning),
+                            ),
                           ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('Unpaid Balance', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)),
-                            Text('৳${currentStaff.unpaidBalance.toStringAsFixed(0)}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: currentStaff.unpaidBalance > 0 ? AppColors.danger : AppColors.success,
-                                )),
+                            Text(
+                              currentStaff.owesCanteen ? 'Staff Owes' : 'Net Due',
+                              style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                            ),
+                            Text(
+                              currentStaff.owesCanteen
+                                  ? '৳${currentStaff.owesCanteenAmount.toStringAsFixed(0)}'
+                                  : '৳${currentStaff.netSalaryDue.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: currentStaff.owesCanteen ? AppColors.danger : AppColors.success,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -156,20 +172,22 @@ class StaffDetailScreen extends ConsumerWidget {
                       RecordSalaryPayoutBottomSheet.show(
                         context,
                         staff: currentStaff,
-                        onConfirm: ({required amount, required paymentMode, required staffId, notes}) {
+                        onConfirm: ({required staffId, required amount, required paymentMode, required payoutType, accountId, notes}) {
                           ref.read(staffNotifierProvider.notifier).recordSalaryPayout(
                                 staffId: staffId,
                                 amount: amount,
                                 paymentMode: paymentMode,
+                                payoutType: payoutType,
+                                accountId: accountId,
                                 notes: notes,
                               );
                         },
                       );
                     },
                     icon: const Icon(LucideIcons.dollarSign, size: 16, color: Colors.white),
-                    label: const Text('Pay Salary', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    label: const Text('Pay / Advance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
+                      backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
@@ -193,6 +211,7 @@ class StaffDetailScreen extends ConsumerWidget {
                         separatorBuilder: (ctx, idx) => const SizedBox(height: 8),
                         itemBuilder: (ctx, idx) {
                           final item = payouts[idx];
+                          final isAdv = item.isAdvance;
                           return Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
@@ -204,24 +223,64 @@ class StaffDetailScreen extends ConsumerWidget {
                               children: [
                                 CircleAvatar(
                                   radius: 18,
-                                  backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-                                  child: const Icon(LucideIcons.arrowUpRight, color: AppColors.accent, size: 18),
+                                  backgroundColor: isAdv
+                                      ? AppColors.warning.withValues(alpha: 0.15)
+                                      : AppColors.primary.withValues(alpha: 0.15),
+                                  child: Icon(
+                                    isAdv ? Icons.handshake_rounded : LucideIcons.arrowUpRight,
+                                    color: isAdv ? AppColors.warning : AppColors.primary,
+                                    size: 18,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Payout (${item.paymentMode})',
-                                          style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 14)),
-                                      if (item.notes != null)
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: isAdv
+                                                  ? AppColors.warning.withValues(alpha: 0.15)
+                                                  : AppColors.primary.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              isAdv ? 'ADVANCE (অগ্রিম)' : 'SALARY',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: isAdv ? AppColors.warning : AppColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            item.paymentMode,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (item.notes != null) ...[
+                                        const SizedBox(height: 2),
                                         Text(item.notes!, style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 12)),
+                                      ],
                                     ],
                                   ),
                                 ),
                                 Text(
                                   '৳${item.amount.toStringAsFixed(0)}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accent, fontSize: 16),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isAdv ? AppColors.warning : AppColors.primary,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ],
                             ),

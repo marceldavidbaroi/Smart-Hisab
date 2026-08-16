@@ -54,8 +54,24 @@ This file outlines the core rules and constraints that the AI agent must adhere 
 ### 6. Stale-While-Revalidate
 * Rely on robust caching strategies (like React Query or SWR) to show cached data instantly while silently fetching the latest updates in the background.
 
+## Full-Stack & Dual-Layer Data Wiring (Local Cache & Remote Backend)
+
+### 1. Dual Backend / Storage Wiring Mandate
+* **Strict Constraint**: Never implement or modify frontend features (UI, widgets, forms, actions) in isolation without wiring BOTH data layers:
+  1. **Local Offline State & Cache**: Local state (Riverpod / Pinia / Hive cache / local store) for instant UI updates, offline resilience, and optimistic rendering.
+  2. **Remote Backend & Database**: Supabase RPCs, table queries (`.from(...)`), schema migrations, or backend API endpoints to persist the change permanently in the database.
+
+### 2. End-to-End Action Completion Checklist
+* Whenever adding or updating an action (Create, Read, Update, Delete, Toggle, Void, Settle, etc.):
+  - Ensure the UI triggers the notifier / store action.
+  - Ensure the notifier / store executes the remote backend call (e.g. Supabase RPC / query) with proper error handling and parameter mapping.
+  - Ensure local cache / Hive / state is updated synchronously or optimistically (targeted cache mutation).
+  - Check if any corresponding SQL function, table column, or RPC in Supabase is required, and create/update migrations or RPC calls accordingly.
+  - Never leave placeholder or mock-only handlers unless explicitly requested.
+
 ## Documentation & IDE Preferences
 
 ### 1. Markdown File Viewing Mode
 * **Strict Constraint**: Always open, view, and present `.md` (Markdown) files in Preview Mode so markdown formatting, alerts, tables, and Mermaid diagrams are rendered visually for the user.
+
 

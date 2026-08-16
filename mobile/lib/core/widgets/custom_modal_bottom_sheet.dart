@@ -57,7 +57,12 @@ abstract class CustomModalBottomSheet {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                Flexible(child: child),
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: child,
+                  ),
+                ),
                 const SizedBox(height: 16),
               ],
             ),

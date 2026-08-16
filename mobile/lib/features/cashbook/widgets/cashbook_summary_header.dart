@@ -6,12 +6,14 @@ class CashbookSummaryHeader extends StatelessWidget {
   final double totalInflow;
   final double totalOutflow;
   final double netBalance;
+  final double? totalWalletsBalance;
 
   const CashbookSummaryHeader({
     super.key,
     required this.totalInflow,
     required this.totalOutflow,
     required this.netBalance,
+    this.totalWalletsBalance,
   });
 
   @override
@@ -58,16 +60,41 @@ class CashbookSummaryHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              AppFormatters.formatBdt(netBalance),
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: netBalance >= 0 ? AppColors.success : AppColors.danger,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                AppFormatters.formatBdt(netBalance),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: netBalance >= 0 ? AppColors.success : AppColors.danger,
+                ),
               ),
-            ),
+              if (totalWalletsBalance != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'All Wallets Total',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      AppFormatters.formatBdt(totalWalletsBalance!),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
           ),
           const SizedBox(height: 16),
           Divider(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight, height: 1),

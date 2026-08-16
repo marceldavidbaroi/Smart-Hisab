@@ -121,6 +121,133 @@ export type Database = {
           },
         ]
       }
+      canteen_account_entries: {
+        Row: {
+          account_id: string
+          amount: number
+          business_day_id: string | null
+          category: string
+          created_at: string
+          entry_type: string
+          id: string
+          metadata: Json
+          notes: string | null
+          recorded_by_staff_id: string | null
+          recorded_by_user_id: string | null
+          reference_id: string | null
+          reference_type: string | null
+          tenant_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          business_day_id?: string | null
+          category: string
+          created_at?: string
+          entry_type: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          recorded_by_staff_id?: string | null
+          recorded_by_user_id?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          business_day_id?: string | null
+          category?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          recorded_by_staff_id?: string | null
+          recorded_by_user_id?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canteen_account_entries_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "canteen_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canteen_account_entries_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canteen_account_entries_recorded_by_staff_id_fkey"
+            columns: ["recorded_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canteen_account_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      canteen_accounts: {
+        Row: {
+          account_number: string | null
+          account_type: string
+          created_at: string
+          current_balance: number
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          account_type: string
+          created_at?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          account_type?: string
+          created_at?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canteen_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_wallets: {
         Row: {
           created_at: string
@@ -521,36 +648,52 @@ export type Database = {
       }
       salary_payouts: {
         Row: {
+          account_id: string | null
           amount: number
           business_day_id: string | null
           created_at: string
           id: string
           notes: string | null
           payment_mode: string
+          payout_month: string | null
+          payout_type: string
           staff_id: string
           tenant_id: string
         }
         Insert: {
+          account_id?: string | null
           amount: number
           business_day_id?: string | null
           created_at?: string
           id?: string
           notes?: string | null
           payment_mode?: string
+          payout_month?: string | null
+          payout_type?: string
           staff_id: string
           tenant_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           business_day_id?: string | null
           created_at?: string
           id?: string
           notes?: string | null
           payment_mode?: string
+          payout_month?: string | null
+          payout_type?: string
           staff_id?: string
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "salary_payouts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "canteen_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "salary_payouts_business_day_id_fkey"
             columns: ["business_day_id"]
@@ -653,8 +796,10 @@ export type Database = {
           hashed_pin: string | null
           id: string
           is_active: boolean
+          monthly_salary: number
           phone: string
           role: string
+          salary_type: string
           temp_pin: string | null
           tenant_id: string
           updated_at: string
@@ -666,8 +811,10 @@ export type Database = {
           hashed_pin?: string | null
           id?: string
           is_active?: boolean
+          monthly_salary?: number
           phone: string
           role: string
+          salary_type?: string
           temp_pin?: string | null
           tenant_id: string
           updated_at?: string
@@ -679,8 +826,10 @@ export type Database = {
           hashed_pin?: string | null
           id?: string
           is_active?: boolean
+          monthly_salary?: number
           phone?: string
           role?: string
+          salary_type?: string
           temp_pin?: string | null
           tenant_id?: string
           updated_at?: string
@@ -1465,6 +1614,10 @@ export type Database = {
         }[]
       }
       get_day_read_scope: { Args: { p_tenant_id: string }; Returns: string }
+      get_default_cash_drawer_account: {
+        Args: { p_tenant_id: string }
+        Returns: string
+      }
       get_enabled_features: {
         Args: { p_device_token: string; p_tenant_id: string }
         Returns: Json
@@ -1624,6 +1777,17 @@ export type Database = {
         }
         Returns: number
       }
+      record_baki_payment_v2: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_customer_id: string
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
       record_baki_transaction: {
         Args: {
           p_amount: number
@@ -1658,6 +1822,18 @@ export type Database = {
         }
         Returns: string
       }
+      record_expense_v2: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_category: string
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+          p_vendor_id?: string
+        }
+        Returns: string
+      }
       record_meal_attendance: {
         Args: {
           p_customer_id: string
@@ -1676,6 +1852,30 @@ export type Database = {
         }
         Returns: string
       }
+      record_salary_payout_v2:
+        | {
+            Args: {
+              p_account_id?: string
+              p_amount: number
+              p_notes?: string
+              p_payment_mode?: string
+              p_staff_id: string
+              p_tenant_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_account_id?: string
+              p_amount: number
+              p_notes?: string
+              p_payment_mode?: string
+              p_payout_type?: string
+              p_staff_id: string
+              p_tenant_id: string
+            }
+            Returns: string
+          }
       record_vendor_payment: {
         Args: {
           p_amount: number
@@ -1689,6 +1889,10 @@ export type Database = {
       reset_staff_pin: { Args: { p_staff_id: string }; Returns: string }
       resume_business_day: {
         Args: { p_day_id: string; p_device_token: string; p_staff_id: string }
+        Returns: undefined
+      }
+      seed_default_canteen_accounts: {
+        Args: { p_tenant_id: string }
         Returns: undefined
       }
       set_staff_pin:
@@ -1734,6 +1938,16 @@ export type Database = {
           action_taken: string
           new_balance: number
         }[]
+      }
+      transfer_canteen_funds: {
+        Args: {
+          p_amount: number
+          p_from_account_id: string
+          p_notes?: string
+          p_tenant_id: string
+          p_to_account_id: string
+        }
+        Returns: Json
       }
       unpair_device: {
         Args: { p_device_token: string; p_tenant_id?: string }

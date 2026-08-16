@@ -11,6 +11,8 @@ class SalaryPayoutRecord {
   final String staffId;
   final double amount;
   final String paymentMode;
+  final String payoutType; // 'regular_salary' or 'advance'
+  final String? accountId;
   final String? notes;
   final DateTime createdAt;
 
@@ -19,9 +21,13 @@ class SalaryPayoutRecord {
     required this.staffId,
     required this.amount,
     this.paymentMode = 'Cash',
+    this.payoutType = 'regular_salary',
+    this.accountId,
     this.notes,
     required this.createdAt,
   });
+
+  bool get isAdvance => payoutType == 'advance';
 
   factory SalaryPayoutRecord.fromJson(Map<String, dynamic> json) {
     return SalaryPayoutRecord(
@@ -29,6 +35,8 @@ class SalaryPayoutRecord {
       staffId: json['staff_id'] as String? ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       paymentMode: json['payment_mode'] as String? ?? 'Cash',
+      payoutType: json['payout_type'] as String? ?? 'regular_salary',
+      accountId: json['account_id'] as String?,
       notes: json['notes'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'].toString())
@@ -42,6 +50,8 @@ class SalaryPayoutRecord {
       'staff_id': staffId,
       'amount': amount,
       'payment_mode': paymentMode,
+      'payout_type': payoutType,
+      'account_id': accountId,
       'notes': notes,
       'created_at': createdAt.toIso8601String(),
     };
@@ -115,53 +125,87 @@ class StaffNotifier extends StateNotifier<StaffState> {
 
   StaffNotifier({this.tenantId}) : super(const StaffState());
 
-  /// Fetch staff list for current tenant with local state fallback
+  /// Fetch staff list for current tenant from Supabase or local cache
   Future<void> fetchStaff() async {
-    final tId = tenantId ?? 'tenant-demo';
+    final tId = tenantId;
+    if (tId == null || tId.isEmpty) {
+      state = state.copyWith(staffList: [], isLoading: false);
+      return;
+    }
+
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    // Offline / Local Cache Fallback
+    // 1. Offline / Local Cache Fallback
     final cached = HiveService.getCache('staff_$tId');
     if (cached != null && cached['list'] is List) {
       final rawList = cached['list'] as List;
       final cachedList = rawList
           .map((json) => StaffMember.fromJson(Map<String, dynamic>.from(json as Map)))
           .toList();
-      if (cachedList.isNotEmpty) {
-        state = state.copyWith(staffList: cachedList, isLoading: false);
+      state = state.copyWith(staffList: cachedList);
+    }
+
+    // 2. Fetch live data from Supabase
+    if (SupabaseService.isInitialized) {
+      try {
+        final staffRows = await SupabaseService.client
+            .from('staff_members')
+            .select()
+            .eq('tenant_id', tId)
+            .order('created_at', ascending: true);
+
+        final payoutsRows = await SupabaseService.client
+            .from('salary_payouts')
+            .select()
+            .eq('tenant_id', tId)
+            .order('created_at', ascending: false);
+
+        // Group payouts by staff_id
+        final Map<String, List<SalaryPayoutRecord>> payoutsMap = {};
+        final Map<String, double> paidThisMonthMap = {};
+        final Map<String, double> advanceThisMonthMap = {};
+        final now = DateTime.now();
+
+        for (final row in payoutsRows) {
+          final record = SalaryPayoutRecord.fromJson(row);
+          payoutsMap.putIfAbsent(record.staffId, () => []).add(record);
+
+          // Check if payout is in current month
+          if (record.createdAt.year == now.year && record.createdAt.month == now.month) {
+            if (record.isAdvance) {
+              advanceThisMonthMap[record.staffId] = (advanceThisMonthMap[record.staffId] ?? 0.0) + record.amount;
+            } else {
+              paidThisMonthMap[record.staffId] = (paidThisMonthMap[record.staffId] ?? 0.0) + record.amount;
+            }
+          }
+        }
+
+        final liveList = (staffRows as List).map((row) {
+          final staff = StaffMember.fromJson(row);
+          final paidThisMonth = paidThisMonthMap[staff.id] ?? 0.0;
+          final advanceThisMonth = advanceThisMonthMap[staff.id] ?? 0.0;
+          return staff.copyWith(
+            totalPaidThisMonth: paidThisMonth,
+            totalAdvanceThisMonth: advanceThisMonth,
+          );
+        }).toList();
+
+        state = state.copyWith(
+          staffList: liveList,
+          payoutsMap: payoutsMap,
+          isLoading: false,
+        );
+
+        await HiveService.setCache('staff_$tId', {
+          'list': liveList.map((s) => s.toJson()).toList(),
+        });
         return;
+      } catch (e) {
+        debugPrint('fetchStaff Supabase error: $e');
       }
     }
 
-    // Demo Seed
-    final demoStaff = [
-      const StaffMember(
-        id: 'staff-1',
-        name: 'Abul Bashar',
-        role: StaffRole.staff,
-        phone: '01712345678',
-        monthlySalary: 15000.0,
-        totalPaidThisMonth: 5000.0,
-      ),
-      const StaffMember(
-        id: 'staff-2',
-        name: 'Jamil Hossain',
-        role: StaffRole.manager,
-        phone: '01898765432',
-        monthlySalary: 12000.0,
-        totalPaidThisMonth: 12000.0,
-      ),
-      const StaffMember(
-        id: 'staff-3',
-        name: 'Solaiman Khan',
-        role: StaffRole.staff,
-        phone: '01911223344',
-        monthlySalary: 10000.0,
-        totalPaidThisMonth: 0.0,
-      ),
-    ];
-
-    state = state.copyWith(staffList: demoStaff, isLoading: false);
+    state = state.copyWith(isLoading: false);
   }
 
   /// Add new staff member with Targeted Cache Mutation
@@ -169,10 +213,12 @@ class StaffNotifier extends StateNotifier<StaffState> {
     required String name,
     required String phone,
     required StaffRole role,
+    SalaryType salaryType = SalaryType.monthly,
     double monthlySalary = 0.0,
     String? pinCode,
   }) async {
-    final tId = tenantId ?? 'tenant-demo';
+    final tId = tenantId;
+    if (tId == null || tId.isEmpty) return false;
     final tempId = 'staff-${DateTime.now().millisecondsSinceEpoch}';
 
     final newStaff = StaffMember(
@@ -180,9 +226,11 @@ class StaffNotifier extends StateNotifier<StaffState> {
       name: name,
       phone: phone,
       role: role,
+      salaryType: salaryType,
       monthlySalary: monthlySalary,
       pinCode: pinCode,
       totalPaidThisMonth: 0.0,
+      totalAdvanceThisMonth: 0.0,
       createdAt: DateTime.now(),
     );
 
@@ -194,11 +242,11 @@ class StaffNotifier extends StateNotifier<StaffState> {
       if (SupabaseService.isInitialized) {
         final res = await SupabaseService.client.from('staff_members').insert({
           'tenant_id': tId,
-          'name': name,
+          'full_name': name,
           'phone': phone,
           'role': role.name,
+          'salary_type': salaryType.name,
           'monthly_salary': monthlySalary,
-          'pin_code': pinCode,
         }).select().single();
 
         final created = StaffMember.fromJson(res);
@@ -221,19 +269,28 @@ class StaffNotifier extends StateNotifier<StaffState> {
     return true;
   }
 
-  /// Record salary payout with Optimistic Targeted Cache Mutation
+  /// Record salary payout / advance with Optimistic Targeted Cache Mutation & RPC `record_salary_payout_v2`
   Future<bool> recordSalaryPayout({
     required String staffId,
     required double amount,
     String paymentMode = 'Cash',
+    String payoutType = 'regular_salary', // 'regular_salary' or 'advance'
+    String? accountId,
     String? notes,
   }) async {
-    final tId = tenantId ?? 'tenant-demo';
+    final tId = tenantId;
+    if (tId == null || tId.isEmpty) return false;
+
+    final isAdv = payoutType == 'advance';
 
     // 1. Optimistic local cache mutation
     final updatedList = state.staffList.map((s) {
       if (s.id == staffId) {
-        return s.copyWith(totalPaidThisMonth: s.totalPaidThisMonth + amount);
+        if (isAdv) {
+          return s.copyWith(totalAdvanceThisMonth: s.totalAdvanceThisMonth + amount);
+        } else {
+          return s.copyWith(totalPaidThisMonth: s.totalPaidThisMonth + amount);
+        }
       }
       return s;
     }).toList();
@@ -243,6 +300,8 @@ class StaffNotifier extends StateNotifier<StaffState> {
       staffId: staffId,
       amount: amount,
       paymentMode: paymentMode,
+      payoutType: payoutType,
+      accountId: accountId,
       notes: notes,
       createdAt: DateTime.now(),
     );
@@ -258,12 +317,14 @@ class StaffNotifier extends StateNotifier<StaffState> {
 
     try {
       if (SupabaseService.isInitialized) {
-        await SupabaseService.client.rpc('record_salary_payout', params: {
+        await SupabaseService.client.rpc('record_salary_payout_v2', params: {
           'p_tenant_id': tId,
           'p_staff_id': staffId,
           'p_amount': amount,
-          'p_payment_mode': paymentMode,
-          'p_notes': notes ?? 'Salary payout',
+          'p_account_id': accountId,
+          'p_payment_mode': paymentMode.toLowerCase(),
+          'p_payout_type': payoutType,
+          'p_notes': notes ?? (isAdv ? 'Salary Advance' : 'Salary Payout'),
         });
       }
       return true;
@@ -275,7 +336,7 @@ class StaffNotifier extends StateNotifier<StaffState> {
 
   /// Delete staff member with Targeted Cache Mutation
   Future<void> deleteStaff(String staffId) async {
-    final tId = tenantId ?? 'tenant-demo';
+    final tId = tenantId;
     final updatedList = state.staffList.where((s) => s.id != staffId).toList();
     state = state.copyWith(staffList: updatedList);
 
@@ -287,9 +348,11 @@ class StaffNotifier extends StateNotifier<StaffState> {
       debugPrint('deleteStaff error: $e');
     }
 
-    await HiveService.setCache('staff_$tId', {
-      'list': updatedList.map((s) => s.toJson()).toList(),
-    });
+    if (tId != null && tId.isNotEmpty) {
+      await HiveService.setCache('staff_$tId', {
+        'list': updatedList.map((s) => s.toJson()).toList(),
+      });
+    }
   }
 
   /// Update staff member details with targeted optimistic cache mutation
@@ -298,9 +361,10 @@ class StaffNotifier extends StateNotifier<StaffState> {
     required String name,
     required String phone,
     required StaffRole role,
+    SalaryType salaryType = SalaryType.monthly,
     double monthlySalary = 0.0,
   }) async {
-    final tId = tenantId ?? 'tenant-demo';
+    final tId = tenantId;
 
     final updatedList = state.staffList.map((s) {
       if (s.id == staffId) {
@@ -308,6 +372,7 @@ class StaffNotifier extends StateNotifier<StaffState> {
           name: name,
           phone: phone,
           role: role,
+          salaryType: salaryType,
           monthlySalary: monthlySalary,
         );
       }
@@ -315,16 +380,19 @@ class StaffNotifier extends StateNotifier<StaffState> {
     }).toList();
 
     state = state.copyWith(staffList: updatedList);
-    await HiveService.setCache('staff_$tId', {
-      'list': updatedList.map((s) => s.toJson()).toList(),
-    });
+    if (tId != null && tId.isNotEmpty) {
+      await HiveService.setCache('staff_$tId', {
+        'list': updatedList.map((s) => s.toJson()).toList(),
+      });
+    }
 
     try {
       if (SupabaseService.isInitialized) {
         await SupabaseService.client.from('staff_members').update({
-          'name': name,
+          'full_name': name,
           'phone': phone,
           'role': role.name,
+          'salary_type': salaryType.name,
           'monthly_salary': monthlySalary,
         }).eq('id', staffId);
       }

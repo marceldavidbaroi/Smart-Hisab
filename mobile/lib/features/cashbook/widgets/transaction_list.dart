@@ -8,17 +8,11 @@ import '../../../core/utils/formatters.dart';
 class TransactionList extends StatelessWidget {
   final List<CashbookEntry> entries;
   final bool isLoading;
-  final Function(String id) onDelete;
-  final VoidCallback onAddExpense;
-  final VoidCallback onAddNote;
 
   const TransactionList({
     super.key,
     required this.entries,
     required this.isLoading,
-    required this.onDelete,
-    required this.onAddExpense,
-    required this.onAddNote,
   });
 
   @override
@@ -50,105 +44,118 @@ class TransactionList extends StatelessWidget {
             ? LucideIcons.fileText
             : (isIncome ? LucideIcons.arrowDownLeft : LucideIcons.arrowUpRight);
 
-        return Dismissible(
-          key: Key(item.id),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            decoration: BoxDecoration(
-              color: AppColors.danger.withAlpha(200),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(LucideIcons.trash2, color: Colors.white),
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.cardDark : AppColors.cardLight,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
           ),
-          onDismissed: (_) => onDelete(item.id),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.cardDark : AppColors.cardLight,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: itemColor.withAlpha(30),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(leadingIcon, color: itemColor, size: 20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: itemColor.withAlpha(30),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${item.category} • ${AppFormatters.formatTimeOnly(item.createdAt)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                        ),
-                      ),
-                      if (item.notes != null && item.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isDark ? AppColors.bgDark : AppColors.bgLight,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
+                child: Icon(leadingIcon, color: itemColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
                           child: Text(
-                            item.notes!,
+                            item.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 12,
-                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                              fontStyle: FontStyle.italic,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                             ),
                           ),
                         ),
+                        if (item.accountName != null && item.accountName!.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(25),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              item.accountName!,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ),
-                if (!isNote)
-                  Text(
-                    '${isIncome ? '+' : '-'}${AppFormatters.formatBdt(item.amount)}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: itemColor,
                     ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.info.withAlpha(40),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'Note',
+                    const SizedBox(height: 4),
+                    Text(
+                      '${item.category} • ${AppFormatters.formatTimeOnly(item.createdAt)}',
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.info,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                       ),
                     ),
+                    if (item.notes != null && item.notes!.isNotEmpty && item.notes != item.title) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.bgDark : AppColors.bgLight,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          item.notes!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (!isNote)
+                Text(
+                  '${isIncome ? '+' : '-'}${AppFormatters.formatBdt(item.amount)}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: itemColor,
                   ),
-              ],
-            ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withAlpha(40),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Note',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.info,
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
       },
@@ -161,8 +168,8 @@ class TransactionList extends StatelessWidget {
     return SingleChildScrollView(
       child: Center(
         child: Container(
-          padding: const EdgeInsets.all(20),
-          margin: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.all(24),
+          margin: const EdgeInsets.symmetric(vertical: 24),
           decoration: BoxDecoration(
             color: isDark ? AppColors.cardDark : AppColors.cardLight,
             borderRadius: BorderRadius.circular(20),
@@ -172,20 +179,20 @@ class TransactionList extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withAlpha(30),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  LucideIcons.bookOpen,
+                  LucideIcons.history,
                   color: AppColors.primary,
-                  size: 28,
+                  size: 32,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Text(
-                'No Cashbook Entries Today',
+                'No Transactions Recorded Today',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -194,45 +201,12 @@ class TransactionList extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Record your daily market expenses or market shopping lists to keep your canteen hisab accurate.',
+                'Transactions from customer payments, bazar purchases, salary payouts, and wallet activities will appear here in chronological order.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
                   color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: onAddExpense,
-                    icon: const Icon(LucideIcons.minusCircle, size: 16, color: Colors.white),
-                    label: const Text(
-                      'Record Expense',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.danger,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  OutlinedButton.icon(
-                    onPressed: onAddNote,
-                    icon: const Icon(LucideIcons.fileText, size: 16, color: AppColors.info),
-                    label: const Text(
-                      'Add Day Note',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.info),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      side: const BorderSide(color: AppColors.info),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
