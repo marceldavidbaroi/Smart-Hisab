@@ -45,21 +45,23 @@ class TransactionList extends StatelessWidget {
             : (isIncome ? LucideIcons.arrowDownLeft : LucideIcons.arrowUpRight);
 
         return Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: isDark ? AppColors.cardDark : AppColors.cardLight,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+            ),
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: itemColor.withAlpha(30),
+                  color: itemColor.withAlpha(22),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(leadingIcon, color: itemColor, size: 20),
+                child: Icon(leadingIcon, color: itemColor, size: 16),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -74,7 +76,7 @@ class TransactionList extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                             ),
@@ -85,14 +87,14 @@ class TransactionList extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withAlpha(25),
+                              color: AppColors.primary.withAlpha(20),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               item.accountName!,
                               style: const TextStyle(
                                 fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.primary,
                               ),
                             ),
@@ -100,7 +102,7 @@ class TransactionList extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       '${item.category} • ${AppFormatters.formatTimeOnly(item.createdAt)}',
                       style: TextStyle(
@@ -108,48 +110,30 @@ class TransactionList extends StatelessWidget {
                         color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                       ),
                     ),
-                    if (item.notes != null && item.notes!.isNotEmpty && item.notes != item.title) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.bgDark : AppColors.bgLight,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.notes!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               if (!isNote)
                 Text(
                   '${isIncome ? '+' : '-'}${AppFormatters.formatBdt(item.amount)}',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: itemColor,
                   ),
                 )
               else
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.info.withAlpha(40),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.info.withAlpha(25),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text(
                     'Note',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: AppColors.info,
                     ),

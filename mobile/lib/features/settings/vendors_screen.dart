@@ -7,6 +7,7 @@ import '../../core/services/notification_service.dart';
 import '../../core/widgets/app_safe_area.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
 import '../../core/widgets/shimmer_loading.dart';
+import 'record_vendor_payment_bottom_sheet.dart';
 import 'vendor_detail_screen.dart';
 import 'vendors_notifier.dart';
 
@@ -93,81 +94,7 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
   }
 
   void _showRecordVendorPaymentSheet(BuildContext context, Vendor vendor) {
-    final amountController = TextEditingController();
-    final notesController = TextEditingController();
-
-    CustomModalBottomSheet.show(
-      context: context,
-      title: "Pay ${vendor.name}",
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.danger.withAlpha(25),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              "Current Outstanding Baki: ৳${vendor.currentBalance.toStringAsFixed(2)}",
-              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.danger, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: amountController,
-            keyboardType: TextInputType.number,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: "Payment Amount (৳) *",
-              prefixText: "৳ ",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: notesController,
-            decoration: InputDecoration(
-              labelText: "Notes / Voucher Ref",
-              prefixIcon: const Icon(LucideIcons.fileText, size: 18),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () async {
-              final amount = double.tryParse(amountController.text) ?? 0.0;
-              if (amount <= 0) {
-                NotificationService.showError("Enter a valid payment amount");
-                return;
-              }
-
-              final success = await ref.read(vendorsNotifierProvider.notifier).recordVendorPayment(
-                    vendorId: vendor.id,
-                    amount: amount,
-                    notes: notesController.text.trim(),
-                  );
-
-              if (context.mounted) {
-                Navigator.pop(context);
-                if (success) {
-                  NotificationService.showSuccess("Payment of ৳$amount recorded for ${vendor.name}");
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.success,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            icon: const Icon(LucideIcons.checkCircle, color: Colors.white),
-            label: const Text('Confirm Payment', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-          ),
-        ],
-      ),
-    );
+    RecordVendorPaymentBottomSheet.show(context, vendor);
   }
 
   @override

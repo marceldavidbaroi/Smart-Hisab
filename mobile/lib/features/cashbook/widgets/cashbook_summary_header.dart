@@ -21,65 +21,50 @@ class CashbookSummaryHeader extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.cardDark : AppColors.cardLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+        ),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Net Day Cashflow',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: netBalance >= 0
-                      ? AppColors.success.withAlpha(40)
-                      : AppColors.danger.withAlpha(40),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  netBalance >= 0 ? 'Surplus' : 'Deficit',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: netBalance >= 0 ? AppColors.success : AppColors.danger,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Net Cashflow',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                AppFormatters.formatBdt(netBalance),
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: netBalance >= 0 ? AppColors.success : AppColors.danger,
-                ),
+                  const SizedBox(height: 2),
+                  Text(
+                    AppFormatters.formatBdt(netBalance),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: netBalance >= 0 ? AppColors.success : AppColors.danger,
+                    ),
+                  ),
+                ],
               ),
               if (totalWalletsBalance != null)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'All Wallets Total',
+                      'Total Balance',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                         color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                       ),
                     ),
@@ -87,7 +72,7 @@ class CashbookSummaryHeader extends StatelessWidget {
                     Text(
                       AppFormatters.formatBdt(totalWalletsBalance!),
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                       ),
@@ -96,93 +81,65 @@ class CashbookSummaryHeader extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
-          Divider(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight, height: 1),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _SummaryMetricCard(
-                  title: 'Cash Inflow (জমা)',
-                  amount: totalInflow,
-                  color: AppColors.success,
-                  icon: Icons.arrow_downward_rounded,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _SummaryMetricCard(
-                  title: 'Cash Outflow (খরচ)',
-                  amount: totalOutflow,
-                  color: AppColors.danger,
-                  icon: Icons.arrow_upward_rounded,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryMetricCard extends StatelessWidget {
-  final String title;
-  final double amount;
-  final Color color;
-  final IconData icon;
-
-  const _SummaryMetricCard({
-    required this.title,
-    required this.amount,
-    required this.color,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.bgDark : AppColors.bgLight,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-      ),
-      child: Row(
-        children: [
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: color.withAlpha(35),
-              shape: BoxShape.circle,
+              color: isDark ? AppColors.bgDark.withAlpha(150) : AppColors.bgLight,
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 16),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.arrow_downward_rounded, size: 14, color: AppColors.success),
+                      const SizedBox(width: 4),
+                      Text(
+                        'In: ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        ),
+                      ),
+                      Text(
+                        AppFormatters.formatBdt(totalInflow),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  AppFormatters.formatBdt(amount),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                Container(
+                  height: 14,
+                  width: 1,
+                  color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.arrow_upward_rounded, size: 14, color: AppColors.danger),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Out: ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        ),
+                      ),
+                      Text(
+                        AppFormatters.formatBdt(totalOutflow),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.danger,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -193,3 +150,4 @@ class _SummaryMetricCard extends StatelessWidget {
     );
   }
 }
+

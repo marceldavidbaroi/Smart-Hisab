@@ -185,31 +185,28 @@ Simple operational notes and daily market/shopping lists.
 
 ---
 
-## Ledger Flows
+## Ledger Flows (Bangladeshi Canteen Model)
 
-### Flow C: Market Purchase (cash, no vendor)
-```
-1. Staff records expense → calls record_expense(tenant, 'market_cost', amount, vendor_id=null, staff, notes)
-2. RPC resolves active business_day
-3. INSERT into day_entries (entry_type='outflow', category='market_cost')
-4. Cash drawer decreases
-```
-
-### Flow C2: Market Purchase (vendor credit — recorded at time of purchase)
-```
-1. Staff records expense with vendor → calls record_expense(tenant, 'market_cost', amount, vendor_id, staff, notes)
-2. INSERT into day_entries (entry_type='outflow', category='market_cost')  ← cash drawer decreases now
-3. INSERT into vendor_wallet_entries (type='purchase')                       ← vendor baki also increases
-4. Trigger updates vendor_wallets.current_balance += amount
+### Flow C: Daily Cash Market Purchase (নগদ বাজার খরচ - e.g. শাক-সবজি, মাছ, ভ্যান ভাড়া)
+```text
+1. Staff records cash expense → calls record_expense_v2(tenant_id, category, amount, account_id, vendor_id=null, staff_id, notes, payment_mode='cash')
+2. RPC inserts into day_entries (entry_type='outflow') and canteen_account_entries (outflow from selected Cash Drawer / bKash / Bank).
+3. Physical cash in drawer decreases immediately.
+4. Vendor debts remain 0.
 ```
 
-> **Note**: There is no deferred/pay-later mode. Both the cash outflow and vendor baki are recorded at the same time.
-
-### Flow C3: Pay Vendor (settle baki)
+### Flow C2: Wholesaler Credit Purchase (মহাজন থেকে বাকিতে মাল - e.g. চাল, তেল, মুরগি, এলপিজি গ্যাস)
+```text
+1. Staff records credit purchase → calls record_expense_v2(tenant_id, category, amount, account_id=null, vendor_id, staff_id, notes, payment_mode='baki')
+2. RPC inserts into vendor_wallet_entries (type='purchase').
+3. Trigger updates vendor_wallets.current_balance += amount (Canteen debt increases).
+4. Physical cash drawer remains 100% UNTOUCHED (৳0 deduction today).
 ```
-1. Owner/Manager pays vendor → calls record_vendor_payment(tenant, vendor_id, amount, staff, notes)
-2. INSERT into vendor_wallet_entries (type='payment')
-3. INSERT into day_entries (entry_type='outflow', category='vendor_payment')
-4. Trigger updates vendor_wallets.current_balance -= amount
-5. Vendor baki decreases, cash drawer decreases
+
+### Flow C3: Pay Wholesaler / Settle Baki (মহাজনের বাকি পরিশোধ)
+```text
+1. Owner/Manager pays vendor → calls record_vendor_payment_v2(tenant_id, vendor_id, amount, account_id, staff_id, notes)
+2. RPC inserts into vendor_wallet_entries (type='payment') → Trigger updates vendor_wallets.current_balance -= amount.
+3. RPC inserts into day_entries (entry_type='outflow', category='vendor_payment') and canteen_account_entries (outflow from chosen wallet: Cash Drawer / bKash / Bank).
+4. Vendor debt decreases, and selected payment account balance decreases.
 ```

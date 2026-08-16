@@ -3,6 +3,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
 
 class AddDayNoteBottomSheet extends StatefulWidget {
+  final String? initialTitle;
+  final String? initialContent;
   final Function({
     required String title,
     required String content,
@@ -10,11 +12,15 @@ class AddDayNoteBottomSheet extends StatefulWidget {
 
   const AddDayNoteBottomSheet({
     super.key,
+    this.initialTitle,
+    this.initialContent,
     required this.onSubmit,
   });
 
   static void show(
     BuildContext context, {
+    String? initialTitle,
+    String? initialContent,
     required Function({
       required String title,
       required String content,
@@ -22,8 +28,12 @@ class AddDayNoteBottomSheet extends StatefulWidget {
   }) {
     CustomModalBottomSheet.show(
       context: context,
-      title: 'Add Day Note / Market List',
-      child: AddDayNoteBottomSheet(onSubmit: onSubmit),
+      title: initialTitle != null ? 'Edit Bazar Note / Fard' : 'Add Bazar Note / Fard',
+      child: AddDayNoteBottomSheet(
+        initialTitle: initialTitle,
+        initialContent: initialContent,
+        onSubmit: onSubmit,
+      ),
     );
   }
 
@@ -33,9 +43,16 @@ class AddDayNoteBottomSheet extends StatefulWidget {
 
 class _AddDayNoteBottomSheetState extends State<AddDayNoteBottomSheet> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _contentController;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.initialTitle ?? '');
+    _contentController = TextEditingController(text: widget.initialContent ?? '');
+  }
 
   @override
   void dispose() {

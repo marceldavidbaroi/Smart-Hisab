@@ -37,7 +37,7 @@ class CustomBottomNav extends StatelessWidget {
         NavigationDestination(
           icon: Icon(LucideIcons.wallet, color: inactiveColor),
           selectedIcon: const Icon(LucideIcons.wallet, color: AppColors.primary),
-          label: 'Cashbook',
+          label: 'Accounts',
         ),
         NavigationDestination(
           icon: Icon(LucideIcons.userCheck, color: inactiveColor),

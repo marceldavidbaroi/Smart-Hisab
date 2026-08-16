@@ -16,7 +16,7 @@
 | **Settings & Profile** | ✅ Done | Shifts & meal rates config, canteen profile & manager invites. |
 | **Cashbook & Bazar Hub (Tab 3)** | ✅ Done | Clean separation of Canteen Wallet Cashflow (Cash Drawer, bKash, Bank) vs Bazar & Vendor Baki (Accounts Payable). |
 | **Canteen Wallets / Accounts** | 🟡 In Progress | Multi-channel business money accounts (Cash Drawer, bKash, Bank, Safe) backend migration created; UI selectors pending. |
-| **Home Dashboard Quick Actions** | ✅ Done | Quick action buttons wired to directly switch tabs to Customers & Cashbook. |
+| **Home Dashboard (Tab 1)** | 🟡 Pending Implementation | Redesign into Zero-Friction Owner Command Hub (Direct modal triggers, live drawer cash pulse, yesterday's recap, recent activity audit). |
 | **Linter & Code Cleanup** | ✅ Done | `flutter analyze` passes with 0 issues & 0 warnings. |
 | **Release Build Testing** | ⏳ Pending | Android APK/AppBundle verification & permissions check. |
 
@@ -39,42 +39,81 @@
      - Distinct ledger tags `[ADVANCE (অগ্রিম)]` and `[SALARY]`.
 
 ### Task 2: Cashbook & Bazar Separation (Tab 3 UX Streamlining)
-- **Status**: ✅ In Implementation
+- **Status**: 🟡 In Progress
+- **Implemented & Remaining Capabilities**:
+  1. **Segmented Sub-view inside Tab 3 (`💵 Cashbook` vs `🛒 Bazar & Baki`)**:
+     - Cashbook view tracks physical liquid cashflow (Inflow, Outflow, Net Balance, Shift Reconciliation).
+     - Bazar & Baki view acts as the morning grocery hub (Checklists, Wholesaler Baki Ledger, Expense categorization).
+  2. **Bazar Hub (`bazar_hub_view.dart`)**:
+     - Top KPI cards: Today's Cash Bazar (আজকের নগদ বাজার), Today's New Credit Baki (আজকের নতুন বাকি), Total Vendor Payable (মহাজনদের মোট দেনা).
+     - Active Bazar Fard (বাজারের ফর্দ): Quick grocery checklist with fast post-bazar price reconciliation.
+     - Direct shortcuts to **Vendors & Suppliers** and **New Bazar Note**.
+  3. **Expense Bottom Sheet (`add_expense_bottom_sheet.dart`)**:
+     - Dual-mode toggle: `[ 💵 নগদ (Cash) ]` vs `[ 📝 বাকি (Vendor Baki) ]`.
+     - Smart routing: Cash expenses deduct from selected Canteen Wallet (Cash Drawer, bKash, Bank); Baki expenses link to a vendor profile without falsely draining today's cash drawer.
+
+### Task 3: Vendor Khata & Baki Settlement Integration
+- **Status**: ✅ Completed
 - **Implemented Capabilities**:
-  1. Segmented Sub-view inside Tab 3 (`💵 Cashbook` vs `🛒 Bazar & Baki`).
-  2. **Cashbook**: Strictly tracks liquid cashflow (Inflow, Outflow, Net Balance, Reconciliation) across active canteen wallets.
-  3. **Bazar & Vendor Baki**: Dedicated supplier ledger view tracking unpaid market purchases, total accounts payable, vendor statements, and swipe-to-pay settlement.
+  1. **Vendors Directory (`vendors_screen.dart`)**:
+     - Total Accounts Payable KPI header (মোট বকেয়া পাওনা).
+     - Supplier list with contact number, outstanding balance, and Swipe-to-Pay row action.
+  2. **Vendor Detail & Ledger Passbook (`vendor_detail_screen.dart`)**:
+     - Full transaction ledger passbook showing chronological `[BAKI PURCHASE / বাকি ক্রয়]` (+৳) vs `[PAYMENT PAID / পরিশোধ]` (−৳) with memo notes and staff signatures.
+     - Direct One-Tap Call button (`tel:` launcher).
+     - Direct Quick Action buttons: `[ 📝 Add Baki (বাকি ক্রয়) ]` and `[ 💳 Pay Due (পরিশোধ) ]`.
+  3. **Pay Vendor Sheet & Multi-Wallet Integration (`record_vendor_payment_bottom_sheet.dart`)**:
+     - Settle supplier debt drawing funds from **Cash Drawer**, **bKash**, or **Bank Account**.
+     - RPC `record_vendor_payment_v2` automatically reduces vendor debt and records a physical wallet outflow.
+  4. **Add Vendor Baki Sheet (`add_vendor_baki_bottom_sheet.dart`)**:
+     - Record raw grocery / fuel credit purchases linked to the vendor (`record_expense_v2`) without touching cash drawer.
 
-### Task 3: Canteen Wallets & Multi-Channel Payment Source
-- **Goal**: Enable canteen owners to spend money (Bazar, Staff salaries) from external channels (bKash, Bank, Safe, Vendor Credit) without breaking or subtracting from the physical active cash drawer.
-- **Components**:
-  1. ✅ Backend: `canteen_accounts` and `canteen_account_entries` tables, RLS policies, trigger-based balance sync, auto-seed defaults, and updated RPCs (`record_expense_v2`, `record_baki_payment_v2`, `record_salary_payout_v2`, `transfer_canteen_funds`, `calculate_expected_cash`).
-  2. In `AddExpenseBottomSheet`: Add **"Paid From"** selector (Cash Drawer, bKash, Bank, Safe, or Pay Later on Vendor Baki).
-  3. In `RecordSalaryPayoutBottomSheet`: Support selecting payment account source (Cash Drawer vs bKash/Bank).
-  4. In `CollectBakiBottomSheet`: Support receiving into Cash Drawer or Mobile Money.
+### Task 4: Zero-Friction Owner Home Dashboard Redesign & Direct Wiring
+- **Status**: 🟡 Pending Implementation
+- **Goal**: Transform Tab 1 from an unwired placeholder into a counter-first daily command center for the solo canteen owner, adhering to the 3-second rule.
+- **Specification & Architecture**:
+  1. **Dynamic Lifecycle States (Morning $\rightarrow$ Active $\rightarrow$ Night)**:
+     - **State A (Morning / Day Closed)**: Prominent "Start Business Day" card with opening cash prompt + **"Yesterday's Recap"** card (Meals count, Cash Inflows, Variance status `✅ Balanced` / `⚠️ Variance`) + Total Baki overview.
+     - **State B (Active Day Pulse)**: Active shift ribbon (e.g. `🍽️ Lunch • ৳80/meal`) + Live Drawer Cash pulse ($\text{Opening Cash} + \text{Inflows} - \text{Outflows}$) + 3 KPI tiles (Meals, Inflow, Outflow) + `[ 🔒 End Day & Reconcile ]` button.
+     - **State C (Closed Day Summary)**: Complete cash reconciliation breakdown (Expected vs Actual Cash + Variance indicator).
+  2. **Direct-Trigger Action Station (Zero Redirection)**:
+     - `[ 🛒 Add Expense ]` $\rightarrow$ Directly triggers `AddExpenseBottomSheet` on Home (no tab switching).
+     - `[ 💵 Collect Baki ]` $\rightarrow$ Triggers `QuickCustomerPickerBottomSheet` $\rightarrow$ `CollectBakiBottomSheet`.
+     - `[ 📝 Day Note / Bazar ]` $\rightarrow$ Directly triggers `AddDayNoteBottomSheet` on Home.
+     - `[ 🍽️ Mark Meals ]` $\rightarrow$ Fast navigation to Customers tab with active shift focused.
+  3. **Live Activity Stream / Audit Feed**:
+     - Shows the latest 3–5 day transactions (cash inflows, market expenses, meal entries) for instant cashier verification.
+  4. **Dual-Layer Data Wiring**:
+     - Wire `businessDayNotifierProvider` to compute real-time inflows/outflows from `day_entries`, fetch `lastClosedDay`, and cache to Hive.
+     - Split into modular widgets under `features/home/widgets/` to strictly comply with the `< 400 lines` rule.
 
-### Task 4: End-to-End Flow Verification (Manual Checklist)
+### Task 5: End-to-End Flow Verification (Manual Checklist)
 Run through these 5 real-life canteen workflows to verify:
 
 1. **Daily Business Day Cycle**:
    - Tap **"Start Business Day"** on Home with opening cash (e.g. ৳5,000).
-   - Verify Home updates to **"Day Open"**.
+   - Verify Home updates to **"Day Open"** and displays active shift & drawer pulse.
    - Tap **"Close Business Day"**, enter closing cash, check variance calculations.
-2. **Cashbook & Market Expenses**:
-   - Add a bazar expense (e.g. ৳1,200 rice from Rahim Vendor).
-   - Add a quick day note (e.g. "Buy 5kg onions tomorrow").
-   - Verify day summary updates Inflows, Outflows, and Net balance.
-3. **Staff Payroll**:
+2. **Direct Home Quick Actions**:
+   - Tap **"Add Expense"** directly on Home $\rightarrow$ record market expense (৳1,200).
+   - Verify drawer cash on Home decreases by ৳1,200 and activity feed shows the new entry immediately.
+   - Tap **"Collect Baki"** on Home $\rightarrow$ pick customer $\rightarrow$ collect ৳500 $\rightarrow$ verify Home updates instantly.
+3. **Cashbook & Market Expenses**:
+   - Add a cash grocery expense (e.g. ৳1,200 vegetables from market).
+   - Add a vendor credit purchase (e.g. ৳3,600 rice from Rahim Store on Baki).
+   - Verify cash drawer only reduced by ৳1,200, while Rahim Store's balance increased by ৳3,600.
+   - Settle ৳2,000 to Rahim Store from Cash Drawer; verify both cash drawer and vendor balance update properly.
+4. **Staff Payroll & Advances**:
    - Add staff member (e.g. Karim - Cook - ৳8,000/mo).
    - Record salary payout (৳4,000 cash).
    - Verify staff detail shows payout history and paid amount.
-4. **Manager Invite Flow**:
+5. **Manager Invite Flow**:
    - In Settings → Invite Manager, tap "Generate Code".
    - Confirm 6-digit code displays with countdown timer.
 
 ---
 
-### Task 3: Android Release Build Verification
+### Task 6: Android Release Build Verification
 - **Command**:
   ```bash
   cd mobile
@@ -94,3 +133,5 @@ Run through these 5 real-life canteen workflows to verify:
 |---|---|
 | **v1.5 (Pro Tier)** | Counter Mode (PIN-based rapid staff switching), Advanced Analytics & Monthly Reports (P&L breakdown across all wallets), SMS alerts. |
 | **v2.0 (Business Tier)** | Multi-canteen switching per owner account, Bulk meal attendance mode, Printable PDF statement export. |
+
+

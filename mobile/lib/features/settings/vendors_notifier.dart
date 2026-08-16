@@ -203,10 +203,52 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
     return true;
   }
 
-  /// Record payment to vendor (`record_vendor_payment` RPC) with optimistic update
+  /// Record Baki Purchase directly for vendor (`record_expense_v2` with category market_cost & payment_mode 'baki')
+  Future<bool> recordVendorBakiPurchase({
+    required String vendorId,
+    required double amount,
+    required String category,
+    String? title,
+    String? notes,
+  }) async {
+    final index = state.vendors.indexWhere((v) => v.id == vendorId);
+    if (index == -1) return false;
+
+    final target = state.vendors[index];
+    final updatedBalance = target.currentBalance + amount;
+    final updatedVendor = target.copyWith(
+      currentBalance: updatedBalance,
+      updatedAt: DateTime.now(),
+    );
+
+    final updatedList = List<Vendor>.from(state.vendors);
+    updatedList[index] = updatedVendor;
+    state = state.copyWith(vendors: updatedList);
+
+    try {
+      if (tenantId != null && SupabaseService.isInitialized) {
+        await SupabaseService.client.rpc('record_expense_v2', params: {
+          'p_tenant_id': tenantId,
+          'p_category': category,
+          'p_amount': amount,
+          'p_account_id': null, // No physical wallet deduction for baki purchase
+          'p_vendor_id': vendorId,
+          'p_notes': notes ?? title ?? 'Vendor Baki Purchase',
+        });
+        fetchVendors();
+      }
+      return true;
+    } catch (e) {
+      debugPrint('recordVendorBakiPurchase RPC error: $e');
+      return true;
+    }
+  }
+
+  /// Record payment to vendor (`record_vendor_payment_v2` RPC) with multi-wallet support & optimistic update
   Future<bool> recordVendorPayment({
     required String vendorId,
     required double amount,
+    String? accountId,
     String? notes,
   }) async {
     final index = state.vendors.indexWhere((v) => v.id == vendorId);
@@ -225,10 +267,11 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
 
     try {
       if (tenantId != null && SupabaseService.isInitialized) {
-        await SupabaseService.client.rpc('record_vendor_payment', params: {
+        await SupabaseService.client.rpc('record_vendor_payment_v2', params: {
           'p_tenant_id': tenantId,
           'p_vendor_id': vendorId,
           'p_amount': amount,
+          'p_account_id': accountId,
           'p_notes': notes ?? '',
         });
         fetchVendors();
@@ -237,6 +280,78 @@ class VendorsNotifier extends StateNotifier<VendorsState> {
     } catch (e) {
       debugPrint('recordVendorPayment RPC error: $e');
       return true;
+    }
+  }
+
+  /// Fetch chronological statement / ledger for a vendor
+  Future<Map<String, dynamic>> fetchVendorStatement({
+    required String vendorId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final tId = tenantId;
+    if (tId == null || !SupabaseService.isInitialized) {
+      return {'entries': <Map<String, dynamic>>[], 'total_count': 0, 'opening_balance': 0.0};
+    }
+
+    try {
+      final res = await SupabaseService.client.rpc('get_vendor_statement', params: {
+        'p_tenant_id': tId,
+        'p_vendor_id': vendorId,
+        'p_start': startDate?.toIso8601String().substring(0, 10),
+        'p_end': endDate?.toIso8601String().substring(0, 10),
+        'p_limit': limit,
+        'p_offset': offset,
+      });
+
+      if (res is Map<String, dynamic>) {
+        return res;
+      } else if (res is Map) {
+        return Map<String, dynamic>.from(res);
+      }
+    } catch (e) {
+      debugPrint('fetchVendorStatement error: $e');
+    }
+
+    return {'entries': <Map<String, dynamic>>[], 'total_count': 0, 'opening_balance': 0.0};
+  }
+
+  /// Delete / deactivate vendor with debt safety check and optimistic cache mutation
+  Future<bool> deleteVendor(String vendorId) async {
+    final tId = tenantId ?? 'tenant-demo';
+    final target = state.vendors.where((v) => v.id == vendorId).firstOrNull;
+
+    // Check outstanding debt first
+    if (target != null && target.currentBalance > 0) {
+      state = state.copyWith(
+        errorMessage:
+            'Cannot delete supplier with outstanding baki balance of ৳${target.currentBalance.toStringAsFixed(2)}. Settle balance first.',
+      );
+      return false;
+    }
+
+    // Optimistic removal
+    final updatedList = state.vendors.where((v) => v.id != vendorId).toList();
+    state = state.copyWith(vendors: updatedList, errorMessage: null);
+
+    try {
+      if (tenantId != null && SupabaseService.isInitialized) {
+        await SupabaseService.client
+            .from('vendors')
+            .update({'is_active': false})
+            .eq('id', vendorId);
+      }
+      await HiveService.setCache('vendors_$tId', {
+        'data': updatedList.map((v) => v.toJson()).toList(),
+      });
+      return true;
+    } catch (e) {
+      debugPrint('deleteVendor error: $e');
+      state = state.copyWith(errorMessage: 'Failed to delete vendor: $e');
+      fetchVendors();
+      return false;
     }
   }
 

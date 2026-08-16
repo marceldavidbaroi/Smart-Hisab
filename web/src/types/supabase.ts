@@ -1670,6 +1670,17 @@ export type Database = {
           total_outflow: number
         }[]
       }
+      get_vendor_statement: {
+        Args: {
+          p_end?: string
+          p_limit?: number
+          p_offset?: number
+          p_start?: string
+          p_tenant_id: string
+          p_vendor_id: string
+        }
+        Returns: Json
+      }
       has_module_permission: {
         Args: {
           p_module_name: string
@@ -1878,6 +1889,17 @@ export type Database = {
           }
       record_vendor_payment: {
         Args: {
+          p_amount: number
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+          p_vendor_id: string
+        }
+        Returns: number
+      }
+      record_vendor_payment_v2: {
+        Args: {
+          p_account_id?: string
           p_amount: number
           p_notes?: string
           p_staff_id?: string

@@ -259,9 +259,11 @@ class CashbookNotifier extends StateNotifier<CashbookState> {
   Future<bool> addDayNote({
     required String title,
     required String content,
+    DateTime? date,
   }) async {
     final tId = tenantId ?? 'tenant-demo';
     final tempId = 'note-${DateTime.now().millisecondsSinceEpoch}';
+    final noteDate = date ?? DateTime.now();
 
     final newNoteEntry = CashbookEntry(
       id: tempId,
@@ -271,11 +273,12 @@ class CashbookNotifier extends StateNotifier<CashbookState> {
       category: 'Day Note',
       amount: 0.0,
       notes: content,
-      createdAt: DateTime.now(),
+      createdAt: noteDate,
     );
 
-    // Targeted Cache Mutation
-    final updatedList = [newNoteEntry, ...state.entries];
+    // Targeted Cache Mutation: insert and re-sort by date descending
+    final updatedList = [newNoteEntry, ...state.entries]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     state = state.copyWith(entries: updatedList);
 
     try {
@@ -286,10 +289,55 @@ class CashbookNotifier extends StateNotifier<CashbookState> {
           'category': 'canteen_expense',
           'amount': 0.01, // fallback dummy amount for strict constraints if needed
           'notes': '[$title] $content',
+          'created_at': noteDate.toIso8601String(),
         });
       }
     } catch (e) {
       debugPrint('addDayNote error: $e');
+    }
+
+    await HiveService.setCache('cashbook_$tId', {
+      'list': updatedList.map((e) => e.toJson()).toList(),
+    });
+    return true;
+  }
+
+  /// Update an existing Day Note / Market List with Targeted Cache Mutation
+  Future<bool> updateDayNote({
+    required String id,
+    required String title,
+    required String content,
+    DateTime? date,
+  }) async {
+    final tId = tenantId ?? 'tenant-demo';
+    
+    // Targeted Cache Mutation
+    final updatedList = state.entries.map((entry) {
+      if (entry.id == id) {
+        return entry.copyWith(
+          title: title.isEmpty ? 'Day Note' : title,
+          notes: content,
+          createdAt: date ?? entry.createdAt,
+        );
+      }
+      return entry;
+    }).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    state = state.copyWith(entries: updatedList);
+
+    try {
+      if (tenantId != null && SupabaseService.isInitialized && !id.startsWith('note-')) {
+        final updateData = <String, dynamic>{
+          'notes': '[$title] $content',
+        };
+        if (date != null) {
+          updateData['created_at'] = date.toIso8601String();
+        }
+        await SupabaseService.client.from('day_entries').update(updateData).eq('id', id);
+      }
+    } catch (e) {
+      debugPrint('updateDayNote error: $e');
     }
 
     await HiveService.setCache('cashbook_$tId', {

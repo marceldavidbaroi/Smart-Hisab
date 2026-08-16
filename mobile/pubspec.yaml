@@ -44,6 +44,7 @@ dependencies:
   lucide_icons: ^0.257.0
   path_provider: ^2.1.5
   google_sign_in: ^6.2.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

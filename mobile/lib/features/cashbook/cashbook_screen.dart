@@ -41,60 +41,36 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row (Clean, no entry buttons)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _selectedSubTab == 0 ? 'Canteen Cashbook' : 'Bazar Hub',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _selectedSubTab == 0
-                            ? 'Physical drawer & digital wallet cashflow history'
-                            : 'Supplier management & market grocery notes',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              // Top Title & Subtitle
+              Text(
+                _selectedSubTab == 0 ? 'Cashflow' : 'Bazar & Vendors',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               // Segmented Sub-View Switch
               Container(
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardDark : AppColors.cardBorderLight.withAlpha(120),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
-                  ),
+                  color: isDark ? AppColors.cardDark : AppColors.cardBorderLight.withAlpha(100),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(3),
                 child: Row(
                   children: [
                     Expanded(
                       child: _SubTabButton(
-                        label: '💵 Cashbook (হিসাব খাতা)',
+                        label: 'Cashbook',
                         isSelected: _selectedSubTab == 0,
                         onTap: () => setState(() => _selectedSubTab = 0),
                       ),
                     ),
-                    const SizedBox(width: 4),
                     Expanded(
                       child: _SubTabButton(
-                        label: '🛒 Bazar (বাজার খাতা)',
+                        label: 'Bazar Hub',
                         isSelected: _selectedSubTab == 1,
                         onTap: () => setState(() => _selectedSubTab = 1),
                       ),
@@ -102,7 +78,7 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               // Active View
               Expanded(
@@ -134,15 +110,15 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Day Transactions History',
+                                'Transactions',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                                 ),
                               ),
                               Text(
-                                '${cashbookState.filteredEntries.length} entries',
+                                '${cashbookState.filteredEntries.length} total',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -150,7 +126,7 @@ class _CashbookScreenState extends ConsumerState<CashbookScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
 
                           // Day Transactions List
                           Expanded(

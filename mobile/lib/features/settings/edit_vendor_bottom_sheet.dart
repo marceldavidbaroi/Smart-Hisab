@@ -159,6 +159,66 @@ class _EditVendorBottomSheetState extends ConsumerState<EditVendorBottomSheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            Divider(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Delete Supplier?'),
+                    content: Text(
+                      'Are you sure you want to delete ${widget.vendor.name}? This action cannot be undone.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true && context.mounted) {
+                  final success = await ref.read(vendorsNotifierProvider.notifier).deleteVendor(widget.vendor.id);
+                  if (context.mounted) {
+                    if (success) {
+                      Navigator.pop(context); // Close bottom sheet
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Supplier ${widget.vendor.name} deleted'),
+                          backgroundColor: AppColors.danger,
+                        ),
+                      );
+                    } else {
+                      final err = ref.read(vendorsNotifierProvider).errorMessage ?? 'Failed to delete vendor';
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(err),
+                          backgroundColor: AppColors.danger,
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+              icon: const Icon(LucideIcons.trash2, color: AppColors.danger, size: 18),
+              label: const Text(
+                'Delete Supplier',
+                style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppColors.danger.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
           ],
         ),
       ),

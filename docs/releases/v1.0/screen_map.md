@@ -83,12 +83,14 @@
 ```
 ┌──────────────────────────────────────┐
 │  📅 Today — [date]        🟢 Open   │
-│  Opening Cash: ৳5,000               │
+│  🍽️ Active Shift: Lunch (৳80/meal)   │
+│  Opening Cash: ৳5,000                │
+│  Expected in Drawer: ৳9,700          │
 │  ┌────────┬────────┬────────┐        │
-│  │ Meals  │ Cash   │  Baki  │        │
-│  │  32    │ ৳8,200 │ ৳6,000 │        │
+│  │ Meals  │ Cash In│ Outflow│        │
+│  │  32    │ ৳8,200 │ ৳3,500 │        │
 │  └────────┴────────┴────────┘        │
-│  Quick Actions:                      │
+│  Quick Actions (Direct Modals):      │
 │  ┌──────────────┬──────────────┐     │
 │  │ 🍽️ Mark      │ 💵 Collect   │     │
 │  │    Meals     │    Baki      │     │
@@ -96,16 +98,24 @@
 │  │ 🛒 Add       │ 📝 Day       │     │
 │  │    Expense   │    Notes     │     │
 │  └──────────────┴──────────────┘     │
+│  Recent Activity:                    │
+│  ┌──────────────────────────────┐    │
+│  │ 12:42 PM • Karim paid ৳500   │    │
+│  │ 12:30 PM • Eggs bazar ৳620   │    │
+│  └──────────────────────────────┘    │
 │  Total Baki Outstanding: ৳45,000    │
 │  ┌──────────────────────────────┐    │
-│  │  🔒  Close Today's Day       │    │
+│  │  🔒  End Day & Reconcile     │    │
 │  └──────────────────────────────┘    │
 └──────────────────────────────────────┘
 ```
 
-**RPCs used**:
+**RPCs & Direct Action Sheets used**:
 - `get_active_business_day(tenant_id)` → resolves current day
-- `calculate_expected_cash(day_id)` → live stats
+- `calculate_expected_cash(day_id)` → live stats & expected drawer cash
+- **Add Expense** → Directly opens `AddExpenseBottomSheet` (`record_expense_v2`)
+- **Collect Baki** → Directly opens `QuickCustomerPickerBottomSheet` $\rightarrow$ `CollectBakiBottomSheet` (`record_baki_payment`)
+- **Day Notes** → Directly opens `AddDayNoteBottomSheet` (day note insert)
 - `end_business_day(tenant_id, day_id, null, closing_cash, notes)` → on close confirm
 
 > [!NOTE]
@@ -140,10 +150,10 @@
 
 ### Customer List
 
-```
+```text
 ┌──────────────────────────────────────┐
-│  Customers (32/50)     [+ Add]  [🔍]│
-│  Active Shift: 🍽️ Lunch (৳80)       │
+│  Customers (32/50)     [+ Add]  [🔍] │
+│  Active Shift: 🍽️ Lunch (৳80)        │
 │  ┌──────────────────────────────┐    │
 │  │ 👤 Rahim Mia         ৳2,400 │    │
 │  │    ABC Factory    [🍽️ ✅]    │    │
@@ -165,7 +175,7 @@
 
 ### Customer Detail Page
 
-```
+```text
 ┌──────────────────────────────────────┐
 │  ← Customers     👤 Rahim Mia       │
 │  ABC Factory  •  📞 01712345678      │
@@ -198,38 +208,63 @@
 
 ## Tab 3: 💰 Cashbook & Bazar Hub
 
-```
-┌──────────────────────────────────────┐
-│  💰 Finances           📅 Today      │
-│  ┌────────────────────────────────┐  │
-│  │ [ 💵 Cashbook ] [ 🛒 Bazar/Baki]│  │  <-- Segmented Sub-View Switch
-│  └────────────────────────────────┘  │
-│                                      │
-│  [💵 Cashbook Sub-View]:             │
-│  ┌────────┬────────┬────────┐        │
-│  │ Inflow │ Outflow│ Net    │        │
-│  │ ৳8,200 │ ৳3,500 │ ৳4,700 │        │
-│  └────────┴────────┴────────┘        │
-│  [+ Income] [+ Expense] [+ Note]     │
-│  Day Transactions List (In/Out)      │
-│                                      │
-│  [🛒 Bazar & Vendor Baki Sub-View]:  │
-│  ┌──────────────────────────────┐    │
-│  │ Total We Owe (Payable):      │    │
-│  │ ৳14,500                      │    │
-│  └──────────────────────────────┘    │
-│  [🔍 Search Vendors...]  [+ Vendor]  │
-│  Vendor Cards (Swipe to Pay / View)  │
-└──────────────────────────────────────┘
+```text
+┌──────────────────────────────────────────────┐
+│  💰 Finances & Market           📅 Today     │
+│  ┌────────────────────────────────────────┐  │
+│  │ [ 💵 Cashbook ]   [ 🛒 Bazar & Baki ]  │  │  <-- Segmented Sub-View Switch
+│  └────────────────────────────────────────┘  │
+│                                              │
+│  [💵 Cashbook Sub-View]:                     │
+│  ┌────────────┬────────────┬────────────┐    │
+│  │ Inflow     │ Outflow    │ Net Cash   │    │
+│  │ ৳8,200     │ ৳3,500     │ ৳4,700     │    │
+│  └────────────┴────────────┴────────────┘    │
+│  [+ Income]   [+ Expense]   [+ Day Note]     │
+│  Day Transactions List (Inflow / Outflow)    │
+│                                              │
+│  [🛒 Bazar & Baki Hub Sub-View]:             │
+│  ┌───────────────┬───────────────┬────────┐  │
+│  │ Today's Cash  │ Today's Baki  │ We Owe │  │
+│  │ ৳1,450        │ ৳3,600        │ ৳24,800│  │
+│  └───────────────┴───────────────┴────────┘  │
+│  [ 🏪 Suppliers & Vendors ]  [ 📝 New Fard ] │
+│  Active Bazar Fard (Checklist + Quick Hisab) │
+│  Today's Market Purchases List               │
+└──────────────────────────────────────────────┘
 ```
 
 **RPCs & APIs used**:
-- `calculate_expected_cash(day_id)` → live inflow/outflow stats
-- `record_expense_v2` / `record_expense` → Add Expense sheet
+- `calculate_expected_cash(day_id)` → live liquid cashflow stats across active canteen accounts
+- `record_expense_v2` → Add Expense sheet (`payment_mode = 'cash'` vs `'baki'`)
 - `record_misc_income` → Add Income sheet
-- `record_vendor_payment` → Pay Vendor action / Swipe-to-pay
-- `get_vendor_statement` → Vendor detailed ledger
-- Direct DB insert for `day_notes` → Add Day Note sheet
+- `record_vendor_payment_v2` → Pay Vendor action / Swipe-to-pay
+- `get_vendor_statement` → Chronological vendor ledger & khata passbook
+- Direct DB insert for `day_notes` → Bazar checklists & daily memos
+
+### Bazar & Vendor Sub-Screens
+
+#### 1. Add Expense Sheet (`AddExpenseBottomSheet`)
+- Mode Toggle: `[ 💵 নগদ (Cash) ]` vs `[ 📝 বাকি (Vendor Baki) ]`.
+- Cash mode: Select Canteen Wallet (`Cash Drawer`, `bKash`, `Bank`); vendor optional.
+- Baki mode: Select Wholesaler / Vendor (Required); cash drawer untouched.
+- Categories: কাঁচাবাজার ও সবজি, চাল ও মুদি, মাছ ও মাংস, গ্যাস সিলিন্ডার, পরিবহন/ভাড়া, অন্যান্য.
+
+#### 2. Suppliers Directory (`VendorsScreen`)
+- Total Accounts Payable KPI Header (মোট বকেয়া পাওনা).
+- Search bar (by name, shop, phone).
+- Supplier cards with category badges, phone call shortcut, and swipe-to-pay.
+- `[+ Add Vendor]` bottom sheet.
+
+#### 3. Vendor Khata Profile (`VendorDetailScreen`)
+- Total Outstanding Due card (`৳১২,৫০০ বকেয়া`).
+- Action buttons: `[ 💳 বাকি পরিশোধ (Pay Due) ]`, `[ 📞 Call Vendor ]`.
+- Chronological transaction passbook (`[🛒 PURCHASE]` vs `[💵 PAYMENT]` with memo notes and running balance).
+
+#### 4. Pay Vendor Sheet (`PayVendorBottomSheet`)
+- Amount input + quick chips (`[ ৳১,০০০ ]`, `[ ৳২,০০০ ]`, `[ Pay Full Due ]`).
+- Paid from wallet selector (`Cash Drawer`, `bKash`, `Bank`).
+- Notes / voucher reference input.
 
 ---
 
