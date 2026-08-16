@@ -70,13 +70,19 @@ class _InviteManagerScreenState extends ConsumerState<InviteManagerScreen> {
             .rpc('generate_invite_code', params: {
           'p_tenant_id': tenantId,
           'p_role': 'manager',
-        }) as Map<String, dynamic>;
+        });
 
-        if (res['success'] == true && res['data'] != null) {
-          final code = res['data']['code'] as String?;
+        String? code;
+        if (res is String) {
+          code = res;
+        } else if (res is Map<String, dynamic>) {
+          code = (res['data']?['code'] ?? res['code']) as String?;
+        }
+
+        if (code != null && code.isNotEmpty) {
           if (mounted) {
             setState(() {
-              _inviteCode = code ?? '849201';
+              _inviteCode = code;
               _remainingSeconds = 86400;
               _isGenerating = false;
             });

@@ -7,13 +7,19 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
 import '../app_scaffold_notifier.dart';
+import '../cashbook/bazar_note_detail_screen.dart';
+import '../cashbook/add_expense_bottom_sheet.dart';
+import '../cashbook/cashbook_notifier.dart';
 import 'business_day_notifier.dart';
 import 'close_day_bottom_sheet.dart';
 import 'open_day_bottom_sheet.dart';
 import 'widgets/active_day_stats_card.dart';
+import 'widgets/live_activity_feed.dart';
 import 'widgets/quick_actions_grid.dart';
+import 'widgets/quick_customer_picker_bottom_sheet.dart';
+import 'widgets/yesterday_recap_card.dart';
 
-/// Tab 1: Home Dashboard Screen complying with v1.0 Roadmap & AGENTS.md constraints
+/// Tab 1: Redesigned Zero-Friction Owner Home Dashboard Screen
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -51,11 +57,17 @@ class HomeScreen extends ConsumerWidget {
               // Business Day Banner Card
               if (businessDayState.isLoading)
                 _buildShimmerLoader(context)
-              else if (!isDayOpen || activeDay == null)
-                _buildStartDayCard(context)
-              else
+              else if (!isDayOpen || activeDay == null) ...[
+                _buildStartDayCard(context),
+                if (businessDayState.lastClosedDayRecap != null) ...[
+                  const SizedBox(height: 16),
+                  YesterdayRecapCard(recap: businessDayState.lastClosedDayRecap!),
+                ],
+              ] else
                 ActiveDayStatsCard(
                   day: activeDay,
+                  shiftName: businessDayState.activeShiftName,
+                  shiftRate: businessDayState.activeShiftRate,
                   onCloseDayPressed: () => CloseDayBottomSheet.show(context),
                 ),
 
@@ -64,12 +76,12 @@ class HomeScreen extends ConsumerWidget {
               // Total Outstanding Baki Card
               _buildBakiCard(
                 context,
-                totalBaki: activeDay?.totalBakiOutstanding ?? 45000.0,
+                totalBaki: activeDay?.totalBakiOutstanding ?? 0.0,
               ),
 
               const SizedBox(height: 20),
 
-              // Quick Actions Grid
+              // Quick Actions Grid (Direct Modals)
               Text(
                 'Quick Actions',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -83,14 +95,48 @@ class HomeScreen extends ConsumerWidget {
                   ref.read(scaffoldNotifierProvider.notifier).setTab(1); // Customers Tab
                 },
                 onCollectBaki: () {
-                  ref.read(scaffoldNotifierProvider.notifier).setTab(1); // Customers Tab
+                  QuickCustomerPickerBottomSheet.show(context);
                 },
                 onAddExpense: () {
-                  ref.read(scaffoldNotifierProvider.notifier).setTab(2); // Cashbook Tab
+                  AddExpenseBottomSheet.show(
+                    context,
+                    onSubmit: ({
+                      required String title,
+                      required String category,
+                      required double amount,
+                      String? accountId,
+                      String? vendorId,
+                      String? notes,
+                    }) async {
+                      await ref.read(cashbookNotifierProvider.notifier).addExpense(
+                            title: title,
+                            category: category,
+                            amount: amount,
+                            accountId: accountId,
+                            vendorId: vendorId,
+                            notes: notes,
+                          );
+                      ref.read(businessDayNotifierProvider.notifier).fetchActiveDay();
+                    },
+                  );
                 },
                 onDayNotes: () {
-                  ref.read(scaffoldNotifierProvider.notifier).setTab(2); // Cashbook Tab
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BazarNoteDetailScreen(),
+                    ),
+                  ).then((_) {
+                    ref.read(businessDayNotifierProvider.notifier).fetchActiveDay();
+                  });
                 },
+              ),
+
+              const SizedBox(height: 20),
+
+              // Live Activity Audit Feed
+              LiveActivityFeed(
+                activities: businessDayState.recentActivities,
               ),
             ],
           ),
@@ -174,13 +220,13 @@ class HomeScreen extends ConsumerWidget {
             "Start Today's Business Day",
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 16, // AGENTS.md rule 7
                   color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                 ),
           ),
           const SizedBox(height: 6),
           Text(
-            'Set opening cash and begin recording meals & baki.',
+            'Set opening cash drawer amount to record daily meals & sales.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   fontSize: 14,
@@ -235,7 +281,7 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Outstanding Baki',
+                  'Total Outstanding Customer Baki',
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,

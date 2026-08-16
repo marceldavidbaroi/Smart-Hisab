@@ -333,8 +333,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         role: joinedRole,
       );
 
-      final baseList = state.availableTenants;
-      final updatedList = [...baseList.where((t) => t.tenantId != joinedTenantId), newItem];
+      List<TenantMembershipItem> updatedList;
+      if (currentUser != null) {
+        final fetchedTenants = await AuthTenantService.fetchUserTenants(currentUser.id);
+        updatedList = fetchedTenants.isNotEmpty
+            ? fetchedTenants
+            : [...state.availableTenants.where((t) => t.tenantId != joinedTenantId), newItem];
+      } else {
+        updatedList = [...state.availableTenants.where((t) => t.tenantId != joinedTenantId), newItem];
+      }
+
       await setActiveTenant(
         tenantId: joinedTenantId,
         tenantName: joinedName,

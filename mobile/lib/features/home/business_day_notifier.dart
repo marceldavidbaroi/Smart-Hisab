@@ -5,14 +5,24 @@ import '../../core/models/business_day.dart';
 import '../../core/services/hive_service.dart';
 import '../../core/services/supabase_service.dart';
 
+import '../../core/models/cashbook_entry.dart';
+
 class BusinessDayState {
   final bool isLoading;
   final BusinessDay? activeDay;
+  final LastClosedDayRecap? lastClosedDayRecap;
+  final List<CashbookEntry> recentActivities;
+  final String activeShiftName;
+  final double activeShiftRate;
   final String? errorMessage;
 
   const BusinessDayState({
     this.isLoading = false,
     this.activeDay,
+    this.lastClosedDayRecap,
+    this.recentActivities = const [],
+    this.activeShiftName = 'Lunch',
+    this.activeShiftRate = 80.0,
     this.errorMessage,
   });
 
@@ -21,12 +31,20 @@ class BusinessDayState {
   BusinessDayState copyWith({
     bool? isLoading,
     BusinessDay? activeDay,
+    LastClosedDayRecap? lastClosedDayRecap,
+    List<CashbookEntry>? recentActivities,
+    String? activeShiftName,
+    double? activeShiftRate,
     String? errorMessage,
     bool clearActiveDay = false,
   }) {
     return BusinessDayState(
       isLoading: isLoading ?? this.isLoading,
       activeDay: clearActiveDay ? null : (activeDay ?? this.activeDay),
+      lastClosedDayRecap: lastClosedDayRecap ?? this.lastClosedDayRecap,
+      recentActivities: recentActivities ?? this.recentActivities,
+      activeShiftName: activeShiftName ?? this.activeShiftName,
+      activeShiftRate: activeShiftRate ?? this.activeShiftRate,
       errorMessage: errorMessage,
     );
   }
@@ -54,13 +72,86 @@ class BusinessDayNotifier extends StateNotifier<BusinessDayState> {
       try {
         final client = SupabaseService.client;
 
-        // 1. Fetch active open business day for this tenant
+        // 1. Fetch active open business day
         final response = await client
             .from('business_days')
             .select()
             .eq('tenant_id', tenantId)
             .eq('status', 'open')
             .maybeSingle();
+
+        // 2. Fetch last closed business day for Yesterday's Recap
+        LastClosedDayRecap? recap;
+        final closedRes = await client
+            .from('business_days')
+            .select()
+            .eq('tenant_id', tenantId)
+            .eq('status', 'closed')
+            .order('closed_at', ascending: false)
+            .limit(1)
+            .maybeSingle();
+
+        if (closedRes != null) {
+          final cId = closedRes['id'] as String;
+          final cMealsRes = await client
+              .from('meal_attendance')
+              .select('id')
+              .eq('tenant_id', tenantId)
+              .eq('business_day_id', cId);
+          final cMealCount = (cMealsRes as List).length;
+
+          final cEntriesRes = await client
+              .from('day_entries')
+              .select('amount, entry_type')
+              .eq('tenant_id', tenantId)
+              .eq('business_day_id', cId);
+
+          double cInflow = 0.0;
+          for (final e in (cEntriesRes as List)) {
+            if (e['entry_type'] == 'inflow') {
+              cInflow += (e['amount'] as num?)?.toDouble() ?? 0.0;
+            }
+          }
+
+          recap = LastClosedDayRecap(
+            closedAt: closedRes['closed_at'] != null
+                ? DateTime.tryParse(closedRes['closed_at'].toString()) ?? DateTime.now()
+                : DateTime.now(),
+            openingCash: (closedRes['opening_cash'] as num?)?.toDouble() ?? 0.0,
+            closingCash: (closedRes['closing_cash'] as num?)?.toDouble() ?? 0.0,
+            expectedCash: (closedRes['expected_cash'] as num?)?.toDouble() ?? 0.0,
+            variance: (closedRes['variance'] as num?)?.toDouble() ?? 0.0,
+            totalMeals: cMealCount,
+            totalInflows: cInflow,
+            notes: closedRes['notes'] as String?,
+          );
+        }
+
+        // 3. Fetch latest 5 activity entries
+        final activitiesRes = await client
+            .from('day_entries')
+            .select('*, canteen_accounts(name)')
+            .eq('tenant_id', tenantId)
+            .order('created_at', ascending: false)
+            .limit(5);
+
+        final recentList = (activitiesRes as List)
+            .map((e) => CashbookEntry.fromJson(e))
+            .toList();
+
+        // 4. Fetch total outstanding baki
+        final wallets = await client
+            .from('customer_wallets')
+            .select('balance')
+            .eq('tenant_id', tenantId);
+
+        double totalBaki = 0.0;
+        for (final w in (wallets as List)) {
+          final bal = (w['balance'] as num?)?.toDouble() ?? 0.0;
+          if (bal < 0) {
+            totalBaki += bal.abs();
+          }
+        }
 
         if (response != null) {
           final dayId = response['id'] as String;
@@ -69,7 +160,6 @@ class BusinessDayNotifier extends StateNotifier<BusinessDayState> {
               ? DateTime.tryParse(response['business_date'].toString()) ?? DateTime.now()
               : DateTime.now();
 
-          // 2. Fetch today's meal count
           final mealsRes = await client
               .from('meal_attendance')
               .select('id')
@@ -77,7 +167,6 @@ class BusinessDayNotifier extends StateNotifier<BusinessDayState> {
               .eq('business_day_id', dayId);
           final mealCount = (mealsRes as List).length;
 
-          // 3. Fetch today's cash inflows (customer wallet topups / cash payments recorded)
           final dayEntries = await client
               .from('day_entries')
               .select('amount, entry_type')
@@ -92,20 +181,6 @@ class BusinessDayNotifier extends StateNotifier<BusinessDayState> {
               todayInflows += amt;
             } else if (entry['entry_type'] == 'outflow') {
               todayOutflows += amt;
-            }
-          }
-
-          // 4. Fetch total outstanding baki
-          final wallets = await client
-              .from('customer_wallets')
-              .select('balance')
-              .eq('tenant_id', tenantId);
-
-          double totalBaki = 0.0;
-          for (final w in (wallets as List)) {
-            final bal = (w['balance'] as num?)?.toDouble() ?? 0.0;
-            if (bal < 0) {
-              totalBaki += bal.abs();
             }
           }
 
@@ -124,18 +199,25 @@ class BusinessDayNotifier extends StateNotifier<BusinessDayState> {
             totalBakiOutstanding: totalBaki,
           );
 
-          // Cache active day locally
           await HiveService.setCache('active_day_$tenantId', day.toJson());
-          state = state.copyWith(isLoading: false, activeDay: day);
+          state = state.copyWith(
+            isLoading: false,
+            activeDay: day,
+            lastClosedDayRecap: recap,
+            recentActivities: recentList,
+          );
           return;
         } else {
-          // No open business day on backend
           await HiveService.deleteCache('active_day_$tenantId');
-          state = state.copyWith(isLoading: false, clearActiveDay: true);
+          state = state.copyWith(
+            isLoading: false,
+            clearActiveDay: true,
+            lastClosedDayRecap: recap,
+            recentActivities: recentList,
+          );
           return;
         }
       } catch (e) {
-        // Fallback to local cache if network error occurs
         final cached = HiveService.getCache('active_day_$tenantId');
         if (cached != null) {
           final cachedDay = BusinessDay.fromJson(Map<String, dynamic>.from(cached));

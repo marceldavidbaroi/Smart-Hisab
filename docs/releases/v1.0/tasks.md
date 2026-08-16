@@ -15,8 +15,8 @@
 | **Invite Manager (Tab 5)** | ✅ Done | Owner can generate a 6-digit code valid for 24h to invite a manager. |
 | **Settings & Profile** | ✅ Done | Shifts & meal rates config, canteen profile & manager invites. |
 | **Cashbook & Bazar Hub (Tab 3)** | ✅ Done | Clean separation of Canteen Wallet Cashflow (Cash Drawer, bKash, Bank) vs Bazar & Vendor Baki (Accounts Payable). |
-| **Canteen Wallets / Accounts** | 🟡 In Progress | Multi-channel business money accounts (Cash Drawer, bKash, Bank, Safe) backend migration created; UI selectors pending. |
-| **Home Dashboard (Tab 1)** | 🟡 Pending Implementation | Redesign into Zero-Friction Owner Command Hub (Direct modal triggers, live drawer cash pulse, yesterday's recap, recent activity audit). |
+| **Canteen Wallets / Accounts** | ✅ Done | Multi-channel business money accounts (Cash Drawer, bKash, Bank, Safe) backend migration & UI selectors integrated across cashbook and payroll. |
+| **Home Dashboard (Tab 1)** | ✅ Done | Zero-Friction Owner Command Hub (Direct modal triggers, live drawer cash pulse, active shift ribbon, yesterday's recap, live activity audit feed). |
 | **Linter & Code Cleanup** | ✅ Done | `flutter analyze` passes with 0 issues & 0 warnings. |
 | **Release Build Testing** | ⏳ Pending | Android APK/AppBundle verification & permissions check. |
 
@@ -69,7 +69,7 @@
      - Record raw grocery / fuel credit purchases linked to the vendor (`record_expense_v2`) without touching cash drawer.
 
 ### Task 4: Zero-Friction Owner Home Dashboard Redesign & Direct Wiring
-- **Status**: 🟡 Pending Implementation
+- **Status**: ✅ Completed
 - **Goal**: Transform Tab 1 from an unwired placeholder into a counter-first daily command center for the solo canteen owner, adhering to the 3-second rule.
 - **Specification & Architecture**:
   1. **Dynamic Lifecycle States (Morning $\rightarrow$ Active $\rightarrow$ Night)**:

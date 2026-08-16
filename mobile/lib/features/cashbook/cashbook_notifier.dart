@@ -23,10 +23,11 @@ class CashbookState {
   });
 
   List<CashbookEntry> get filteredEntries {
+    final financialEntries = entries.where((e) => e.type != 'note').toList();
     if (selectedAccountId == null || selectedAccountId!.isEmpty) {
-      return entries;
+      return financialEntries;
     }
-    return entries.where((e) => e.accountId == selectedAccountId).toList();
+    return financialEntries.where((e) => e.accountId == selectedAccountId).toList();
   }
 
   double get totalInflow {

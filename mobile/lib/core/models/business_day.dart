@@ -125,3 +125,58 @@ class BusinessDay {
     );
   }
 }
+
+/// Data class representing the recap summary of yesterday's / last closed business day
+@immutable
+class LastClosedDayRecap {
+  final DateTime closedAt;
+  final double openingCash;
+  final double closingCash;
+  final double expectedCash;
+  final double variance;
+  final int totalMeals;
+  final double totalInflows;
+  final String? notes;
+
+  const LastClosedDayRecap({
+    required this.closedAt,
+    required this.openingCash,
+    required this.closingCash,
+    required this.expectedCash,
+    required this.variance,
+    required this.totalMeals,
+    required this.totalInflows,
+    this.notes,
+  });
+
+  bool get isBalanced => variance.abs() < 0.01;
+
+  factory LastClosedDayRecap.fromJson(Map<String, dynamic> json) {
+    return LastClosedDayRecap(
+      closedAt: json['closed_at'] != null
+          ? DateTime.tryParse(json['closed_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      openingCash: (json['opening_cash'] as num?)?.toDouble() ?? 0.0,
+      closingCash: (json['closing_cash'] as num?)?.toDouble() ?? 0.0,
+      expectedCash: (json['expected_cash'] as num?)?.toDouble() ?? 0.0,
+      variance: (json['variance'] as num?)?.toDouble() ?? 0.0,
+      totalMeals: (json['total_meals'] as num?)?.toInt() ?? 0,
+      totalInflows: (json['total_inflows'] as num?)?.toDouble() ?? 0.0,
+      notes: json['notes'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'closed_at': closedAt.toIso8601String(),
+      'opening_cash': openingCash,
+      'closing_cash': closingCash,
+      'expected_cash': expectedCash,
+      'variance': variance,
+      'total_meals': totalMeals,
+      'total_inflows': totalInflows,
+      'notes': notes,
+    };
+  }
+}
+
