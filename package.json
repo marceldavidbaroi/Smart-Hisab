@@ -2,12 +2,8 @@
   "name": "smart-hisab-root",
   "private": true,
   "version": "1.0.0",
-  "description": "Root scripts for web app and Supabase backend",
+  "description": "Root scripts for Smart-Hisab mobile app and Supabase backend",
   "scripts": {
-    "dev": "pnpm --filter web dev",
-    "build": "pnpm --filter web build",
-    "lint": "pnpm --filter web lint",
-    "app": "bash ./scripts/open-mobile-android.sh",
     "backend:init": "npx supabase init",
     "backend:login": "npx supabase login",
     "backend:link": "npx supabase link --project-ref \"$SUPABASE_PROJECT_REF\"",
@@ -16,19 +12,18 @@
     "backend:stop": "npx supabase stop",
     "backend:reset": "npx supabase db reset",
     "backend:status": "npx supabase status",
-    "backend:types": "sh -c 'mkdir -p web/src/types && npx supabase gen types typescript --linked --schema public > web/src/types/supabase.ts'",
-    "backend:types:local": "sh -c 'mkdir -p web/src/types && npx supabase gen types typescript --local --schema public > web/src/types/supabase.ts'",
-    "backend:push": "npx supabase db push --linked",
+    "backend:types": "sh -c 'npx supabase gen types typescript --linked --schema public > supabase/types.ts'",
+    "backend:types:local": "sh -c 'npx supabase gen types typescript --local --schema public > supabase/types.ts'",
     "backend:deploy": "bash ./deploy_backend.sh",
     "deploy:backend": "bash ./deploy_backend.sh",
-    "deploy:frontend": "bash ./scripts/deploy-frontend.sh",
-    "deploy:web": "bash ./scripts/deploy-frontend.sh",
-    "clear-tenant": "bash ./scripts/clear-tenant.sh"
+    "clear-tenant": "bash ./scripts/clear-tenant.sh",
+    "mobile:dev": "cd mobile && flutter run",
+    "web:dev": "cd mobile && flutter run -d chrome",
+    "mobile:analyze": "cd mobile && flutter analyze",
+    "mobile:clean": "cd mobile && flutter clean && flutter pub get"
   },
   "devDependencies": {
-    "nativewind": "^4.1.23",
     "supabase": "^2.105.0",
-    "tailwindcss": "^3.4.17",
     "typescript": "^5.9.3",
     "wrangler": "^4.93.1"
   }

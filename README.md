@@ -83,7 +83,56 @@ Once seeded, a platform superadmin account is automatically created for local te
 * **Email**: `admin@example.com`
 * **Password**: `Superadmin123!`
 
-### 4. Running the Dev Server
+### 4. Running the Flutter Android Mobile App
+
+#### Step 4.1: Launching or Creating an Android Emulator
+
+**To list existing emulators:**
+```bash
+flutter emulators
+```
+
+**To launch an existing emulator:**
+```bash
+flutter emulators --launch Medium_Phone_API_36.1
+```
+
+**How to create a new Android Virtual Device (AVD) emulator:**
+
+* **Option A: Via Android Studio (Recommended)**:
+  1. Open **Android Studio**.
+  2. Click **More Actions** (or Tools menu) → Select **Virtual Device Manager** (or **AVD Manager**).
+  3. Click **Create Device** (+).
+  4. Select a Phone hardware profile (e.g. *Pixel 8* or *Medium Phone*) → Click **Next**.
+  5. Select a system image (e.g. *API 34 / API 35* download) → Click **Next**.
+  6. Name your device and click **Finish**.
+  7. Click the **Play (▶️)** button to launch your new emulator.
+
+* **Option B: Via Command Line (`avdmanager` / `flutter`)**:
+  ```bash
+  # 1. List available system images (requires Android SDK command-line tools)
+  sdkmanager --list
+  
+  # 2. Download a system image
+  sdkmanager "system-images;android-34;google_apis;x86_64"
+  
+  # 3. Create a new AVD device
+  avdmanager create avd -n MyCustomPhone -k "system-images;android-34;google_apis;x86_64"
+  
+  # 4. Launch the newly created device via Flutter
+  flutter emulators --launch MyCustomPhone
+  ```
+
+#### Step 4.2: Running the App
+Once the emulator is running, start the Flutter mobile app from the root workspace:
+```bash
+pnpm run mobile:dev
+```
+*(Or navigate into `mobile/` and run `flutter run`)*.
+
+---
+
+### 5. Running the Quasar Web Server
 Launch the Quasar local development server:
 ```bash
 pnpm run dev
@@ -98,7 +147,9 @@ All commands are run from the root workspace:
 
 | Script | Command | Description |
 | :--- | :--- | :--- |
-| `pnpm run dev` | `pnpm --filter web dev` | Starts the Quasar Vite dev server (runs on `http://localhost:9000`) |
+| `pnpm run mobile:dev` | `cd mobile && flutter run` | Launches the Flutter mobile application |
+| `pnpm run mobile:analyze` | `cd mobile && flutter analyze` | Runs Flutter static code analysis & linter |
+| `pnpm run dev` | `pnpm --filter web dev` | Starts the Quasar Vite dev server (`http://localhost:9000`) |
 | `pnpm run build` | `pnpm --filter web build` | Builds the Quasar web application |
 | `pnpm run lint` | `pnpm --filter web lint` | Runs eslint and prettier formatting |
 | `pnpm run backend:start` | `npx supabase start` | Starts the local Supabase Docker containers |

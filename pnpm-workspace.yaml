@@ -1,6 +1,5 @@
 packages:
   - 'web'
-  - 'mobile'
 
 onlyBuiltDependencies:
   - '@parcel/watcher'

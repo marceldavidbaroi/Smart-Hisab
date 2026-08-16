@@ -51,7 +51,7 @@ export type Database = {
           id: string
           notes: string | null
           opened_at: string
-          opened_by_staff_id: string
+          opened_by_staff_id: string | null
           opened_by_user_id: string | null
           opening_cash: number
           status: string
@@ -70,7 +70,7 @@ export type Database = {
           id?: string
           notes?: string | null
           opened_at?: string
-          opened_by_staff_id: string
+          opened_by_staff_id?: string | null
           opened_by_user_id?: string | null
           opening_cash?: number
           status: string
@@ -89,7 +89,7 @@ export type Database = {
           id?: string
           notes?: string | null
           opened_at?: string
-          opened_by_staff_id?: string
+          opened_by_staff_id?: string | null
           opened_by_user_id?: string | null
           opening_cash?: number
           status?: string
@@ -114,6 +114,133 @@ export type Database = {
           },
           {
             foreignKeyName: "business_days_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      canteen_account_entries: {
+        Row: {
+          account_id: string
+          amount: number
+          business_day_id: string | null
+          category: string
+          created_at: string
+          entry_type: string
+          id: string
+          metadata: Json
+          notes: string | null
+          recorded_by_staff_id: string | null
+          recorded_by_user_id: string | null
+          reference_id: string | null
+          reference_type: string | null
+          tenant_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          business_day_id?: string | null
+          category: string
+          created_at?: string
+          entry_type: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          recorded_by_staff_id?: string | null
+          recorded_by_user_id?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          business_day_id?: string | null
+          category?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          recorded_by_staff_id?: string | null
+          recorded_by_user_id?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canteen_account_entries_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "canteen_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canteen_account_entries_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canteen_account_entries_recorded_by_staff_id_fkey"
+            columns: ["recorded_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canteen_account_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      canteen_accounts: {
+        Row: {
+          account_number: string | null
+          account_type: string
+          created_at: string
+          current_balance: number
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          account_type: string
+          created_at?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          account_type?: string
+          created_at?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canteen_accounts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -163,51 +290,33 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
-          category: string | null
-          contract_daily_rate: number | null
-          contract_shifts: string[] | null
           created_at: string
-          factory_unit: string | null
-          full_name: string
           id: string
           institution: string | null
           is_active: boolean
-          outstanding_balance: number
+          name: string
           phone: string
           tenant_id: string
-          updated_at: string
         }
         Insert: {
           address?: string | null
-          category?: string | null
-          contract_daily_rate?: number | null
-          contract_shifts?: string[] | null
           created_at?: string
-          factory_unit?: string | null
-          full_name: string
           id?: string
           institution?: string | null
           is_active?: boolean
-          outstanding_balance?: number
+          name: string
           phone: string
           tenant_id: string
-          updated_at?: string
         }
         Update: {
           address?: string | null
-          category?: string | null
-          contract_daily_rate?: number | null
-          contract_shifts?: string[] | null
           created_at?: string
-          factory_unit?: string | null
-          full_name?: string
           id?: string
           institution?: string | null
           is_active?: boolean
-          outstanding_balance?: number
+          name?: string
           phone?: string
           tenant_id?: string
-          updated_at?: string
         }
         Relationships: [
           {
@@ -226,8 +335,10 @@ export type Database = {
           category: string
           created_at: string
           created_by_staff_id: string | null
+          created_by_user_id: string | null
           entry_type: string
           id: string
+          metadata: Json
           notes: string | null
           reference_id: string | null
           reference_type: string | null
@@ -240,8 +351,10 @@ export type Database = {
           category: string
           created_at?: string
           created_by_staff_id?: string | null
+          created_by_user_id?: string | null
           entry_type: string
           id?: string
+          metadata?: Json
           notes?: string | null
           reference_id?: string | null
           reference_type?: string | null
@@ -254,8 +367,10 @@ export type Database = {
           category?: string
           created_at?: string
           created_by_staff_id?: string | null
+          created_by_user_id?: string | null
           entry_type?: string
           id?: string
+          metadata?: Json
           notes?: string | null
           reference_id?: string | null
           reference_type?: string | null
@@ -299,6 +414,7 @@ export type Database = {
           content: string
           created_at: string
           created_by_staff_id: string | null
+          created_by_user_id: string | null
           id: string
           note_type: string
           tenant_id: string
@@ -308,6 +424,7 @@ export type Database = {
           content: string
           created_at?: string
           created_by_staff_id?: string | null
+          created_by_user_id?: string | null
           id?: string
           note_type: string
           tenant_id: string
@@ -317,6 +434,7 @@ export type Database = {
           content?: string
           created_at?: string
           created_by_staff_id?: string | null
+          created_by_user_id?: string | null
           id?: string
           note_type?: string
           tenant_id?: string
@@ -370,48 +488,47 @@ export type Database = {
           pairing_code?: string
           tenant_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "device_pairings_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       meal_attendance: {
         Row: {
+          business_day_id: string | null
           charge_amount: number
           created_at: string
           customer_id: string
-          date: string
           id: string
           recorded_by_staff_id: string | null
           shift_id: string | null
           tenant_id: string
         }
         Insert: {
+          business_day_id?: string | null
           charge_amount?: number
           created_at?: string
           customer_id: string
-          date?: string
           id?: string
           recorded_by_staff_id?: string | null
           shift_id?: string | null
           tenant_id: string
         }
         Update: {
+          business_day_id?: string | null
           charge_amount?: number
           created_at?: string
           customer_id?: string
-          date?: string
           id?: string
           recorded_by_staff_id?: string | null
           shift_id?: string | null
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "meal_attendance_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meal_attendance_customer_id_fkey"
             columns: ["customer_id"]
@@ -449,6 +566,7 @@ export type Database = {
           id: string
           note: string | null
           rate: number
+          shift_id: string | null
           tenant_id: string
         }
         Insert: {
@@ -457,6 +575,7 @@ export type Database = {
           id?: string
           note?: string | null
           rate: number
+          shift_id?: string | null
           tenant_id: string
         }
         Update: {
@@ -465,9 +584,17 @@ export type Database = {
           id?: string
           note?: string | null
           rate?: number
+          shift_id?: string | null
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "meal_configs_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meal_configs_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -517,48 +644,56 @@ export type Database = {
           tenant_id?: string
           unpair_code?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "paired_devices_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       salary_payouts: {
         Row: {
+          account_id: string | null
           amount: number
           business_day_id: string | null
           created_at: string
           id: string
           notes: string | null
           payment_mode: string
+          payout_month: string | null
+          payout_type: string
           staff_id: string
           tenant_id: string
         }
         Insert: {
+          account_id?: string | null
           amount: number
           business_day_id?: string | null
           created_at?: string
           id?: string
           notes?: string | null
           payment_mode?: string
+          payout_month?: string | null
+          payout_type?: string
           staff_id: string
           tenant_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           business_day_id?: string | null
           created_at?: string
           id?: string
           notes?: string | null
           payment_mode?: string
+          payout_month?: string | null
+          payout_type?: string
           staff_id?: string
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "salary_payouts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "canteen_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "salary_payouts_business_day_id_fkey"
             columns: ["business_day_id"]
@@ -591,7 +726,6 @@ export type Database = {
           name: string
           start_time: string
           tenant_id: string
-          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -601,7 +735,6 @@ export type Database = {
           name: string
           start_time: string
           tenant_id: string
-          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -611,7 +744,6 @@ export type Database = {
           name?: string
           start_time?: string
           tenant_id?: string
-          updated_at?: string
         }
         Relationships: [
           {
@@ -654,36 +786,7 @@ export type Database = {
           tenant_id?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "staff_attendance_business_day_id_fkey"
-            columns: ["business_day_id"]
-            isOneToOne: false
-            referencedRelation: "business_days"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "staff_attendance_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "staff_attendance_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "staff_attendance_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       staff_members: {
         Row: {
@@ -693,12 +796,13 @@ export type Database = {
           hashed_pin: string | null
           id: string
           is_active: boolean
+          monthly_salary: number
           phone: string
-          staff_role_id: string
+          role: string
+          salary_type: string
           temp_pin: string | null
           tenant_id: string
           updated_at: string
-          user_id: string | null
         }
         Insert: {
           allow_terminal_login?: boolean
@@ -707,12 +811,13 @@ export type Database = {
           hashed_pin?: string | null
           id?: string
           is_active?: boolean
+          monthly_salary?: number
           phone: string
-          staff_role_id: string
+          role: string
+          salary_type?: string
           temp_pin?: string | null
           tenant_id: string
           updated_at?: string
-          user_id?: string | null
         }
         Update: {
           allow_terminal_login?: boolean
@@ -721,21 +826,15 @@ export type Database = {
           hashed_pin?: string | null
           id?: string
           is_active?: boolean
+          monthly_salary?: number
           phone?: string
-          staff_role_id?: string
+          role?: string
+          salary_type?: string
           temp_pin?: string | null
           tenant_id?: string
           updated_at?: string
-          user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "staff_members_staff_role_id_fkey"
-            columns: ["staff_role_id"]
-            isOneToOne: false
-            referencedRelation: "staff_roles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "staff_members_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -776,15 +875,7 @@ export type Database = {
           tenant_id?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "staff_roles_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       staff_wallets: {
         Row: {
@@ -856,15 +947,7 @@ export type Database = {
           tenant_id?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tenant_billing_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: true
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tenant_invitations: {
         Row: {
@@ -908,8 +991,42 @@ export type Database = {
             referencedRelation: "tenant_roles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      tenant_invites: {
+        Row: {
+          code: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          role: string
+          tenant_id: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          role?: string
+          tenant_id: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          role?: string
+          tenant_id?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "tenant_invitations_tenant_id_fkey"
+            foreignKeyName: "tenant_invites_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -921,35 +1038,25 @@ export type Database = {
         Row: {
           id: string
           joined_at: string
-          role_id: string
-          status: string
+          role: string
           tenant_id: string
           user_id: string
         }
         Insert: {
           id?: string
           joined_at?: string
-          role_id: string
-          status?: string
+          role: string
           tenant_id: string
           user_id: string
         }
         Update: {
           id?: string
           joined_at?: string
-          role_id?: string
-          status?: string
+          role?: string
           tenant_id?: string
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "tenant_members_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "tenant_roles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "tenant_members_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -990,15 +1097,7 @@ export type Database = {
           tenant_id?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tenant_roles_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tenant_settings: {
         Row: {
@@ -1028,53 +1127,31 @@ export type Database = {
           theme_color?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tenant_settings_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: true
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tenants: {
         Row: {
           created_at: string
           id: string
           name: string
-          parent_id: string | null
-          slug: string
           status: string
-          updated_at: string
+          subscription_tier: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
-          parent_id?: string | null
-          slug: string
           status?: string
-          updated_at?: string
+          subscription_tier?: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
-          parent_id?: string | null
-          slug?: string
           status?: string
-          updated_at?: string
+          subscription_tier?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tenants_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_profiles: {
         Row: {
@@ -1083,7 +1160,6 @@ export type Database = {
           full_name: string
           id: string
           is_superadmin: boolean
-          preferences: Json
           updated_at: string
         }
         Insert: {
@@ -1092,7 +1168,6 @@ export type Database = {
           full_name: string
           id: string
           is_superadmin?: boolean
-          preferences?: Json
           updated_at?: string
         }
         Update: {
@@ -1101,10 +1176,166 @@ export type Database = {
           full_name?: string
           id?: string
           is_superadmin?: boolean
-          preferences?: Json
           updated_at?: string
         }
         Relationships: []
+      }
+      vendor_wallet_entries: {
+        Row: {
+          amount: number
+          business_day_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          notes: string | null
+          recorded_by_staff_id: string | null
+          recorded_by_user_id: string | null
+          reference_id: string | null
+          reference_type: string | null
+          tenant_id: string
+          type: string
+          vendor_wallet_id: string
+        }
+        Insert: {
+          amount: number
+          business_day_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          recorded_by_staff_id?: string | null
+          recorded_by_user_id?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id: string
+          type: string
+          vendor_wallet_id: string
+        }
+        Update: {
+          amount?: number
+          business_day_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          recorded_by_staff_id?: string | null
+          recorded_by_user_id?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id?: string
+          type?: string
+          vendor_wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_wallet_entries_business_day_id_fkey"
+            columns: ["business_day_id"]
+            isOneToOne: false
+            referencedRelation: "business_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_wallet_entries_recorded_by_staff_id_fkey"
+            columns: ["recorded_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_wallet_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_wallet_entries_vendor_wallet_id_fkey"
+            columns: ["vendor_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_wallets: {
+        Row: {
+          created_at: string
+          current_balance: number
+          id: string
+          tenant_id: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_balance?: number
+          id?: string
+          tenant_id: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          current_balance?: number
+          id?: string
+          tenant_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_wallets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_wallets_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: true
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          tenant_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          tenant_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendors_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wallet_entries: {
         Row: {
@@ -1112,7 +1343,9 @@ export type Database = {
           business_day_id: string | null
           created_at: string
           id: string
+          metadata: Json
           notes: string | null
+          recorded_by_staff_id: string | null
           reference_id: string | null
           reference_type: string | null
           shift_id: string | null
@@ -1125,7 +1358,9 @@ export type Database = {
           business_day_id?: string | null
           created_at?: string
           id?: string
+          metadata?: Json
           notes?: string | null
+          recorded_by_staff_id?: string | null
           reference_id?: string | null
           reference_type?: string | null
           shift_id?: string | null
@@ -1138,7 +1373,9 @@ export type Database = {
           business_day_id?: string | null
           created_at?: string
           id?: string
+          metadata?: Json
           notes?: string | null
+          recorded_by_staff_id?: string | null
           reference_id?: string | null
           reference_type?: string | null
           shift_id?: string | null
@@ -1148,31 +1385,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "wallet_entries_business_day_id_fkey"
-            columns: ["business_day_id"]
+            foreignKeyName: "wallet_entries_recorded_by_staff_id_fkey"
+            columns: ["recorded_by_staff_id"]
             isOneToOne: false
-            referencedRelation: "business_days"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "wallet_entries_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "wallet_entries_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "wallet_entries_wallet_id_fkey"
-            columns: ["wallet_id"]
-            isOneToOne: false
-            referencedRelation: "customer_wallets"
+            referencedRelation: "staff_members"
             referencedColumns: ["id"]
           },
         ]
@@ -1217,10 +1433,19 @@ export type Database = {
       }
       calculate_expected_cash: { Args: { p_day_id: string }; Returns: number }
       claim_pending_invitations: { Args: never; Returns: number }
-      create_tenant: {
-        Args: { p_name: string; p_slug: string }
-        Returns: string
+      create_or_reactivate_customer: {
+        Args: {
+          p_address?: string
+          p_institution?: string
+          p_name: string
+          p_phone: string
+          p_tenant_id: string
+        }
+        Returns: Json
       }
+      create_tenant:
+        | { Args: { p_name: string }; Returns: string }
+        | { Args: { p_name: string; p_slug: string }; Returns: string }
       create_terminal_customer:
         | {
             Args: {
@@ -1244,7 +1469,9 @@ export type Database = {
             }
             Returns: Json
           }
+      delete_canteen: { Args: { p_tenant_id: string }; Returns: Json }
       delete_own_account: { Args: never; Returns: undefined }
+      delete_user_account: { Args: never; Returns: Json }
       edit_pos_sale: {
         Args: {
           p_amount: number
@@ -1257,19 +1484,38 @@ export type Database = {
         }
         Returns: string
       }
-      end_business_day: {
-        Args: {
-          p_closing_cash: number
-          p_day_id: string
-          p_device_token: string
-          p_notes?: string
-          p_staff_id: string
-        }
-        Returns: {
-          expected_cash: number
-          status: string
-          variance: number
-        }[]
+      end_business_day:
+        | {
+            Args: {
+              p_closing_cash: number
+              p_day_id: string
+              p_device_token: string
+              p_notes?: string
+              p_staff_id: string
+            }
+            Returns: {
+              expected_cash: number
+              status: string
+              variance: number
+            }[]
+          }
+        | {
+            Args: {
+              p_closing_cash?: number
+              p_day_id: string
+              p_notes?: string
+              p_staff_id?: string
+              p_tenant_id: string
+            }
+            Returns: {
+              expected: number
+              status: string
+              variance: number
+            }[]
+          }
+      generate_invite_code: {
+        Args: { p_role?: string; p_tenant_id: string }
+        Returns: string
       }
       generate_pairing_code: {
         Args: { p_device_name: string; p_tenant_id: string }
@@ -1293,6 +1539,21 @@ export type Database = {
         Returns: number
       }
       get_current_shift: { Args: { p_tenant_id: string }; Returns: string }
+      get_customer_balance: {
+        Args: { p_customer_id: string; p_tenant_id: string }
+        Returns: number
+      }
+      get_customer_statement: {
+        Args: {
+          p_customer_id: string
+          p_end?: string
+          p_limit?: number
+          p_offset?: number
+          p_start?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       get_customer_statement_kiosk:
         | {
             Args: {
@@ -1353,6 +1614,10 @@ export type Database = {
         }[]
       }
       get_day_read_scope: { Args: { p_tenant_id: string }; Returns: string }
+      get_default_cash_drawer_account: {
+        Args: { p_tenant_id: string }
+        Returns: string
+      }
       get_enabled_features: {
         Args: { p_device_token: string; p_tenant_id: string }
         Returns: Json
@@ -1369,6 +1634,7 @@ export type Database = {
           total_salary_outflow: number
         }[]
       }
+      get_my_tenant_ids: { Args: never; Returns: string[] }
       get_next_device_sl: { Args: { p_tenant_id: string }; Returns: number }
       get_open_session: {
         Args: { p_device_token: string; p_tenant_id: string }
@@ -1404,30 +1670,16 @@ export type Database = {
           total_outflow: number
         }[]
       }
-      get_terminal_customers: {
-        Args: { p_tenant_id: string }
-        Returns: {
-          address: string | null
-          category: string | null
-          contract_daily_rate: number | null
-          contract_shifts: string[] | null
-          created_at: string
-          factory_unit: string | null
-          full_name: string
-          id: string
-          institution: string | null
-          is_active: boolean
-          outstanding_balance: number
-          phone: string
-          tenant_id: string
-          updated_at: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "customers"
-          isOneToOne: false
-          isSetofReturn: true
+      get_vendor_statement: {
+        Args: {
+          p_end?: string
+          p_limit?: number
+          p_offset?: number
+          p_start?: string
+          p_tenant_id: string
+          p_vendor_id: string
         }
+        Returns: Json
       }
       has_module_permission: {
         Args: {
@@ -1452,6 +1704,8 @@ export type Database = {
       is_superadmin: { Args: never; Returns: boolean }
       is_tenant_member: { Args: { p_tenant_id: string }; Returns: boolean }
       is_tenant_owner: { Args: { p_tenant_id: string }; Returns: boolean }
+      join_tenant_by_code: { Args: { p_code: string }; Returns: Json }
+      leave_canteen: { Args: { p_tenant_id: string }; Returns: Json }
       list_active_shifts: {
         Args: { p_device_token: string; p_tenant_id: string }
         Returns: {
@@ -1460,36 +1714,6 @@ export type Database = {
           name: string
           start_time: string
         }[]
-      }
-      list_customers: {
-        Args: {
-          p_active_only?: boolean
-          p_device_token: string
-          p_staff_id: string
-          p_tenant_id: string
-        }
-        Returns: {
-          address: string | null
-          category: string | null
-          contract_daily_rate: number | null
-          contract_shifts: string[] | null
-          created_at: string
-          factory_unit: string | null
-          full_name: string
-          id: string
-          institution: string | null
-          is_active: boolean
-          outstanding_balance: number
-          phone: string
-          tenant_id: string
-          updated_at: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "customers"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       list_session_baki_transactions: {
         Args: {
@@ -1554,6 +1778,27 @@ export type Database = {
         Args: { p_device_id: string; p_tenant_id: string }
         Returns: string
       }
+      record_baki_payment: {
+        Args: {
+          p_amount: number
+          p_customer_id: string
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
+      record_baki_payment_v2: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_customer_id: string
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+        }
+        Returns: number
+      }
       record_baki_transaction: {
         Args: {
           p_amount: number
@@ -1577,9 +1822,99 @@ export type Database = {
         }
         Returns: number
       }
+      record_expense: {
+        Args: {
+          p_amount: number
+          p_category: string
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+          p_vendor_id?: string
+        }
+        Returns: string
+      }
+      record_expense_v2: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_category: string
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+          p_vendor_id?: string
+        }
+        Returns: string
+      }
+      record_meal_attendance: {
+        Args: {
+          p_customer_id: string
+          p_staff_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      record_salary_payout: {
+        Args: {
+          p_amount: number
+          p_notes?: string
+          p_payment_mode?: string
+          p_staff_id: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
+      record_salary_payout_v2:
+        | {
+            Args: {
+              p_account_id?: string
+              p_amount: number
+              p_notes?: string
+              p_payment_mode?: string
+              p_staff_id: string
+              p_tenant_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_account_id?: string
+              p_amount: number
+              p_notes?: string
+              p_payment_mode?: string
+              p_payout_type?: string
+              p_staff_id: string
+              p_tenant_id: string
+            }
+            Returns: string
+          }
+      record_vendor_payment: {
+        Args: {
+          p_amount: number
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+          p_vendor_id: string
+        }
+        Returns: number
+      }
+      record_vendor_payment_v2: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_notes?: string
+          p_staff_id?: string
+          p_tenant_id: string
+          p_vendor_id: string
+        }
+        Returns: number
+      }
       reset_staff_pin: { Args: { p_staff_id: string }; Returns: string }
       resume_business_day: {
         Args: { p_day_id: string; p_device_token: string; p_staff_id: string }
+        Returns: undefined
+      }
+      seed_default_canteen_accounts: {
+        Args: { p_tenant_id: string }
         Returns: undefined
       }
       set_staff_pin:
@@ -1597,14 +1932,23 @@ export type Database = {
             Args: { p_new_pin: string; p_staff_id: string; p_temp_pin: string }
             Returns: boolean
           }
-      start_business_day: {
-        Args: {
-          p_device_token: string
-          p_opening_cash: number
-          p_staff_id: string
-        }
-        Returns: string
-      }
+      start_business_day:
+        | {
+            Args: {
+              p_device_token: string
+              p_opening_cash: number
+              p_staff_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_opening_cash?: number
+              p_staff_id?: string
+              p_tenant_id: string
+            }
+            Returns: string
+          }
       toggle_contract_attendance: {
         Args: {
           p_customer_id: string
@@ -1617,6 +1961,16 @@ export type Database = {
           new_balance: number
         }[]
       }
+      transfer_canteen_funds: {
+        Args: {
+          p_amount: number
+          p_from_account_id: string
+          p_notes?: string
+          p_tenant_id: string
+          p_to_account_id: string
+        }
+        Returns: Json
+      }
       unpair_device: {
         Args: { p_device_token: string; p_tenant_id?: string }
         Returns: boolean
@@ -1624,43 +1978,6 @@ export type Database = {
       unpair_device_with_code: {
         Args: { p_device_token: string; p_unpair_code: string }
         Returns: Json
-      }
-      upsert_customer: {
-        Args: {
-          p_category?: string
-          p_contract_daily_rate?: number
-          p_contract_shifts?: string[]
-          p_device_token?: string
-          p_factory_unit?: string
-          p_full_name: string
-          p_id?: string
-          p_is_active?: boolean
-          p_phone?: string
-          p_staff_id?: string
-          p_tenant_id: string
-        }
-        Returns: {
-          address: string | null
-          category: string | null
-          contract_daily_rate: number | null
-          contract_shifts: string[] | null
-          created_at: string
-          factory_unit: string | null
-          full_name: string
-          id: string
-          institution: string | null
-          is_active: boolean
-          outstanding_balance: number
-          phone: string
-          tenant_id: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "customers"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       verify_pairing_code: {
         Args: { p_code: string; p_device_name: string }
@@ -1672,6 +1989,24 @@ export type Database = {
             Returns: Json
           }
         | { Args: { p_pin: string; p_tenant_id: string }; Returns: Json }
+      void_day_entry: {
+        Args: {
+          p_entry_id: string
+          p_reason: string
+          p_staff_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      void_wallet_entry: {
+        Args: {
+          p_entry_id: string
+          p_reason: string
+          p_staff_id?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
