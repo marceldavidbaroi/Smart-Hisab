@@ -6,14 +6,14 @@
 
 ## `record_salary_payout`
 
-Record a salary payment to a staff member.
+Record a salary payment / wage advance to a staff member from a designated canteen account.
 
 | | |
 |---|---|
-| **Parameters** | `p_tenant_id UUID`, `p_staff_id UUID`, `p_amount NUMERIC`, `p_payment_mode TEXT`, `p_notes TEXT` |
+| **Parameters** | `p_tenant_id UUID`, `p_staff_id UUID`, `p_amount NUMERIC`, `p_payment_mode TEXT`, `p_canteen_account_id UUID (nullable)`, `p_notes TEXT` |
 | **Returns** | `UUID` (salary_payout ID) |
-| **Side effects** | INSERT `salary_payouts` + INSERT `day_entries` (outflow, category: `salary_outflow`) |
-| **Payment modes** | `cash`, `bank`, `mobile_money` |
+| **Side effects** | INSERT `salary_payouts` + INSERT `day_entries` (outflow, category: `salary_outflow`, links to `canteen_account_id`). If paid from cash drawer, updates active shift drawer balance. |
+| **Payment modes** | `cash`, `bank`, `mobile_money` (bKash/Nagad) |
 | **Auth** | Owner or Manager only |
 
 ---

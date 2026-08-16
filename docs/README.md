@@ -69,6 +69,7 @@ docs/
 | `get_current_shift` | [02_meal_attendance](features/02_meal_attendance/rpc_apis.md) |
 | `record_meal_attendance` | [02_meal_attendance](features/02_meal_attendance/rpc_apis.md) |
 | `bulk_record_meal_attendance` | [02_meal_attendance](features/02_meal_attendance/rpc_apis.md) |
+| `create_or_reactivate_customer` | [03_customer_wallets_ar](features/03_customer_wallets_ar/rpc_apis.md) |
 | `record_baki_payment` | [03_customer_wallets_ar](features/03_customer_wallets_ar/rpc_apis.md) |
 | `get_customer_balance` / `get_customer_statement` | [03_customer_wallets_ar](features/03_customer_wallets_ar/rpc_apis.md) |
 | `record_expense` | [04_bazar_and_expenses_ap](features/04_bazar_and_expenses_ap/rpc_apis.md) |

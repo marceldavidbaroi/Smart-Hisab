@@ -5,7 +5,6 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/models/customer.dart';
-import '../../core/services/supabase_service.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
 import 'customer_quick_action_grid.dart';
@@ -40,33 +39,20 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     if (!mounted) return;
     setState(() => _isLoadingEntries = true);
 
-    if (SupabaseService.isInitialized) {
-      try {
-        final walletRes = await SupabaseService.client
-            .from('customer_wallets')
-            .select('id')
-            .eq('customer_id', widget.customer.id)
-            .maybeSingle();
+    try {
+      final res = await ref.read(customersNotifierProvider.notifier).fetchCustomerStatement(
+        customerId: widget.customer.id,
+      );
 
-        if (walletRes != null && walletRes['id'] != null) {
-          final walletId = walletRes['id'] as String;
-          final entriesRes = await SupabaseService.client
-              .from('wallet_entries')
-              .select('*')
-              .eq('wallet_id', walletId)
-              .order('created_at', ascending: false);
-
-          if (mounted) {
-            setState(() {
-              _entries = List<Map<String, dynamic>>.from(entriesRes as List);
-              _isLoadingEntries = false;
-            });
-            return;
-          }
-        }
-      } catch (e) {
-        debugPrint('_fetchLedgerEntries error: $e');
+      if (mounted) {
+        setState(() {
+          _entries = List<Map<String, dynamic>>.from(res['entries'] as List? ?? []);
+          _isLoadingEntries = false;
+        });
+        return;
       }
+    } catch (e) {
+      debugPrint('_fetchLedgerEntries error: $e');
     }
 
     if (mounted) {
@@ -132,6 +118,64 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             onPressed: () => EditCustomerBottomSheet.show(context, activeCustomer),
             tooltip: 'Edit Profile',
           ),
+          IconButton(
+            icon: const Icon(LucideIcons.trash2, color: AppColors.danger, size: 20),
+            onPressed: () async {
+              if (activeCustomer.currentBalance > 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Customer owes ৳${activeCustomer.currentBalance.toStringAsFixed(0)}. Collect payment before archiving profile.'),
+                    backgroundColor: AppColors.danger,
+                  ),
+                );
+                return;
+              }
+
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+                  title: const Text('Delete Customer?', style: TextStyle(fontWeight: FontWeight.bold)),
+                  content: Text('Are you sure you want to delete ${activeCustomer.name}? This customer profile will be archived/soft-deleted.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                final success = await ref.read(customersNotifierProvider.notifier).deleteCustomer(activeCustomer.id);
+                if (context.mounted) {
+                  if (success) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Customer ${activeCustomer.name} deleted'),
+                        backgroundColor: AppColors.danger,
+                      ),
+                    );
+                  } else {
+                    final err = ref.read(customersNotifierProvider).errorMessage ?? 'Failed to delete customer';
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(err),
+                        backgroundColor: AppColors.danger,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            tooltip: 'Delete Customer',
+          ),
         ],
       ),
 
@@ -194,6 +238,53 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                         ),
                       ],
                     ),
+                    if (activeCustomer.activeMeals.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            LucideIcons.utensils,
+                            size: 14,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Subscribed Meals:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: activeCustomer.activeMeals.map((meal) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(
+                                    meal,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     Divider(height: 24, color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
 
                     // Outstanding Balance Hero Row

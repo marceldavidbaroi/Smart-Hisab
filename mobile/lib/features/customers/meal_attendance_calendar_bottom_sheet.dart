@@ -4,7 +4,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/models/customer.dart';
+import '../../core/services/supabase_service.dart';
 import 'customers_notifier.dart';
+import 'void_transaction_bottom_sheet.dart';
 
 class MealAttendanceCalendarBottomSheet extends ConsumerStatefulWidget {
   final Customer customer;
@@ -132,7 +134,52 @@ class _MealAttendanceCalendarBottomSheetState
           // Quick Action: "Mark Today as Present" Hero Button
           ElevatedButton.icon(
             onPressed: () async {
-              await customersNotifier.toggleCustomerAttendanceDate(widget.customer.id, today);
+              if (isTodayPresent) {
+                // Revert flow for today
+                Map<String, dynamic>? matchingEntry;
+                try {
+                  final walletRes = await SupabaseService.client
+                      .from('customer_wallets')
+                      .select('id')
+                      .eq('customer_id', widget.customer.id)
+                      .maybeSingle();
+                  if (walletRes != null && walletRes['id'] != null) {
+                    final walletId = walletRes['id'] as String;
+                    final entriesRes = await SupabaseService.client
+                        .from('wallet_entries')
+                        .select('*')
+                        .eq('wallet_id', walletId)
+                        .gte('created_at', '${todayKey}T00:00:00')
+                        .lte('created_at', '${todayKey}T23:59:59')
+                        .order('created_at', ascending: false);
+
+                    final list = entriesRes as List;
+                    if (list.isNotEmpty) {
+                      matchingEntry = Map<String, dynamic>.from(list.first as Map);
+                    }
+                  }
+                } catch (e) {
+                  debugPrint('Error finding today attendance entry: $e');
+                }
+
+                if (!context.mounted) return;
+                final voided = await VoidTransactionBottomSheet.show(
+                  context,
+                  customer: widget.customer,
+                  entry: matchingEntry ?? {
+                    'id': 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                    'type': 'charge',
+                    'amount': customersState.activeShiftRate > 0 ? customersState.activeShiftRate : 80.0,
+                    'notes': 'Meal Attendance ($todayKey)',
+                    'created_at': today.toIso8601String(),
+                  },
+                );
+                if (context.mounted && voided == true) {
+                  await customersNotifier.fetchCustomers();
+                }
+              } else {
+                await customersNotifier.toggleCustomerAttendanceDate(widget.customer.id, today);
+              }
             },
             icon: Icon(
               isTodayPresent ? LucideIcons.checkCircle2 : LucideIcons.plusCircle,
@@ -140,7 +187,7 @@ class _MealAttendanceCalendarBottomSheetState
               size: 20,
             ),
             label: Text(
-              isTodayPresent ? 'Today Marked as Present (Tap to toggle)' : 'Mark Today as Present',
+              isTodayPresent ? 'Today Marked as Present (Tap to void)' : 'Mark Today as Present',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
@@ -219,7 +266,66 @@ class _MealAttendanceCalendarBottomSheetState
 
               return InkWell(
                 onTap: () async {
-                  await customersNotifier.toggleCustomerAttendanceDate(widget.customer.id, date);
+                  if (isPresent) {
+                    // Revert flow: Trigger void transaction bottom sheet
+                    Map<String, dynamic>? matchingEntry;
+                    try {
+                      final walletRes = await SupabaseService.client
+                          .from('customer_wallets')
+                          .select('id')
+                          .eq('customer_id', widget.customer.id)
+                          .maybeSingle();
+                      if (walletRes != null && walletRes['id'] != null) {
+                        final walletId = walletRes['id'] as String;
+                        final keyStr = key;
+                        final entriesRes = await SupabaseService.client
+                            .from('wallet_entries')
+                            .select('*')
+                            .eq('wallet_id', walletId)
+                            .gte('created_at', '${keyStr}T00:00:00')
+                            .lte('created_at', '${keyStr}T23:59:59')
+                            .order('created_at', ascending: false);
+
+                        final list = entriesRes as List;
+                        if (list.isNotEmpty) {
+                          matchingEntry = Map<String, dynamic>.from(list.first as Map);
+                        }
+                      }
+                    } catch (e) {
+                      debugPrint('Error finding attendance entry for void: $e');
+                    }
+
+                    if (matchingEntry != null) {
+                      if (!context.mounted) return;
+                      final voided = await VoidTransactionBottomSheet.show(
+                        context,
+                        customer: widget.customer,
+                        entry: matchingEntry,
+                      );
+                      if (context.mounted && voided == true) {
+                        await customersNotifier.fetchCustomers();
+                      }
+                    } else {
+                      // Fallback dummy entry construct for voiding if offline/un-synced
+                      if (!context.mounted) return;
+                      final voided = await VoidTransactionBottomSheet.show(
+                        context,
+                        customer: widget.customer,
+                        entry: {
+                          'id': 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                          'type': 'charge',
+                          'amount': customersState.activeShiftRate > 0 ? customersState.activeShiftRate : 80.0,
+                          'notes': 'Meal Attendance ($key)',
+                          'created_at': date.toIso8601String(),
+                        },
+                      );
+                      if (context.mounted && voided == true) {
+                        await customersNotifier.fetchCustomers();
+                      }
+                    }
+                  } else {
+                    await customersNotifier.toggleCustomerAttendanceDate(widget.customer.id, date);
+                  }
                 },
                 borderRadius: BorderRadius.circular(10),
                 child: Container(

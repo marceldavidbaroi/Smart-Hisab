@@ -258,27 +258,29 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     final isToday = dateKey == todayKey;
 
     final existingDates = Set<String>.from(getCustomerAttendanceDates(customerId));
+    final isCurrentlyMarked = existingDates.contains(dateKey);
 
-    if (existingDates.contains(dateKey)) {
-      existingDates.remove(dateKey);
-      if (isToday) {
-        final updatedMarked = Set<String>.from(state.markedCustomerIds)..remove(customerId);
-        state = state.copyWith(markedCustomerIds: updatedMarked);
-      }
-    } else {
+    if (!isCurrentlyMarked) {
+      // 1. Mark attendance date locally
       existingDates.add(dateKey);
+
+      final updatedMap = Map<String, Set<String>>.from(state.customerAttendanceDates);
+      updatedMap[customerId] = existingDates;
+      state = state.copyWith(customerAttendanceDates: updatedMap);
+
       if (isToday) {
-        final updatedMarked = Set<String>.from(state.markedCustomerIds)..add(customerId);
-        state = state.copyWith(markedCustomerIds: updatedMarked);
+        // recordMealAttendance will update balance (locally & RPC)
+        await recordMealAttendance(customerId);
+      } else {
+        // Record baki entry for past/future non-today date
+        final mealCharge = state.activeShiftRate > 0 ? state.activeShiftRate : 80.0;
+        await addManualBaki(
+          customerId: customerId,
+          amount: mealCharge,
+          notes: 'Meal Attendance ($dateKey)',
+          entryDate: date,
+        );
       }
-    }
-
-    final updatedMap = Map<String, Set<String>>.from(state.customerAttendanceDates);
-    updatedMap[customerId] = existingDates;
-    state = state.copyWith(customerAttendanceDates: updatedMap);
-
-    if (isToday) {
-      await recordMealAttendance(customerId);
     }
   }
 
@@ -288,14 +290,67 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     String? address,
     String? institution,
   }) async {
-    final tId = tenantId ?? 'tenant-demo';
-    final tempId = 'cust-${DateTime.now().millisecondsSinceEpoch}';
+    final cleanPhone = phone.trim();
 
+    // 1. Check if active customer already exists in local state
+    final activeDuplicateExists = state.customers.any(
+      (c) => (c.phone ?? '').trim() == cleanPhone,
+    );
+    if (activeDuplicateExists) {
+      state = state.copyWith(errorMessage: 'An active customer with phone ($cleanPhone) already exists.');
+      return false;
+    }
+
+    final tId = tenantId ?? 'tenant-demo';
+
+    try {
+      if (SupabaseService.isInitialized) {
+        final res = await SupabaseService.client.rpc(
+          'create_or_reactivate_customer',
+          params: {
+            'p_tenant_id': tId,
+            'p_name': name,
+            'p_phone': cleanPhone,
+            'p_address': address,
+            'p_institution': institution,
+          },
+        );
+
+        if (res != null && res['customer'] != null) {
+          final customerData = Map<String, dynamic>.from(res['customer'] as Map);
+          final customerObj = Customer.fromJson(customerData);
+
+          // If reactivated, remove any stale copy in list if present, then add to front
+          final updatedList = [
+            customerObj,
+            ...state.customers.where((c) => c.id != customerObj.id),
+          ];
+
+          state = state.copyWith(customers: updatedList, errorMessage: null);
+          await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
+          return true;
+        }
+      }
+    } catch (e) {
+      debugPrint('addCustomer error: $e');
+      final errStr = e.toString();
+      if (errStr.contains('already exists') ||
+          errStr.contains('duplicate key') ||
+          errStr.contains('idx_unique_active_customer_phone_per_tenant')) {
+        state = state.copyWith(errorMessage: 'An active customer with phone ($cleanPhone) already exists.');
+        return false;
+      }
+      state = state.copyWith(errorMessage: 'Failed to create customer: $errStr');
+      return false;
+    }
+
+    // Demo / Offline fallback
+    final tempId = 'cust-${DateTime.now().millisecondsSinceEpoch}';
     final newCustomer = Customer(
       id: tempId,
       tenantId: tId,
       name: name,
-      phone: phone,
+      phone: cleanPhone,
       address: address,
       institution: institution,
       currentBalance: 0.0,
@@ -303,28 +358,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     );
 
     final updatedList = [newCustomer, ...state.customers];
-    state = state.copyWith(customers: updatedList);
-
-    try {
-      if (SupabaseService.isInitialized) {
-        final res = await SupabaseService.client.from('customers').insert({
-          'tenant_id': tId,
-          'name': name,
-          'phone': phone,
-          'address': address,
-          'institution': institution,
-        }).select('*, customer_wallets(current_balance)').single();
-
-        final created = Customer.fromJson(res);
-        final finalizedList = state.customers.map((c) => c.id == tempId ? created : c).toList();
-        state = state.copyWith(customers: finalizedList);
-        await HiveService.setCache('customers_$tId', {'list': finalizedList.map((c) => c.toJson()).toList()});
-        return true;
-      }
-    } catch (e) {
-      debugPrint('addCustomer error: $e');
-    }
-
+    state = state.copyWith(customers: updatedList, errorMessage: null);
     await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
     return true;
   }
@@ -378,6 +412,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     required String customerId,
     required double amount,
     String? notes,
+    DateTime? entryDate,
   }) async {
     final tId = tenantId ?? 'tenant-demo';
 
@@ -398,14 +433,18 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
         if (walletRes != null && walletRes['id'] != null) {
           final walletId = walletRes['id'] as String;
-          await SupabaseService.client.from('wallet_entries').insert({
+          final entryPayload = <String, dynamic>{
             'tenant_id': tId,
             'wallet_id': walletId,
             'type': 'adjustment',
             'amount': amount,
             'reference_type': 'manual_adjustment',
             'notes': notes ?? 'Manual Baki Entry',
-          });
+          };
+          if (entryDate != null) {
+            entryPayload['created_at'] = entryDate.toIso8601String();
+          }
+          await SupabaseService.client.from('wallet_entries').insert(entryPayload);
         }
       }
       return true;
@@ -443,20 +482,104 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     }
   }
 
-  Future<void> deleteCustomer(String customerId) async {
+  Future<bool> deleteCustomer(String customerId) async {
     final tId = tenantId ?? 'tenant-demo';
-    final updatedList = state.customers.where((c) => c.id != customerId).toList();
-    state = state.copyWith(customers: updatedList);
+    final customer = state.customers.where((c) => c.id == customerId).firstOrNull;
+
+    // Check local debt first
+    if (customer != null && customer.currentBalance > 0) {
+      state = state.copyWith(
+        errorMessage: 'Cannot delete customer with outstanding balance of ৳${customer.currentBalance.toStringAsFixed(0)}. Settle balance first.',
+      );
+      return false;
+    }
 
     try {
       if (SupabaseService.isInitialized) {
         await SupabaseService.client.from('customers').update({'is_active': false}).eq('id', customerId);
       }
+
+      final updatedList = state.customers.where((c) => c.id != customerId).toList();
+      state = state.copyWith(customers: updatedList, errorMessage: null);
+      await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
+      return true;
     } catch (e) {
       debugPrint('deleteCustomer error: $e');
+      final errStr = e.toString();
+      if (errStr.contains('Cannot deactivate customer with outstanding debt balance')) {
+        state = state.copyWith(errorMessage: 'Cannot delete customer with outstanding debt. Settle balance first.');
+      } else {
+        state = state.copyWith(errorMessage: 'Failed to delete customer: $errStr');
+      }
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchCustomerStatement({
+    required String customerId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final tId = tenantId;
+    if (tId == null || tId.isEmpty || !SupabaseService.isInitialized) {
+      return {'entries': [], 'total_count': 0, 'opening_balance': 0.0};
     }
 
-    await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
+    try {
+      final res = await SupabaseService.client.rpc(
+        'get_customer_statement',
+        params: {
+          'p_tenant_id': tId,
+          'p_customer_id': customerId,
+          'p_start': startDate?.toIso8601String().substring(0, 10),
+          'p_end': endDate?.toIso8601String().substring(0, 10),
+          'p_limit': limit,
+          'p_offset': offset,
+        },
+      );
+
+      if (res != null && res is Map) {
+        final entriesList = (res['entries'] as List?)
+                ?.map((e) => Map<String, dynamic>.from(e as Map))
+                .toList() ??
+            [];
+        final totalCount = (res['total_count'] as num?)?.toInt() ?? entriesList.length;
+        final openingBalance = (res['opening_balance'] as num?)?.toDouble() ?? 0.0;
+
+        return {
+          'entries': entriesList,
+          'total_count': totalCount,
+          'opening_balance': openingBalance,
+        };
+      }
+    } catch (e) {
+      debugPrint('fetchCustomerStatement RPC error: $e');
+    }
+
+    return {'entries': [], 'total_count': 0, 'opening_balance': 0.0};
+  }
+
+  Future<double?> fetchCustomerBalance(String customerId) async {
+    final tId = tenantId;
+    if (tId == null || tId.isEmpty || !SupabaseService.isInitialized) return null;
+
+    try {
+      final res = await SupabaseService.client.rpc(
+        'get_customer_balance',
+        params: {
+          'p_tenant_id': tId,
+          'p_customer_id': customerId,
+        },
+      );
+      if (res != null && res is num) {
+        return res.toDouble();
+      }
+    } catch (e) {
+      debugPrint('fetchCustomerBalance RPC error: $e');
+    }
+    return null;
   }
 
   Future<bool> updateCustomer({
@@ -466,23 +589,32 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     String? address,
     String? institution,
   }) async {
+    final cleanPhone = phone.trim();
+    final duplicateExists = state.customers.any(
+      (c) => c.id != customerId && (c.phone ?? '').trim() == cleanPhone,
+    );
+    if (duplicateExists) {
+      state = state.copyWith(errorMessage: 'Another customer with this phone number ($cleanPhone) already exists.');
+      return false;
+    }
+
     final tId = tenantId ?? 'tenant-demo';
 
     final updatedList = state.customers.map((c) {
       if (c.id == customerId) {
-        return c.copyWith(name: name, phone: phone, address: address, institution: institution);
+        return c.copyWith(name: name, phone: cleanPhone, address: address, institution: institution);
       }
       return c;
     }).toList();
 
-    state = state.copyWith(customers: updatedList);
+    state = state.copyWith(customers: updatedList, errorMessage: null);
     await HiveService.setCache('customers_$tId', {'list': updatedList.map((c) => c.toJson()).toList()});
 
     try {
       if (SupabaseService.isInitialized) {
         await SupabaseService.client.from('customers').update({
           'name': name,
-          'phone': phone,
+          'phone': cleanPhone,
           'address': address,
           'institution': institution,
         }).eq('id', customerId);
@@ -490,6 +622,10 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
       return true;
     } catch (e) {
       debugPrint('updateCustomer error: $e');
+      if (e.toString().contains('duplicate key') || e.toString().contains('customers_phone')) {
+        state = state.copyWith(errorMessage: 'Phone number $cleanPhone is already registered to another customer.');
+        return false;
+      }
       return true;
     }
   }
@@ -502,17 +638,50 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     required String customerId,
     required String entryId,
     required String reason,
+    String? entryDateStr,
   }) async {
     final tId = tenantId;
     if (tId == null || tId.isEmpty) return false;
 
     try {
       if (SupabaseService.isInitialized) {
+        // Fetch target entry details to check if it's an attendance entry
+        final entryRes = await SupabaseService.client
+            .from('wallet_entries')
+            .select('created_at, notes, type')
+            .eq('id', entryId)
+            .maybeSingle();
+
+        final createdAtStr = entryRes?['created_at']?.toString() ?? entryDateStr;
+        final notesStr = entryRes?['notes']?.toString() ?? '';
+
         await SupabaseService.client.rpc('void_wallet_entry', params: {
           'p_tenant_id': tId,
           'p_entry_id': entryId,
           'p_reason': reason,
         });
+
+        // If this entry was a meal attendance entry, remove the date from attendance set
+        if (createdAtStr != null && (notesStr.contains('Meal Attendance') || notesStr.contains('Meal Charge'))) {
+          final targetDateKey = createdAtStr.substring(0, 10);
+          final todayKey = DateTime.now().toIso8601String().substring(0, 10);
+
+          final existingDates = Set<String>.from(getCustomerAttendanceDates(customerId));
+          existingDates.remove(targetDateKey);
+
+          final updatedMap = Map<String, Set<String>>.from(state.customerAttendanceDates);
+          updatedMap[customerId] = existingDates;
+
+          final newMarkedSet = Set<String>.from(state.markedCustomerIds);
+          if (targetDateKey == todayKey) {
+            newMarkedSet.remove(customerId);
+          }
+
+          state = state.copyWith(
+            customerAttendanceDates: updatedMap,
+            markedCustomerIds: newMarkedSet,
+          );
+        }
 
         // Re-sync customer list & wallet balances
         await fetchCustomers();

@@ -6,6 +6,7 @@ import '../../core/auth/auth_notifier.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
+import '../app_scaffold_notifier.dart';
 import 'business_day_notifier.dart';
 import 'close_day_bottom_sheet.dart';
 import 'open_day_bottom_sheet.dart';
@@ -78,10 +79,18 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               QuickActionsGrid(
-                onMarkMeals: () {},
-                onCollectBaki: () {},
-                onAddExpense: () {},
-                onDayNotes: () {},
+                onMarkMeals: () {
+                  ref.read(scaffoldNotifierProvider.notifier).setTab(1); // Customers Tab
+                },
+                onCollectBaki: () {
+                  ref.read(scaffoldNotifierProvider.notifier).setTab(1); // Customers Tab
+                },
+                onAddExpense: () {
+                  ref.read(scaffoldNotifierProvider.notifier).setTab(2); // Cashbook Tab
+                },
+                onDayNotes: () {
+                  ref.read(scaffoldNotifierProvider.notifier).setTab(2); // Cashbook Tab
+                },
               ),
             ],
           ),

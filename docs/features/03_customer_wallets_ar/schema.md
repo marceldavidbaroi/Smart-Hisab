@@ -32,10 +32,24 @@ Customer profiles — the diners who eat on credit.
 | `phone` | TEXT | NOT NULL | Contact number (required for SMS reminders) |
 | `address` | TEXT | | Optional |
 | `institution` | TEXT | | Factory, hostel, company, etc. |
-| `is_active` | BOOLEAN | NOT NULL DEFAULT true | Soft delete |
+| `is_active` | BOOLEAN | NOT NULL DEFAULT true | Soft delete flag |
 | `created_at` | TIMESTAMPTZ | NOT NULL DEFAULT now() | |
 
-**Indexes**: `tenant_id`
+**Indexes & Constraints**:
+- `tenant_id`
+- Unique Active Phone Constraint (`idx_unique_active_customer_phone_per_tenant`): `UNIQUE(tenant_id, phone) WHERE (is_active = true)`.
+
+---
+
+## Soft-Delete & Reactivation Standard Flow (Option A)
+
+When a new customer creation request is made with a phone number:
+1. **Active Match Check**: If an active customer (`is_active = true`) with the same phone exists within the tenant, block creation and return a duplicate phone error message.
+2. **Inactive Match Reactivation**: If an inactive customer (`is_active = false`) with the same phone exists within the tenant:
+   - Reactivate the existing customer record (`is_active = true`).
+   - Update the customer's `name`, `address`, and `institution` with the new input values.
+   - Retain the existing `customer_id`, `customer_wallet`, and all historical `wallet_entries` to preserve ledger integrity.
+   - Return a success status letting the caller know the customer profile was reactivated.
 
 ---
 
@@ -76,12 +90,19 @@ Immutable append-only ledger for customer debt tracking.
 | `metadata` | JSONB | NOT NULL DEFAULT '{}'::jsonb | Audit metadata (status, void_info, reason, terminal details) |
 | `created_at` | TIMESTAMPTZ | NOT NULL DEFAULT now() | |
 
-**Indexes**: `tenant_id`, `wallet_id`, `business_day_id`, `(metadata->>'status')`
+**Indexes**: `tenant_id`, `wallet_id`, `business_day_id`, `(metadata->>'status')`, `idx_wallet_entries_statement_lookup (tenant_id, wallet_id, created_at DESC)`
 
 **Balance rule**:
 - `meal_charge` → increases debt (customer owes more)
 - `payment` → decreases debt (customer paid)
 - `adjustment` → can go either way (manual correction)
+
+---
+
+## Soft Delete & Outstanding Debt Policy
+
+1. **Active Debt Guard**: If a customer has `customer_wallets.current_balance > 0`, the client and backend should block soft deletion or flag the customer as `[Archived / Inactive]` while still displaying their outstanding balance in the **Accounts Receivable / Debt Directory** until fully collected or written off.
+2. **Reactivation (Option A)**: If re-added with the same phone number, the existing customer row is reactivated (`is_active = true`), preserving all past `wallet_entries` and uncollected debt balances.
 
 ---
 

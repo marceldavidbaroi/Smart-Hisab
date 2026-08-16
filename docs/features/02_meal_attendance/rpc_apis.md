@@ -25,7 +25,7 @@ Toggles meal attendance for a customer in the current shift. This is the **core 
 | **Parameters** | `p_tenant_id UUID`, `p_customer_id UUID`, `p_staff_id UUID (nullable)` |
 | **Returns** | `JSONB` → `{ action: 'added' \| 'removed', new_balance: NUMERIC }` |
 | **Logic** | 1. Resolves active `business_day_id` + `shift_id`<br>2. Resolves `charge_amount` from `meal_configs` (latest effective rate for shift)<br>3. If no existing attendance for this customer/day/shift → **INSERT** `meal_attendance` + **INSERT** `wallet_entry` (type: `meal_charge`) → returns `action: 'added'`<br>4. If attendance exists → **DELETE** `meal_attendance` row + **DELETE** matching `wallet_entries` row → returns `action: 'removed'` |
-| **Side effects** | On mark: trigger `update_wallet_balance` fires (AFTER INSERT on `wallet_entries`) and updates `customer_wallets.current_balance`. On unmark: rows are hard-deleted — no trigger fires; balance is corrected by the deletion of the ledger row. |
+| **Side effects** | On mark: trigger `update_wallet_balance` fires (`AFTER INSERT OR DELETE ON wallet_entries`) and increments `customer_wallets.current_balance`. On unmark: ledger entry deletion triggers `sync_customer_wallet_balance` which deducts the charge amount from `customer_wallets.current_balance`. |
 | **Auth** | Tenant member or staff via PIN session |
 
 ---

@@ -70,25 +70,68 @@ class CustomerQuickActionGrid extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,
-      childAspectRatio: 2.2,
+      childAspectRatio: 2.4,
       children: [
         _buildActionButton(
           context: context,
-          icon: LucideIcons.utensilsCrossed,
-          label: 'Add Meal',
+          icon: customer.activeMeals.isNotEmpty ? LucideIcons.utensils : LucideIcons.utensilsCrossed,
+          label: customer.activeMeals.isNotEmpty ? 'Edit Meals' : 'Add Meal',
           color: AppColors.primary,
           onTap: () => ManageMealSubscriptionBottomSheet.show(context, customer),
         ),
-        _buildActionButton(
-          context: context,
-          icon: isMarkedToday ? LucideIcons.checkCircle2 : LucideIcons.calendarCheck2,
-          label: isMarkedToday ? 'Meal: Ate Today' : 'Mark Attendance',
-          color: AppColors.success,
-          onTap: () async {
-            await MealAttendanceCalendarBottomSheet.show(context, customer);
-            onActionCompleted();
-          },
-        ),
+        Builder(builder: (context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final hasActiveMeal = customer.activeMeals.isNotEmpty;
+          final buttonColor = hasActiveMeal ? AppColors.success : Colors.grey;
+
+          return IgnorePointer(
+            ignoring: !hasActiveMeal,
+            child: InkWell(
+              onTap: hasActiveMeal
+                  ? () async {
+                      await MealAttendanceCalendarBottomSheet.show(context, customer);
+                      onActionCompleted();
+                    }
+                  : null,
+              borderRadius: BorderRadius.circular(14),
+              child: Opacity(
+                opacity: hasActiveMeal ? 1.0 : 0.4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: buttonColor.withValues(alpha: hasActiveMeal ? 0.12 : 0.05),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: buttonColor.withValues(alpha: hasActiveMeal ? 0.3 : 0.1)),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isMarkedToday ? LucideIcons.checkCircle2 : LucideIcons.calendarCheck2,
+                        color: buttonColor,
+                        size: 22,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        isMarkedToday ? 'Meal: Ate Today' : 'Mark Attendance',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: hasActiveMeal
+                              ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)
+                              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
         _buildActionButton(
           context: context,
           icon: LucideIcons.plusCircle,

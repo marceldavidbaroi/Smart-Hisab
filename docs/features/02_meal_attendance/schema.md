@@ -71,7 +71,15 @@ Record of a customer consuming a meal. Triggers a `wallet_entry` (meal_charge).
 | `recorded_by_staff_id` | UUID | FK → `staff_members(id)` ON DELETE SET NULL | Staff who toggled this meal |
 | `created_at` | TIMESTAMPTZ | NOT NULL DEFAULT now() | |
 
-**Indexes**: `tenant_id`, `customer_id`, `business_day_id`
+**Indexes & Constraints**:
+- `tenant_id`, `customer_id`, `business_day_id`
+- Unique Per-Shift Attendance Constraint (`idx_unique_meal_attendance_per_shift`): `UNIQUE(tenant_id, customer_id, shift_id, business_day_id)` prevents double charges and powers idempotent toggle logic.
+
+---
+
+## Transaction Orchestration Rule
+
+* **Single Source of Truth**: All meal attendance recording and debit operations are orchestrated atomically by the `record_meal_attendance` RPC. `meal_attendance` does **not** employ a standalone database trigger to insert into `wallet_entries`; rather, the RPC inserts into `meal_attendance` and `wallet_entries` within a single ACID transaction block.
 
 ---
 

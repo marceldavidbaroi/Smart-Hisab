@@ -34,11 +34,25 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
   final _notesController = TextEditingController();
   bool _isSubmitting = false;
 
+  DateTime _selectedDate = DateTime.now();
+
   @override
   void dispose() {
     _amountController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() => _selectedDate = picked);
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -52,6 +66,7 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
           customerId: widget.customer.id,
           amount: amount,
           notes: _notesController.text.trim().isEmpty ? 'Manual Baki Entry' : _notesController.text.trim(),
+          entryDate: _selectedDate,
         );
 
     if (mounted) {
@@ -72,6 +87,8 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final inputBgColor = isDark ? AppColors.bgDark : AppColors.bgLight;
+    final borderColor = isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight;
 
     return Container(
       padding: EdgeInsets.only(
@@ -89,16 +106,16 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Drag Handle Bar (Rule #3: no X button)
               Center(
                 child: Container(
-                  width: 40,
-                  height: 4,
+                  width: 48,
+                  height: 5,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.black26,
-                    borderRadius: BorderRadius.circular(2),
+                    color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight).withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -119,6 +136,7 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
                   ),
                 ],
               ),
+              const SizedBox(height: 4),
               Text(
                 'Customer: ${widget.customer.name}',
                 style: TextStyle(
@@ -135,12 +153,25 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
                 autofocus: true,
                 style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 18, fontWeight: FontWeight.bold),
                 decoration: InputDecoration(
-                  labelText: 'Baki Amount (৳)',
+                  labelText: 'Baki Amount (৳) *',
+                  labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                   hintText: 'e.g. 150',
+                  hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark.withValues(alpha: 0.6) : AppColors.textSecondaryLight.withValues(alpha: 0.6)),
                   prefixIcon: const Icon(LucideIcons.fileText, color: AppColors.danger),
                   filled: true,
-                  fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  fillColor: inputBgColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.danger, width: 2),
+                  ),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'Please enter baki amount';
@@ -151,17 +182,78 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
               ),
               const SizedBox(height: 12),
 
-              // Notes / Reason Field
+              // Date Picker Field
+              InkWell(
+                onTap: () => _selectDate(context),
+                borderRadius: BorderRadius.circular(12),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Entry Date',
+                    labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                    prefixIcon: const Icon(LucideIcons.calendar, color: AppColors.primary),
+                    filled: true,
+                    fillColor: inputBgColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: borderColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: borderColor),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppFormatters.formatDateShort(_selectedDate),
+                        style: TextStyle(
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Icon(
+                        LucideIcons.chevronDown,
+                        size: 18,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Notes / Reason Field (Multiline Text Area)
               TextFormField(
                 controller: _notesController,
-                style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 14),
+                maxLines: 3,
+                minLines: 2,
+                keyboardType: TextInputType.multiline,
+                style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 15),
                 decoration: InputDecoration(
-                  labelText: 'Reason / Item Note',
+                  labelText: 'Reason / Item Note (Optional)',
+                  labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                   hintText: 'e.g. Extra tea, Cigarettes, Guest Meal',
-                  prefixIcon: Icon(LucideIcons.tag, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                  hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark.withValues(alpha: 0.6) : AppColors.textSecondaryLight.withValues(alpha: 0.6)),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Icon(LucideIcons.tag, color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                  ),
                   filled: true,
-                  fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  fillColor: inputBgColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -174,9 +266,16 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: borderColor),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Cancel'),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -190,7 +289,7 @@ class _AddManualBakiBottomSheetState extends ConsumerState<AddManualBakiBottomSh
                       ),
                       child: _isSubmitting
                           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text('Add Baki Entry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          : const Text('Add Baki Entry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                     ),
                   ),
                 ],

@@ -1284,6 +1284,16 @@ export type Database = {
       }
       calculate_expected_cash: { Args: { p_day_id: string }; Returns: number }
       claim_pending_invitations: { Args: never; Returns: number }
+      create_or_reactivate_customer: {
+        Args: {
+          p_address?: string
+          p_institution?: string
+          p_name: string
+          p_phone: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       create_tenant:
         | { Args: { p_name: string }; Returns: string }
         | { Args: { p_name: string; p_slug: string }; Returns: string }
@@ -1380,6 +1390,21 @@ export type Database = {
         Returns: number
       }
       get_current_shift: { Args: { p_tenant_id: string }; Returns: string }
+      get_customer_balance: {
+        Args: { p_customer_id: string; p_tenant_id: string }
+        Returns: number
+      }
+      get_customer_statement: {
+        Args: {
+          p_customer_id: string
+          p_end?: string
+          p_limit?: number
+          p_offset?: number
+          p_start?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       get_customer_statement_kiosk:
         | {
             Args: {

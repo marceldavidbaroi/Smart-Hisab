@@ -64,6 +64,14 @@ class _AddCustomerBottomSheetState extends ConsumerState<AddCustomerBottomSheet>
             backgroundColor: AppColors.success,
           ),
         );
+      } else {
+        final err = ref.read(customersNotifierProvider).errorMessage ?? 'Failed to add customer. Check phone number.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err),
+            backgroundColor: AppColors.danger,
+          ),
+        );
       }
     }
   }

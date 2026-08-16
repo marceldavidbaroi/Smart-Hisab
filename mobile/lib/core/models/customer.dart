@@ -25,7 +25,7 @@ class Customer {
     this.isActive = true,
     this.currentBalance = 0.0,
     this.createdAt,
-    this.activeMeals = const ['Breakfast', 'Lunch', 'Dinner'],
+    this.activeMeals = const [],
   });
 
   /// Factory constructor to create a [Customer] from a Supabase JSON payload.
@@ -41,7 +41,7 @@ class Customer {
       balance = (json['balance'] as num?)?.toDouble() ?? 0.0;
     }
 
-    List<String> meals = const ['Breakfast', 'Lunch', 'Dinner'];
+    List<String> meals = const [];
     if (json['active_meals'] != null && json['active_meals'] is List) {
       meals = List<String>.from(json['active_meals'] as List);
     } else if (json['subscribed_shifts'] != null && json['subscribed_shifts'] is List) {

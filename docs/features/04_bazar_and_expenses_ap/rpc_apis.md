@@ -6,18 +6,15 @@
 
 ## `record_expense`
 
-Record a cash outflow — market cost or canteen expense.
+Record an expense outflow or credit purchase across designated canteen accounts (wallets).
 
 | | |
 |---|---|
-| **Parameters** | `p_tenant_id UUID`, `p_category TEXT`, `p_amount NUMERIC`, `p_vendor_id UUID (nullable)`, `p_staff_id UUID (nullable)`, `p_notes TEXT` |
-| **Returns** | `UUID` (day_entry ID) |
+| **Parameters** | `p_tenant_id UUID`, `p_category TEXT`, `p_amount NUMERIC`, `p_canteen_account_id UUID (nullable)`, `p_vendor_id UUID (nullable)`, `p_is_credit BOOLEAN DEFAULT false`, `p_staff_id UUID (nullable)`, `p_notes TEXT` |
+| **Returns** | `UUID` (day_entry ID or vendor_wallet_entry ID) |
 | **Categories** | `market_cost`, `canteen_expense` |
-| **Logic — cash purchase (no vendor)** | INSERT `day_entries` (outflow). Cash drawer decreases immediately. |
-| **Logic — vendor credit purchase (`p_vendor_id` provided)** | INSERT `day_entries` (outflow) **AND** INSERT `vendor_wallet_entries` (purchase). Both are created. Cash drawer decreases AND vendor baki increases simultaneously. |
-
-> [!IMPORTANT]
-> When buying on vendor credit, `record_expense` still creates a `day_entries` outflow. There is currently **no separate "pay-later" mode** where cash stays in the drawer. If a future design requires tracking a purchase as pending cash-out, a new RPC or a `is_credit` flag on the call would be needed.
+| **Logic — direct payment (Cash/bKash/Bank)** | INSERT `day_entries` (outflow) referencing `canteen_account_id`. The chosen canteen account balance decreases. If `canteen_account_id` is the active cash drawer, it updates shift cash balance. |
+| **Logic — vendor credit purchase (`p_is_credit = true`)** | INSERT `vendor_wallet_entries` (purchase). Vendor baki increases. Canteen cash accounts and active shift drawer remain untouched until paid later. |
 
 ---
 
@@ -26,25 +23,25 @@ Record a cash outflow — market cost or canteen expense.
 > [!NOTE]
 > **Status: Not yet implemented in migration SQL.**
 
-Record a miscellaneous cash inflow.
+Record a miscellaneous cash inflow into a canteen account.
 
 | | |
 |---|---|
-| **Parameters** | `p_tenant_id UUID`, `p_amount NUMERIC`, `p_staff_id UUID (nullable)`, `p_notes TEXT` |
+| **Parameters** | `p_tenant_id UUID`, `p_amount NUMERIC`, `p_canteen_account_id UUID (nullable)`, `p_staff_id UUID (nullable)`, `p_notes TEXT` |
 | **Returns** | `UUID` (day_entry ID) |
-| **Side effects** | INSERT `day_entries` (inflow, category: `misc_earn`) |
+| **Side effects** | INSERT `day_entries` (inflow, category: `misc_earn`, links to `canteen_account_id`) |
 
 ---
 
 ## `record_vendor_payment`
 
-Canteen pays vendor to settle baki.
+Canteen pays vendor to settle baki from a selected canteen account (Cash Drawer, bKash, Bank, or Safe).
 
 | | |
 |---|---|
-| **Parameters** | `p_tenant_id UUID`, `p_vendor_id UUID`, `p_amount NUMERIC`, `p_staff_id UUID (nullable)`, `p_notes TEXT` |
+| **Parameters** | `p_tenant_id UUID`, `p_vendor_id UUID`, `p_amount NUMERIC`, `p_canteen_account_id UUID (nullable)`, `p_staff_id UUID (nullable)`, `p_notes TEXT` |
 | **Returns** | `NUMERIC` (updated vendor balance) |
-| **Side effects** | INSERT `vendor_wallet_entries` (payment) + INSERT `day_entries` (outflow, category: `vendor_payment`) |
+| **Side effects** | INSERT `vendor_wallet_entries` (payment) + INSERT `day_entries` (outflow, category: `vendor_payment`, linked to `canteen_account_id`). |
 | **Trigger** | `update_vendor_wallet_balance` updates `vendor_wallets.current_balance` |
 
 ---

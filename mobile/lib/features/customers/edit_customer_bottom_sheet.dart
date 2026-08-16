@@ -30,6 +30,7 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
   late final TextEditingController _phoneController;
   late final TextEditingController _institutionController;
   late final TextEditingController _addressController;
+  late bool _isActive;
   bool _isSubmitting = false;
 
   @override
@@ -39,6 +40,7 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
     _phoneController = TextEditingController(text: widget.customer.phone ?? '');
     _institutionController = TextEditingController(text: widget.customer.institution ?? '');
     _addressController = TextEditingController(text: widget.customer.address ?? '');
+    _isActive = widget.customer.isActive;
   }
 
   @override
@@ -53,7 +55,45 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (!_isActive && widget.customer.currentBalance > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Active debt exists (৳${widget.customer.currentBalance.toStringAsFixed(0)}). Settle balance before deactivating.',
+          ),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
+
+    // If deactivating customer
+    if (!_isActive && widget.customer.isActive) {
+      final success = await ref.read(customersNotifierProvider.notifier).deleteCustomer(widget.customer.id);
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        if (success) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Customer deactivated successfully!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else {
+          final err = ref.read(customersNotifierProvider).errorMessage ?? 'Failed to deactivate customer.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(err),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+        }
+      }
+      return;
+    }
 
     final success = await ref.read(customersNotifierProvider.notifier).updateCustomer(
           customerId: widget.customer.id,
@@ -77,6 +117,14 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
             backgroundColor: AppColors.success,
           ),
         );
+      } else {
+        final err = ref.read(customersNotifierProvider).errorMessage ?? 'Failed to update customer. Check phone number.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err),
+            backgroundColor: AppColors.danger,
+          ),
+        );
       }
     }
   }
@@ -84,6 +132,7 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasDebt = widget.customer.currentBalance > 0;
 
     return Form(
       key: _formKey,
@@ -190,6 +239,83 @@ class _EditCustomerBottomSheetState extends ConsumerState<EditCustomerBottomShee
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
                 ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Status Card & Debt Warning
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.bgDark : AppColors.bgLight,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Active Customer Status',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                            ),
+                          ),
+                          Text(
+                            _isActive ? 'Customer can record meals and baki' : 'Customer profile is deactivated',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Switch.adaptive(
+                        value: _isActive,
+                        activeTrackColor: AppColors.primary,
+                        onChanged: hasDebt && _isActive
+                            ? null
+                            : (val) {
+                                setState(() => _isActive = val);
+                              },
+                      ),
+                    ],
+                  ),
+                  if (hasDebt) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(LucideIcons.alertTriangle, size: 16, color: AppColors.danger),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Active debt exists (৳${widget.customer.currentBalance.toStringAsFixed(0)}). Settle balance before deactivating.',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.danger,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 24),
