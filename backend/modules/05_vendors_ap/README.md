@@ -26,49 +26,54 @@ graph TD
 
 ---
 
-## 3. API & RPC Endpoints Summary Table
+## 3. Screen & Page Wiring Directory
 
-| Function / RPC | Method | Purpose | Input Payload | Output Response |
-| :--- | :--- | :--- | :--- | :--- |
-| `record_vendor_payment_v2` | `POST /rpc/record_vendor_payment_v2` | Settles supplier payable debt and creates outflow in Canteen Account | `{"p_tenant_id": "uuid", "p_vendor_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 2500.0, "p_business_day_id": "uuid"}` | `{"success": true, "vendor_entry_id": "uuid", "vendor_id": "uuid", "amount": 2500.0}` |
-| `get_vendor_statement` | `POST /rpc/get_vendor_statement` | Chronological supplier ledger & payments | `{"p_vendor_id": "uuid", "p_start_date": "2026-08-01", "p_end_date": "2026-08-21"}` | `[{"id": "uuid", "entry_type": "debit|credit", "category": "string", "amount": 2500.0, "account_name": "string"}]` |
-| `sync_vendor_wallet_balance` | Trigger | Auto-recalculates supplier debt cache on transactions | System trigger | `Updates vendor_wallets.current_balance` |
-| `handle_new_vendor` | Trigger | Auto-initializes vendor wallet record on new supplier creation | System trigger | `Inserts into vendor_wallets` |
-
----
-
-## 4. Detailed RPC Reference
-
-### `record_vendor_payment_v2`
-* **Triggered by**: [record_vendor_payment_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/record_vendor_payment_bottom_sheet.dart)
-* **Payload**:
-```json
-{
-  "p_tenant_id": "e2a3b4c5-0000-0000-0000-000000000001",
-  "p_vendor_id": "88e7d6c5-0000-0000-0000-000000000001",
-  "p_canteen_account_id": "11a2b3c4-0000-0000-0000-000000000001",
-  "p_amount": 3500.00,
-  "p_business_day_id": "8f3b6a9c-0000-0000-0000-000000000001",
-  "p_notes": "Settled weekly vegetable bill via Cash Drawer"
-}
-```
-* **Success Response**:
-```json
-{
-  "success": true,
-  "vendor_entry_id": "33b4c5d6-0000-0000-0000-000000000001",
-  "vendor_id": "88e7d6c5-0000-0000-0000-000000000001",
-  "canteen_account_id": "11a2b3c4-0000-0000-0000-000000000001",
-  "amount": 3500.00
-}
-```
+### 📱 `VendorsScreen` (Suppliers Directory & AP List)
+* **File**: [vendors_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/vendors_screen.dart)
+* **Riverpod Provider**: `vendorsNotifierProvider` (`AsyncNotifier<List<Vendor>>`)
+* **Read APIs**: `.from('vendors').select('*, vendor_wallets(*)').eq('tenant_id', tenantId).order('name')`
+* **Intended Actions**:
+  * Search suppliers by name, category, or phone.
+  * Vendor card tap: Navigates to `VendorDetailScreen`.
+  * Swipe actions: Quick settle payment, edit vendor.
+  * Header CTA: Opens Add Vendor sheet.
 
 ---
 
-## 5. Mobile Screens & Consumers
-* [vendors_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/vendors_screen.dart)
-* [vendor_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/vendor_detail_screen.dart)
-* [vendors_notifier.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/vendors_notifier.dart)
-* [edit_vendor_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/edit_vendor_bottom_sheet.dart)
-* [add_vendor_baki_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/add_vendor_baki_bottom_sheet.dart)
-* [record_vendor_payment_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/record_vendor_payment_bottom_sheet.dart)
+### 📱 `VendorDetailScreen` (Vendor Ledger & Statement)
+* **File**: [vendor_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/vendor_detail_screen.dart)
+* **Riverpod Provider**: `vendorDetailNotifierProvider(vendorId)`
+* **Read RPC**: `get_vendor_statement(p_vendor_id, p_start_date, p_end_date)`
+* **Intended Actions**:
+  * Balance card: Displays outstanding payable debt.
+  * CTA 1: "Record Payment" ➔ Opens `RecordVendorPaymentBottomSheet`.
+  * CTA 2: "Add Supply Baki" ➔ Opens `AddVendorBakiBottomSheet`.
+  * Chronological statement listing of supply deliveries vs payments.
+
+---
+
+### 🗂️ `RecordVendorPaymentBottomSheet` (Settlement Disbursement)
+* **File**: [record_vendor_payment_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/record_vendor_payment_bottom_sheet.dart)
+* **Riverpod Providers**: `vendorsNotifierProvider`, `vendorDetailNotifierProvider`, `cashbookNotifierProvider`
+* **Mutation RPC**: `record_vendor_payment_v2(p_tenant_id, p_vendor_id, p_canteen_account_id, p_amount, p_business_day_id, p_notes)`
+* **Payload**: `{"p_tenant_id": "uuid", "p_vendor_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 2500.0, "p_business_day_id": "uuid"}`
+* **Target Cache Mutation**:
+  * Decrements payable debt in `vendor_wallets.current_balance`.
+  * Appends credit settlement row in `vendorDetailNotifierProvider`.
+  * Appends expense outflow row in `cashbookNotifierProvider`.
+
+---
+
+### 🗂️ `AddVendorBakiBottomSheet` (Credit Purchase)
+* **File**: [add_vendor_baki_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/add_vendor_baki_bottom_sheet.dart)
+* **Mutation API**: `.from('vendor_wallet_entries').insert({'entry_type': 'debit', 'amount': ..., 'category': 'supplies'})`
+* **Target Cache Mutation**: Increments vendor's payable balance cache.
+
+---
+
+## 4. API & RPC Endpoints Summary Table
+
+| Function / RPC | Method | Purpose | Input Payload | Output Response | Calling Screen / UI |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `record_vendor_payment_v2` | `POST /rpc/record_vendor_payment_v2` | Settles supplier payable debt | `{"p_tenant_id": "uuid", "p_vendor_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 2500.0}` | `{"success": true, "vendor_entry_id": "uuid"}` | [record_vendor_payment_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/record_vendor_payment_bottom_sheet.dart) |
+| `get_vendor_statement` | `POST /rpc/get_vendor_statement` | Chronological supplier ledger | `{"p_vendor_id": "uuid", "p_start_date": "...", "p_end_date": "..."}` | `[{"id": "uuid", "amount": 2500.0, ...}]` | [vendor_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/vendor_detail_screen.dart) |

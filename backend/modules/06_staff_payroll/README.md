@@ -25,51 +25,55 @@ graph TD
 
 ---
 
-## 3. API & RPC Endpoints Summary Table
+## 3. Screen & Page Wiring Directory
 
-| Function / RPC | Method | Purpose | Input Payload | Output Response |
-| :--- | :--- | :--- | :--- | :--- |
-| `record_salary_payout_v2` | `POST /rpc/record_salary_payout_v2` | Records salary advance or monthly payroll payout from Canteen Account | `{"p_tenant_id": "uuid", "p_staff_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 5000.0, "p_payout_type": "advance\|salary", "p_payout_month": "2026-08-01"}` | `{"success": true, "salary_payout_id": "uuid", "staff_id": "uuid", "payout_type": "salary", "amount": 5000.0}` |
-| `verify_staff_pin` | `POST /rpc/verify_staff_pin` | Verifies 4-digit staff PIN for POS actions | `{"p_tenant_id": "uuid", "p_pin": "1234"}` | `{"valid": true, "staff_id": "uuid", "name": "string", "role": "staff"}` |
-| `handle_new_staff` | Trigger | Auto-initializes staff wallet cache row on new employee creation | System trigger | `Inserts into staff_wallets` |
-
----
-
-## 4. Detailed RPC Reference
-
-### `record_salary_payout_v2`
-* **Triggered by**: [record_salary_payout_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/record_salary_payout_bottom_sheet.dart)
-* **Payload (Salary Advance)**:
-```json
-{
-  "p_tenant_id": "e2a3b4c5-0000-0000-0000-000000000001",
-  "p_staff_id": "22f3e4d5-0000-0000-0000-000000000001",
-  "p_canteen_account_id": "11a2b3c4-0000-0000-0000-000000000001",
-  "p_amount": 2000.00,
-  "p_payout_type": "advance",
-  "p_payout_month": "2026-08-01",
-  "p_business_day_id": "8f3b6a9c-0000-0000-0000-000000000001",
-  "p_notes": "Mid-month advance for festival"
-}
-```
-* **Success Response**:
-```json
-{
-  "success": true,
-  "salary_payout_id": "99c8b7a6-0000-0000-0000-000000000001",
-  "staff_id": "22f3e4d5-0000-0000-0000-000000000001",
-  "payout_type": "advance",
-  "canteen_account_id": "11a2b3c4-0000-0000-0000-000000000001",
-  "amount": 2000.00
-}
-```
+### 📱 `StaffScreen` (Staff Directory & Payroll Overview)
+* **File**: [staff_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/staff_screen.dart)
+* **Riverpod Provider**: `staffNotifierProvider` (`AsyncNotifier<List<StaffMember>>`)
+* **Read APIs**: `.from('staff_members').select('*, staff_wallets(*)').eq('tenant_id', tenantId).order('name')`
+* **Intended Actions**:
+  * Filter active/inactive staff.
+  * Summary header card: Total monthly payroll liability & active advances.
+  * Staff card tap: Navigates to `StaffDetailScreen`.
+  * Swipe actions: Quick payout advance, edit contract.
+  * Header CTA: Opens `AddStaffBottomSheet`.
 
 ---
 
-## 5. Mobile Screens & Consumers
-* [staff_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/staff_screen.dart)
-* [staff_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/staff_detail_screen.dart)
-* [staff_notifier.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/staff_notifier.dart)
-* [add_staff_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/add_staff_bottom_sheet.dart)
-* [edit_staff_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/edit_staff_bottom_sheet.dart)
-* [record_salary_payout_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/record_salary_payout_bottom_sheet.dart)
+### 📱 `StaffDetailScreen` (Staff Profile & Payout Ledger)
+* **File**: [staff_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/staff_detail_screen.dart)
+* **Riverpod Provider**: `staffDetailNotifierProvider(staffId)`
+* **Read APIs**: `.from('salary_payouts').select('*').eq('staff_id', staffId).order('created_at', ascending: false)`
+* **Intended Actions**:
+  * View current advance balance, monthly salary amount, daily wage rate.
+  * CTA: "Record Payout" ➔ Opens `RecordSalaryPayoutBottomSheet`.
+  * Payout history log (with advance vs full salary indicators).
+
+---
+
+### 🗂️ `RecordSalaryPayoutBottomSheet` (Advance / Monthly Salary)
+* **File**: [record_salary_payout_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/record_salary_payout_bottom_sheet.dart)
+* **Riverpod Providers**: `staffNotifierProvider`, `staffDetailNotifierProvider`, `cashbookNotifierProvider`
+* **Mutation RPC**: `record_salary_payout_v2(p_tenant_id, p_staff_id, p_canteen_account_id, p_amount, p_payout_type, p_payout_month, p_business_day_id, p_notes)`
+* **Payload**: `{"p_tenant_id": "uuid", "p_staff_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 3000.0, "p_payout_type": "advance|salary"}`
+* **Target Cache Mutation**:
+  * For Advance: Increments `staff_wallets.current_advance_balance`.
+  * For Salary: Increments `total_salary_paid` and resets `current_advance_balance` to 0.
+  * Appends salary expense outflow to `cashbookNotifierProvider`.
+
+---
+
+### 📱 POS Staff PIN Authorization
+* **RPC**: `verify_staff_pin(p_tenant_id, p_pin)`
+* **Payload**: `{"p_tenant_id": "uuid", "p_pin": "1234"}`
+* **Response**: `{"valid": true, "staff_id": "uuid", "name": "string", "role": "staff"}`
+* **Intended Actions**: Prompts 4-digit numeric keypad before unlocking cashier functions or high-risk overrides.
+
+---
+
+## 4. API & RPC Endpoints Summary Table
+
+| Function / RPC | Method | Purpose | Input Payload | Output Response | Calling Screen / UI |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `record_salary_payout_v2` | `POST /rpc/record_salary_payout_v2` | Pays salary advance or monthly payroll | `{"p_tenant_id": "uuid", "p_staff_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 3000.0, "p_payout_type": "advance\|salary"}` | `{"success": true, "salary_payout_id": "uuid"}` | [record_salary_payout_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/staff/record_salary_payout_bottom_sheet.dart) |
+| `verify_staff_pin` | `POST /rpc/verify_staff_pin` | Validates 4-digit staff PIN for POS actions | `{"p_tenant_id": "uuid", "p_pin": "1234"}` | `{"valid": true, "staff_id": "uuid", "role": "staff"}` | [home_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/home/home_screen.dart) |

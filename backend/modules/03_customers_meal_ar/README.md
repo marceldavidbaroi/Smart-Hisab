@@ -27,84 +27,83 @@ graph TD
 
 ---
 
-## 3. API & RPC Endpoints Summary Table
+## 3. Screen & Page Wiring Directory
 
-| Function / RPC | Method | Purpose | Input Payload | Output Response |
-| :--- | :--- | :--- | :--- | :--- |
-| `create_or_reactivate_customer` | `POST /rpc/create_or_reactivate_customer` | Idempotent customer creation or reactivation | `{"p_tenant_id": "uuid", "p_name": "string", "p_phone": "string", "p_opening_balance": 0.0, "p_subscribed_shifts": ["uuid"]}` | `{"success": true, "customer_id": "uuid", "name": "string", "reactivated": false}` |
-| `record_meal_attendance` | `POST /rpc/record_meal_attendance` | Punches meal, calculates rate snapshot, charges customer wallet debit | `{"p_tenant_id": "uuid", "p_customer_id": "uuid", "p_shift_id": "uuid", "p_rate": 50.0, "p_business_day_id": "uuid"}` | `{"success": true, "attendance_id": "uuid", "customer_id": "uuid", "rate": 50.0}` |
-| `record_baki_payment_v2` | `POST /rpc/record_baki_payment_v2` | Records debt repayment into Canteen Account (Cash Drawer / bKash) | `{"p_tenant_id": "uuid", "p_customer_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 500.0, "p_business_day_id": "uuid"}` | `{"success": true, "wallet_entry_id": "uuid", "customer_id": "uuid", "amount": 500.0}` |
-| `get_customer_balance` | `POST /rpc/get_customer_balance` | Fetches aggregated customer balance & totals | `{"p_customer_id": "uuid"}` | `{"customer_id": "uuid", "customer_name": "string", "current_balance": 250.0, "total_debit": 1250.0, "total_credit": 1000.0}` |
-| `get_customer_statement` | `POST /rpc/get_customer_statement` | Chronological transaction statement | `{"p_customer_id": "uuid", "p_start_date": "2026-08-01", "p_end_date": "2026-08-21"}` | `[{"id": "uuid", "entry_type": "debit|credit", "category": "string", "amount": 50.0, "account_name": "string"}]` |
-| `sync_customer_wallet_balance` | Trigger | Auto-recomputes customer balance cache on transaction changes | System trigger | `Updates customer_wallets table` |
-| `check_customer_debt_before_deactivation` | Trigger Guard | Prevents deactivating a customer with unpaid baki | System trigger | `Raises exception if current_balance > 0` |
-
----
-
-## 4. Detailed RPC Reference
-
-### `record_meal_attendance`
-* **Triggered by**: [quick_customer_picker_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/home/widgets/quick_customer_picker_bottom_sheet.dart) / [customers_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/customers_screen.dart)
-* **Payload**:
-```json
-{
-  "p_tenant_id": "e2a3b4c5-0000-0000-0000-000000000001",
-  "p_customer_id": "99f8c12a-0000-0000-0000-000000000001",
-  "p_shift_id": "33a1b2c3-0000-0000-0000-000000000001",
-  "p_rate": 60.00,
-  "p_business_day_id": "8f3b6a9c-0000-0000-0000-000000000001",
-  "p_is_manual": false,
-  "p_notes": "Lunch meal punch"
-}
-```
-* **Success Response**:
-```json
-{
-  "success": true,
-  "attendance_id": "77a8b9c0-0000-0000-0000-000000000001",
-  "customer_id": "99f8c12a-0000-0000-0000-000000000001",
-  "rate": 60.00,
-  "meal_date": "2026-08-21"
-}
-```
+### 📱 `CustomersScreen` (Customer Directory & Baki List)
+* **File**: [customers_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/customers_screen.dart)
+* **Riverpod Provider**: `customersNotifierProvider` (`AsyncNotifier<List<Customer>>`)
+* **Read APIs**: `.from('customers').select('*, customer_wallets(*)').eq('tenant_id', tenantId).order('name')`
+* **Intended Actions**:
+  * Debounced text search by customer name or phone.
+  * Shift filter chips (e.g., Breakfast, Lunch, Dinner subscribers).
+  * Customer card tap: Navigates to `CustomerDetailScreen`.
+  * Swipe actions: Edit customer, quick collect baki.
+  * Header/Floating Button: Opens `AddCustomerBottomSheet`.
 
 ---
 
-### `record_baki_payment_v2`
-* **Triggered by**: [collect_baki_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/collect_baki_bottom_sheet.dart)
-* **Payload**:
-```json
-{
-  "p_tenant_id": "e2a3b4c5-0000-0000-0000-000000000001",
-  "p_customer_id": "99f8c12a-0000-0000-0000-000000000001",
-  "p_canteen_account_id": "11a2b3c4-0000-0000-0000-000000000001",
-  "p_amount": 500.00,
-  "p_business_day_id": "8f3b6a9c-0000-0000-0000-000000000001",
-  "p_notes": "Cash repayment received by Manager"
-}
-```
-* **Success Response**:
-```json
-{
-  "success": true,
-  "wallet_entry_id": "55a6b7c8-0000-0000-0000-000000000001",
-  "customer_id": "99f8c12a-0000-0000-0000-000000000001",
-  "canteen_account_id": "11a2b3c4-0000-0000-0000-000000000001",
-  "amount": 500.00
-}
-```
+### 📱 `CustomerDetailScreen` (Customer Ledger & Statement)
+* **File**: [customer_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/customer_detail_screen.dart)
+* **Riverpod Provider**: `customerDetailNotifierProvider(customerId)`
+* **Read RPCs**:
+  * `get_customer_balance(p_customer_id)` -> Fetches live balance, total debt, total credit.
+  * `get_customer_statement(p_customer_id, p_start_date, p_end_date)` -> Fetches chronological statement.
+* **Intended Actions**:
+  * View balance summary header with total due baki badge.
+  * Quick Actions Grid:
+    * Tap "Collect Baki" ➔ Opens `CollectBakiBottomSheet`.
+    * Tap "Add Baki (Debit)" ➔ Opens `AddManualBakiBottomSheet`.
+    * Tap "Subscriptions" ➔ Opens `ManageMealSubscriptionBottomSheet`.
+    * Tap "Calendar" ➔ Opens `MealAttendanceCalendarBottomSheet`.
+  * Transaction history row: Swipe to void ➔ Opens `VoidTransactionBottomSheet`.
 
 ---
 
-## 5. Mobile Screens & Consumers
-* [customers_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/customers_screen.dart)
-* [customer_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/customer_detail_screen.dart)
-* [customers_notifier.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/customers_notifier.dart)
-* [add_customer_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/add_customer_bottom_sheet.dart)
-* [edit_customer_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/edit_customer_bottom_sheet.dart)
-* [collect_baki_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/collect_baki_bottom_sheet.dart)
-* [add_manual_baki_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/add_manual_baki_bottom_sheet.dart)
-* [manage_meal_subscription_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/manage_meal_subscription_bottom_sheet.dart)
-* [meal_attendance_calendar_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/meal_attendance_calendar_bottom_sheet.dart)
-* [meal_configs_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/meal_configs_screen.dart)
-* [meal_config_form_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/meal_config_form_bottom_sheet.dart)
+### 🗂️ `AddCustomerBottomSheet`
+* **File**: [add_customer_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/add_customer_bottom_sheet.dart)
+* **Riverpod Provider**: `customersNotifierProvider`
+* **Mutation RPC**: `create_or_reactivate_customer(p_tenant_id, p_name, p_phone, p_opening_balance, p_subscribed_shifts)`
+* **Payload**: `{"p_tenant_id": "uuid", "p_name": "Rahim", "p_phone": "01711000000", "p_opening_balance": 0.0, "p_subscribed_shifts": ["uuid"]}`
+* **Target Cache Mutation**: Optimistically prepends new `Customer` object with initial `CustomerWallet` to `customersNotifierProvider` state.
+
+---
+
+### 🗂️ `CollectBakiBottomSheet` (Repayment into Canteen Wallet)
+* **File**: [collect_baki_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/collect_baki_bottom_sheet.dart)
+* **Riverpod Providers**: `customersNotifierProvider`, `customerDetailNotifierProvider`, `cashbookNotifierProvider`
+* **Mutation RPC**: `record_baki_payment_v2(p_tenant_id, p_customer_id, p_canteen_account_id, p_amount, p_business_day_id, p_notes)`
+* **Payload**: `{"p_tenant_id": "uuid", "p_customer_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 500.0, "p_business_day_id": "uuid"}`
+* **Target Cache Mutation**:
+  * Decrements `customer_wallets.current_balance` by `amount`.
+  * Inserts credit transaction into `customerDetailNotifierProvider` ledger list.
+  * Appends cashbook income entry in `cashbookNotifierProvider`.
+
+---
+
+### 🗂️ `QuickCustomerPickerBottomSheet` (Fast Meal Punch)
+* **File**: [quick_customer_picker_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/home/widgets/quick_customer_picker_bottom_sheet.dart)
+* **Riverpod Provider**: `customersNotifierProvider`
+* **Mutation RPC**: `record_meal_attendance(p_tenant_id, p_customer_id, p_shift_id, p_rate, p_business_day_id)`
+* **Payload**: `{"p_tenant_id": "uuid", "p_customer_id": "uuid", "p_shift_id": "uuid", "p_rate": 60.0, "p_business_day_id": "uuid"}`
+* **Target Cache Mutation**: Increments customer's `current_balance` by `rate` locally for instant feedback.
+
+---
+
+### 📱 `MealConfigsScreen` & `MealConfigFormBottomSheet`
+* **Files**: [meal_configs_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/meal_configs_screen.dart), [meal_config_form_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/settings/meal_config_form_bottom_sheet.dart)
+* **Riverpod Provider**: `mealConfigsNotifierProvider` (`AsyncNotifier<List<MealConfig>>`)
+* **Read APIs**: `.from('meal_configs').select('*').eq('tenant_id', tenantId)`
+* **Mutation APIs**: `.from('meal_configs').insert(...)` / `.update(...)`
+* **Target Cache Mutation**: Updates meal rate and active flags in local state.
+
+---
+
+## 4. API & RPC Endpoints Summary Table
+
+| Function / RPC | Method | Purpose | Input Payload | Output Response | Calling Screen / UI |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `create_or_reactivate_customer` | `POST /rpc/create_or_reactivate_customer` | Idempotent customer creation | `{"p_tenant_id": "uuid", "p_name": "string", "p_phone": "string"}` | `{"success": true, "customer_id": "uuid"}` | [add_customer_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/add_customer_bottom_sheet.dart) |
+| `record_meal_attendance` | `POST /rpc/record_meal_attendance` | Meal punch & wallet debit | `{"p_tenant_id": "uuid", "p_customer_id": "uuid", "p_rate": 50.0}` | `{"success": true, "attendance_id": "uuid"}` | [quick_customer_picker_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/home/widgets/quick_customer_picker_bottom_sheet.dart) |
+| `record_baki_payment_v2` | `POST /rpc/record_baki_payment_v2` | Repayment into Canteen Wallet | `{"p_tenant_id": "uuid", "p_customer_id": "uuid", "p_canteen_account_id": "uuid", "p_amount": 500.0}` | `{"success": true, "wallet_entry_id": "uuid"}` | [collect_baki_bottom_sheet.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/collect_baki_bottom_sheet.dart) |
+| `get_customer_balance` | `POST /rpc/get_customer_balance` | Live customer balance & totals | `{"p_customer_id": "uuid"}` | `{"current_balance": 250.0, "total_debit": 1250.0}` | [customer_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/customer_detail_screen.dart) |
+| `get_customer_statement` | `POST /rpc/get_customer_statement` | Chronological statement | `{"p_customer_id": "uuid", "p_start_date": "...", "p_end_date": "..."}` | `[{"id": "uuid", "amount": 50.0, ...}]` | [customer_detail_screen.dart](file:///Users/daviditc/Documents/personal_projects/smart-hisab/mobile/lib/features/customers/customer_detail_screen.dart) |

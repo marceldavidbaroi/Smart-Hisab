@@ -69,6 +69,9 @@ This file outlines the core rules and constraints that the AI agent must adhere 
   - Check if any corresponding SQL function, table column, or RPC in Supabase is required, and create/update migrations or RPC calls accordingly.
   - Never leave placeholder or mock-only handlers unless explicitly requested.
 
+### 3. Backend Contract & API Directory Compliance
+* **Strict Constraint**: When creating or modifying any frontend screen, widget, bottom sheet, or Riverpod notifier, the agent **MUST** check `backend/README.md` and the corresponding `backend/modules/*/README.md` for exact RPC signatures, required payload fields, and targeted cache mutation specifications. Never invent ad-hoc database queries or bypass documented RPCs.
+
 ## Documentation & IDE Preferences
 
 ### 1. Markdown File Viewing Mode
