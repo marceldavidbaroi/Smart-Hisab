@@ -114,9 +114,7 @@ final vendorsNotifierProvider =
 class VendorsNotifier extends StateNotifier<VendorsState> {
   final String? tenantId;
 
-  VendorsNotifier({required this.tenantId}) : super(const VendorsState()) {
-    fetchVendors();
-  }
+  VendorsNotifier({required this.tenantId}) : super(const VendorsState());
 
   Future<void> fetchVendors() async {
     final tId = tenantId;

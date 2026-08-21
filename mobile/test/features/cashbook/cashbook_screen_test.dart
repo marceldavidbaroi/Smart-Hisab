@@ -20,7 +20,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify main titles and cashbook header render properly
-    expect(find.text('Cashflow'), findsOneWidget);
+    expect(find.text('Cashflow & Ledger'), findsOneWidget);
     expect(find.text('Net Cashflow'), findsOneWidget);
     expect(find.text('Transactions'), findsOneWidget);
   });

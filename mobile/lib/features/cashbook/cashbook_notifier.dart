@@ -71,10 +71,9 @@ class CashbookState {
 final cashbookNotifierProvider =
     StateNotifierProvider<CashbookNotifier, CashbookState>((ref) {
   final tenantId = ref.watch(authNotifierProvider).tenantId;
-  final notifier = CashbookNotifier(tenantId: tenantId);
-  notifier.fetchAccountsAndEntries();
-  return notifier;
+  return CashbookNotifier(tenantId: tenantId);
 });
+
 
 class CashbookNotifier extends StateNotifier<CashbookState> {
   final String? tenantId;
@@ -121,9 +120,25 @@ class CashbookNotifier extends StateNotifier<CashbookState> {
             .order('is_default', ascending: false)
             .order('created_at', ascending: true);
 
-        final accounts = (res as List)
+        List<CanteenAccount> accounts = (res as List)
             .map((json) => CanteenAccount.fromJson(Map<String, dynamic>.from(json as Map)))
             .toList();
+
+        if (accounts.isEmpty) {
+          try {
+            await SupabaseService.client.rpc('seed_default_canteen_accounts', params: {'p_tenant_id': tId});
+            final retryRes = await SupabaseService.client
+                .from('canteen_accounts')
+                .select()
+                .eq('tenant_id', tId)
+                .eq('is_active', true)
+                .order('is_default', ascending: false)
+                .order('created_at', ascending: true);
+            accounts = (retryRes as List)
+                .map((json) => CanteenAccount.fromJson(Map<String, dynamic>.from(json as Map)))
+                .toList();
+          } catch (_) {}
+        }
 
         if (accounts.isNotEmpty) {
           state = state.copyWith(accounts: accounts);
@@ -159,7 +174,7 @@ class CashbookNotifier extends StateNotifier<CashbookState> {
         try {
           final res = await SupabaseService.client
               .from('day_entries')
-              .select('*, canteen_accounts(name)')
+              .select('*')
               .eq('tenant_id', tId)
               .order('created_at', ascending: false)
               .limit(100);
@@ -213,6 +228,7 @@ class CashbookNotifier extends StateNotifier<CashbookState> {
       amount: amount,
       notes: notes,
       createdAt: DateTime.now(),
+      isSynced: false, // Optimistically stored locally
     );
 
     // Targeted Cache Mutation
@@ -376,6 +392,7 @@ class CashbookNotifier extends StateNotifier<CashbookState> {
       amount: amount,
       notes: notes,
       createdAt: DateTime.now(),
+      isSynced: false, // Optimistically stored locally
     );
 
     // Targeted Cache Mutation

@@ -20,6 +20,14 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
   final _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(staffNotifierProvider.notifier).fetchStaff();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -53,36 +61,59 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
     final staffState = ref.watch(staffNotifierProvider);
     final staffList = staffState.filteredStaffList;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final canPop = Navigator.canPop(context);
 
-    return AppSafeArea(
-      child: RefreshIndicator(
-        onRefresh: () async {
-          await ref.read(staffNotifierProvider.notifier).fetchStaff();
-        },
-        color: AppColors.primary,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header & Add Staff CTA
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Staff Management', style: Theme.of(context).textTheme.titleLarge),
-                  if (staffList.isNotEmpty)
-                    ElevatedButton.icon(
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      appBar: canPop
+          ? AppBar(
+              title: const Text('Staff Management / কর্মচারী'),
+              elevation: 0,
+            )
+          : null,
+      body: AppSafeArea(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(staffNotifierProvider.notifier).fetchStaff();
+          },
+          color: AppColors.primary,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header & Add Staff CTA
+                if (!canPop)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Staff Management', style: Theme.of(context).textTheme.titleLarge),
+                      if (staffList.isNotEmpty)
+                        ElevatedButton.icon(
+                          onPressed: _openAddStaffModal,
+                          icon: const Icon(LucideIcons.userPlus, size: 16, color: Colors.white),
+                          label: const Text('Add Staff', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                    ],
+                  )
+                else if (staffList.isNotEmpty)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton.icon(
                       onPressed: _openAddStaffModal,
                       icon: const Icon(LucideIcons.userPlus, size: 16, color: Colors.white),
-                      label: const Text('Add Staff', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      label: const Text('Add Staff Member', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 12),
+                  ),
+                const SizedBox(height: 12),
 
               // Search Bar
               TextField(
@@ -280,8 +311,9 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                               );
                             },
                           ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

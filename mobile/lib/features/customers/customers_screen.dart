@@ -24,6 +24,14 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(customersNotifierProvider.notifier).fetchCustomers();
+    });
+  }
+
+  @override
   void dispose() {
     _debounceTimer?.cancel();
     _searchController.dispose();

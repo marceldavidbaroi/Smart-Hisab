@@ -34,7 +34,7 @@ class CustomerQuickActionGrid extends ConsumerWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14),
@@ -42,9 +42,10 @@ class CustomerQuickActionGrid extends ConsumerWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 6),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
             Text(
               label,
               textAlign: TextAlign.center,
@@ -70,7 +71,7 @@ class CustomerQuickActionGrid extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,
-      childAspectRatio: 2.4,
+      childAspectRatio: 1.9,
       children: [
         _buildActionButton(
           context: context,
@@ -97,7 +98,7 @@ class CustomerQuickActionGrid extends ConsumerWidget {
               child: Opacity(
                 opacity: hasActiveMeal ? 1.0 : 0.4,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   decoration: BoxDecoration(
                     color: buttonColor.withValues(alpha: hasActiveMeal ? 0.12 : 0.05),
                     borderRadius: BorderRadius.circular(14),
@@ -105,13 +106,14 @@ class CustomerQuickActionGrid extends ConsumerWidget {
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         isMarkedToday ? LucideIcons.checkCircle2 : LucideIcons.calendarCheck2,
                         color: buttonColor,
-                        size: 22,
+                        size: 20,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         isMarkedToday ? 'Meal: Ate Today' : 'Mark Attendance',
                         textAlign: TextAlign.center,

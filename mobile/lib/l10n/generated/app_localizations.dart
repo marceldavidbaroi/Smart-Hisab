@@ -122,6 +122,18 @@ abstract class AppLocalizations {
   /// **'Cashbook'**
   String get navCashbook;
 
+  /// No description provided for @navBazar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bazar'**
+  String get navBazar;
+
+  /// No description provided for @navMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get navMore;
+
   /// No description provided for @navStaff.
   ///
   /// In en, this message translates to:
@@ -499,6 +511,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Collect Baki'**
   String get homeActionCollectBaki;
+
+  /// No description provided for @homeActionAddIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Income'**
+  String get homeActionAddIncome;
 
   /// No description provided for @homeActionAddExpense.
   ///

@@ -95,9 +95,8 @@ final shiftsNotifierProvider =
 class ShiftsNotifier extends StateNotifier<ShiftsState> {
   final String? tenantId;
 
-  ShiftsNotifier({required this.tenantId}) : super(const ShiftsState()) {
-    fetchShifts();
-  }
+  ShiftsNotifier({required this.tenantId}) : super(const ShiftsState());
+
 
   Future<void> fetchShifts() async {
     state = state.copyWith(isLoading: true, errorMessage: null);

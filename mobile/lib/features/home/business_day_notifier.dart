@@ -12,8 +12,6 @@ class BusinessDayState {
   final BusinessDay? activeDay;
   final LastClosedDayRecap? lastClosedDayRecap;
   final List<CashbookEntry> recentActivities;
-  final String activeShiftName;
-  final double activeShiftRate;
   final String? errorMessage;
 
   const BusinessDayState({
@@ -21,8 +19,6 @@ class BusinessDayState {
     this.activeDay,
     this.lastClosedDayRecap,
     this.recentActivities = const [],
-    this.activeShiftName = 'Lunch',
-    this.activeShiftRate = 80.0,
     this.errorMessage,
   });
 
@@ -33,8 +29,6 @@ class BusinessDayState {
     BusinessDay? activeDay,
     LastClosedDayRecap? lastClosedDayRecap,
     List<CashbookEntry>? recentActivities,
-    String? activeShiftName,
-    double? activeShiftRate,
     String? errorMessage,
     bool clearActiveDay = false,
   }) {
@@ -43,8 +37,6 @@ class BusinessDayState {
       activeDay: clearActiveDay ? null : (activeDay ?? this.activeDay),
       lastClosedDayRecap: lastClosedDayRecap ?? this.lastClosedDayRecap,
       recentActivities: recentActivities ?? this.recentActivities,
-      activeShiftName: activeShiftName ?? this.activeShiftName,
-      activeShiftRate: activeShiftRate ?? this.activeShiftRate,
       errorMessage: errorMessage,
     );
   }
@@ -130,7 +122,7 @@ class BusinessDayNotifier extends StateNotifier<BusinessDayState> {
         // 3. Fetch latest 5 activity entries
         final activitiesRes = await client
             .from('day_entries')
-            .select('*, canteen_accounts(name)')
+            .select('*')
             .eq('tenant_id', tenantId)
             .order('created_at', ascending: false)
             .limit(5);
@@ -228,6 +220,40 @@ class BusinessDayNotifier extends StateNotifier<BusinessDayState> {
     }
 
     state = state.copyWith(isLoading: false);
+  }
+
+  void recordOutflowOptimistic(double amount) {
+    final active = state.activeDay;
+    if (active == null) return;
+
+    final updatedDay = active.copyWith(
+      totalOutflows: active.totalOutflows + amount,
+      expectedCash: active.openingCash + active.totalInflows - (active.totalOutflows + amount),
+    );
+
+    final tenantId = _tenantId;
+    if (tenantId != null && tenantId.isNotEmpty) {
+      HiveService.setCache('active_day_$tenantId', updatedDay.toJson());
+    }
+
+    state = state.copyWith(activeDay: updatedDay);
+  }
+
+  void recordInflowOptimistic(double amount) {
+    final active = state.activeDay;
+    if (active == null) return;
+
+    final updatedDay = active.copyWith(
+      totalInflows: active.totalInflows + amount,
+      expectedCash: active.openingCash + (active.totalInflows + amount) - active.totalOutflows,
+    );
+
+    final tenantId = _tenantId;
+    if (tenantId != null && tenantId.isNotEmpty) {
+      HiveService.setCache('active_day_$tenantId', updatedDay.toJson());
+    }
+
+    state = state.copyWith(activeDay: updatedDay);
   }
 
   Future<bool> startDay(double openingCash) async {

@@ -7,13 +7,28 @@ import '../../core/widgets/custom_modal_bottom_sheet.dart';
 import 'cashbook_notifier.dart';
 
 class AddIncomeBottomSheet extends ConsumerStatefulWidget {
-  const AddIncomeBottomSheet({super.key});
+  final Future<void> Function({
+    required String title,
+    required double amount,
+    String? accountId,
+    String? notes,
+  })? onSubmit;
 
-  static Future<void> show(BuildContext context) {
+  const AddIncomeBottomSheet({super.key, this.onSubmit});
+
+  static Future<void> show(
+    BuildContext context, {
+    Future<void> Function({
+      required String title,
+      required double amount,
+      String? accountId,
+      String? notes,
+    })? onSubmit,
+  }) {
     return CustomModalBottomSheet.show(
       context: context,
       title: 'Record Miscellaneous Income',
-      child: const AddIncomeBottomSheet(),
+      child: AddIncomeBottomSheet(onSubmit: onSubmit),
     );
   }
 
@@ -43,14 +58,36 @@ class _AddIncomeBottomSheetState extends ConsumerState<AddIncomeBottomSheet> {
     setState(() => _isSubmitting = true);
 
     final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
+    final title = _titleController.text.trim();
+    final notes = _notesController.text.trim().isEmpty
+        ? null
+        : _notesController.text.trim();
+
+    if (widget.onSubmit != null) {
+      await widget.onSubmit!(
+        title: title,
+        amount: amount,
+        accountId: _selectedAccountId,
+        notes: notes,
+      );
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Income recorded successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+      return;
+    }
 
     final success = await ref.read(cashbookNotifierProvider.notifier).recordMiscIncome(
-          title: _titleController.text.trim(),
+          title: title,
           amount: amount,
           accountId: _selectedAccountId,
-          notes: _notesController.text.trim().isEmpty
-              ? null
-              : _notesController.text.trim(),
+          notes: notes,
         );
 
     if (mounted) {

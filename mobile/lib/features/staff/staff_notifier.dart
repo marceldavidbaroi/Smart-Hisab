@@ -113,12 +113,9 @@ class StaffState {
 final staffNotifierProvider =
     StateNotifierProvider<StaffNotifier, StaffState>((ref) {
   final tenantId = ref.watch(authNotifierProvider).tenantId;
-  final notifier = StaffNotifier(tenantId: tenantId);
-  if (tenantId != null && tenantId.isNotEmpty) {
-    notifier.fetchStaff();
-  }
-  return notifier;
+  return StaffNotifier(tenantId: tenantId);
 });
+
 
 class StaffNotifier extends StateNotifier<StaffState> {
   final String? tenantId;

@@ -23,6 +23,14 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
   String _searchQuery = '';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(vendorsNotifierProvider.notifier).fetchVendors();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

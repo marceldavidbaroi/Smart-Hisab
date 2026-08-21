@@ -102,9 +102,7 @@ final mealConfigsNotifierProvider =
 class MealConfigsNotifier extends StateNotifier<MealConfigsState> {
   final String? tenantId;
 
-  MealConfigsNotifier({required this.tenantId}) : super(const MealConfigsState()) {
-    fetchMealConfigs();
-  }
+  MealConfigsNotifier({required this.tenantId}) : super(const MealConfigsState());
 
   Future<void> fetchMealConfigs() async {
     state = state.copyWith(isLoading: true, errorMessage: null);

@@ -4,6 +4,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/cashbook_entry.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/cloud_sync_indicator.dart';
 
 class TransactionList extends StatelessWidget {
   final List<CashbookEntry> entries;
@@ -103,12 +104,18 @@ class TransactionList extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 3),
-                    Text(
-                      '${item.category} • ${AppFormatters.formatTimeOnly(item.createdAt)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '${item.category} • ${AppFormatters.formatTimeOnly(item.createdAt)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        CloudSyncIndicator(isSynced: item.isSynced, size: 13),
+                      ],
                     ),
                   ],
                 ),

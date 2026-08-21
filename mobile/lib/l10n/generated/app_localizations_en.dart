@@ -21,6 +21,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navCashbook => 'Cashbook';
 
   @override
+  String get navBazar => 'Bazar';
+
+  @override
+  String get navMore => 'More';
+
+  @override
   String get navStaff => 'Staff';
 
   @override
@@ -216,6 +222,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeActionCollectBaki => 'Collect Baki';
+
+  @override
+  String get homeActionAddIncome => 'Add Income';
 
   @override
   String get homeActionAddExpense => 'Add Expense';

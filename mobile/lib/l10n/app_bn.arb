@@ -5,6 +5,8 @@
   "navHome": "হোম",
   "navCustomers": "খদ্দের তালিকা",
   "navCashbook": "ক্যাশ খাতা",
+  "navBazar": "বাজার ফর্দ",
+  "navMore": "আরও",
   "navStaff": "কর্মচারী",
   "navSettings": "সেটিংস",
 
@@ -71,6 +73,7 @@
   "homeQuickActions": "কুইক অ্যাকশন",
   "homeActionMarkMeals": "মিল গণনা",
   "homeActionCollectBaki": "বাকি আদায়",
+  "homeActionAddIncome": "জমা লিখুন",
   "homeActionAddExpense": "খরচ লিখুন",
   "homeActionDayNotes": "দিনের নোট",
   "homeLiveActivityFeed": "সাম্প্রতিক লেনদেন",

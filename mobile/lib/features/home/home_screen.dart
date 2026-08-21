@@ -5,17 +5,21 @@ import 'package:shimmer/shimmer.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/time_phase_helper.dart';
 import '../../core/widgets/app_safe_area.dart';
+import '../../core/widgets/cloud_sync_indicator.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../app_scaffold_notifier.dart';
 import '../cashbook/bazar_note_detail_screen.dart';
+import '../cashbook/add_income_bottom_sheet.dart';
 import '../cashbook/add_expense_bottom_sheet.dart';
 import '../cashbook/cashbook_notifier.dart';
 import 'business_day_notifier.dart';
 import 'close_day_bottom_sheet.dart';
-import 'open_day_bottom_sheet.dart';
 import 'widgets/active_day_stats_card.dart';
+import 'widgets/dynamic_start_day_card.dart';
 import 'widgets/live_activity_feed.dart';
+import 'widgets/onboarding_checklist_card.dart';
 import 'widgets/quick_actions_grid.dart';
 import 'widgets/quick_customer_picker_bottom_sheet.dart';
 import 'widgets/yesterday_recap_card.dart';
@@ -56,11 +60,14 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
+              // Interactive First-Time Setup Checklist Card
+              const OnboardingChecklistCard(),
+
               // Business Day Banner Card
               if (businessDayState.isLoading)
                 _buildShimmerLoader(context)
               else if (!isDayOpen || activeDay == null) ...[
-                _buildStartDayCard(context),
+                const DynamicStartDayCard(),
                 if (businessDayState.lastClosedDayRecap != null) ...[
                   const SizedBox(height: 16),
                   YesterdayRecapCard(recap: businessDayState.lastClosedDayRecap!),
@@ -68,8 +75,6 @@ class HomeScreen extends ConsumerWidget {
               ] else
                 ActiveDayStatsCard(
                   day: activeDay,
-                  shiftName: businessDayState.activeShiftName,
-                  shiftRate: businessDayState.activeShiftRate,
                   onCloseDayPressed: () => CloseDayBottomSheet.show(context),
                 ),
 
@@ -99,6 +104,26 @@ class HomeScreen extends ConsumerWidget {
                 onCollectBaki: () {
                   QuickCustomerPickerBottomSheet.show(context);
                 },
+                onAddIncome: () {
+                  AddIncomeBottomSheet.show(
+                    context,
+                    onSubmit: ({
+                      required String title,
+                      required double amount,
+                      String? accountId,
+                      String? notes,
+                    }) async {
+                      ref.read(businessDayNotifierProvider.notifier).recordInflowOptimistic(amount);
+                      await ref.read(cashbookNotifierProvider.notifier).recordMiscIncome(
+                            title: title,
+                            amount: amount,
+                            accountId: accountId,
+                            notes: notes,
+                          );
+                      ref.read(businessDayNotifierProvider.notifier).fetchActiveDay();
+                    },
+                  );
+                },
                 onAddExpense: () {
                   AddExpenseBottomSheet.show(
                     context,
@@ -110,6 +135,7 @@ class HomeScreen extends ConsumerWidget {
                       String? vendorId,
                       String? notes,
                     }) async {
+                      ref.read(businessDayNotifierProvider.notifier).recordOutflowOptimistic(amount);
                       await ref.read(cashbookNotifierProvider.notifier).addExpense(
                             title: title,
                             category: category,
@@ -155,109 +181,83 @@ class HomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
+    final phase = TimePhaseHelper.getPhase();
+    final primaryAccent = TimePhaseHelper.getPrimaryAccent(phase);
+    final isDaytime = TimePhaseHelper.isDaytime(phase);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    l10n?.appName ?? 'Smart-Hisab',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                        ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    isDaytime ? LucideIcons.sun : LucideIcons.moon,
+                    size: 16,
+                    color: primaryAccent,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                canteenName,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      fontSize: 14,
+                    ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              l10n?.appName ?? 'Smart-Hisab',
-              style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                  ),
+            const CloudSyncIndicator(
+              isSynced: true,
+              size: 16,
+              showLabel: false,
             ),
-            const SizedBox(height: 2),
-            Text(
-              canteenName,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                    fontSize: 14,
-                  ),
+            const SizedBox(width: 8),
+            // Day Open/Closed Status Chip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: isDayOpen
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : AppColors.warning.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDayOpen ? AppColors.primary : AppColors.warning,
+                ),
+              ),
+              child: Text(
+                isDayOpen
+                    ? (l10n?.homeDayOpen ?? '🟢 Day Open')
+                    : (l10n?.homeDayClosed ?? '🟡 Day Closed'),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isDayOpen ? AppColors.primary : AppColors.warning,
+                ),
+              ),
             ),
           ],
         ),
-        // Day Open/Closed Status Chip
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: isDayOpen
-                ? AppColors.primary.withValues(alpha: 0.2)
-                : AppColors.warning.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDayOpen ? AppColors.primary : AppColors.warning,
-            ),
-          ),
-          child: Text(
-            isDayOpen
-                ? (l10n?.homeDayOpen ?? '🟢 Day Open')
-                : (l10n?.homeDayClosed ?? '🟡 Day Closed'),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isDayOpen ? AppColors.primary : AppColors.warning,
-            ),
-          ),
-        ),
       ],
-    );
-  }
-
-  Widget _buildStartDayCard(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : AppColors.cardLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-      ),
-      child: Column(
-        children: [
-          const Icon(LucideIcons.sun, size: 40, color: AppColors.warning),
-          const SizedBox(height: 12),
-          Text(
-            l10n?.homeStartDayTitle ?? "Start Today's Business Day",
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16, // AGENTS.md rule 7
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n?.homeStartDaySubtitle ?? 'Set opening cash drawer amount to record daily meals & sales.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                  fontSize: 14,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => OpenDayBottomSheet.show(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(LucideIcons.playCircle, size: 20),
-            label: Text(
-              l10n?.homeStartDayButton ?? 'Start Business Day',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

@@ -22,7 +22,8 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     // Verify English text
     expect(find.text('Quick Actions'), findsOneWidget);
@@ -48,7 +49,8 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     // Verify Bangla text
     expect(find.text('কুইক অ্যাকশন'), findsOneWidget);

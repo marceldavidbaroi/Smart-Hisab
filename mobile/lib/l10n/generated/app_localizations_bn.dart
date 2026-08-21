@@ -21,6 +21,12 @@ class AppLocalizationsBn extends AppLocalizations {
   String get navCashbook => 'ক্যাশ খাতা';
 
   @override
+  String get navBazar => 'বাজার ফর্দ';
+
+  @override
+  String get navMore => 'আরও';
+
+  @override
   String get navStaff => 'কর্মচারী';
 
   @override
@@ -216,6 +222,9 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get homeActionCollectBaki => 'বাকি আদায়';
+
+  @override
+  String get homeActionAddIncome => 'জমা লিখুন';
 
   @override
   String get homeActionAddExpense => 'খরচ লিখুন';

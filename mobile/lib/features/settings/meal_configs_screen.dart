@@ -10,8 +10,21 @@ import '../../core/widgets/shimmer_loading.dart';
 import 'meal_config_form_bottom_sheet.dart';
 import 'meal_configs_notifier.dart';
 
-class MealConfigsScreen extends ConsumerWidget {
+class MealConfigsScreen extends ConsumerStatefulWidget {
   const MealConfigsScreen({super.key});
+
+  @override
+  ConsumerState<MealConfigsScreen> createState() => _MealConfigsScreenState();
+}
+
+class _MealConfigsScreenState extends ConsumerState<MealConfigsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(mealConfigsNotifierProvider.notifier).fetchMealConfigs();
+    });
+  }
 
   void _showDeleteConfirmation(BuildContext context, WidgetRef ref, MealConfig config) {
     final titleName = (config.note != null && config.note!.isNotEmpty)
@@ -70,7 +83,7 @@ class MealConfigsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final state = ref.watch(mealConfigsNotifierProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 

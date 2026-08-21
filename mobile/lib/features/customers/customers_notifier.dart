@@ -66,10 +66,9 @@ class CustomersState {
 
 final customersNotifierProvider = StateNotifierProvider<CustomersNotifier, CustomersState>((ref) {
   final tenantId = ref.watch(authNotifierProvider).tenantId;
-  final notifier = CustomersNotifier(tenantId: tenantId);
-  if (tenantId != null && tenantId.isNotEmpty) notifier.fetchCustomers();
-  return notifier;
+  return CustomersNotifier(tenantId: tenantId);
 });
+
 
 class CustomersNotifier extends StateNotifier<CustomersState> {
   final String? tenantId;
@@ -289,6 +288,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     required String phone,
     String? address,
     String? institution,
+    double openingBaki = 0.0,
   }) async {
     final cleanPhone = phone.trim();
 
@@ -318,7 +318,18 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
 
         if (res != null && res['customer'] != null) {
           final customerData = Map<String, dynamic>.from(res['customer'] as Map);
-          final customerObj = Customer.fromJson(customerData);
+          var customerObj = Customer.fromJson(customerData);
+
+          // If opening baki is provided, record manual baki entry / initial debt
+          if (openingBaki > 0) {
+            customerObj = customerObj.copyWith(currentBalance: openingBaki);
+            // Record opening balance adjustment entry asynchronously
+            addManualBaki(
+              customerId: customerObj.id,
+              amount: openingBaki,
+              notes: 'Opening Baki (পূর্বের খাতার বাকি)',
+            );
+          }
 
           // If reactivated, remove any stale copy in list if present, then add to front
           final updatedList = [
@@ -353,7 +364,7 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
       phone: cleanPhone,
       address: address,
       institution: institution,
-      currentBalance: 0.0,
+      currentBalance: openingBaki > 0 ? openingBaki : 0.0,
       createdAt: DateTime.now(),
     );
 

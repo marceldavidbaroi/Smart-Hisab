@@ -7,7 +7,7 @@ import '../settings/vendors_notifier.dart';
 import 'cashbook_notifier.dart';
 
 class AddExpenseBottomSheet extends ConsumerStatefulWidget {
-  final Function({
+  final Future<void> Function({
     required String title,
     required String category,
     required double amount,
@@ -23,7 +23,7 @@ class AddExpenseBottomSheet extends ConsumerStatefulWidget {
 
   static void show(
     BuildContext context, {
-    required Function({
+    required Future<void> Function({
       required String title,
       required String category,
       required double amount,
@@ -82,17 +82,20 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet> {
         ? _selectedCategory
         : _titleController.text.trim();
 
-    widget.onSubmit(
-      title: title,
-      category: _selectedCategory,
-      amount: amount,
-      accountId: _selectedAccountId,
-      vendorId: _selectedVendorId,
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-    );
-
-    if (mounted) {
-      Navigator.pop(context);
+    try {
+      await widget.onSubmit(
+        title: title,
+        category: _selectedCategory,
+        amount: amount,
+        accountId: _selectedAccountId,
+        vendorId: _selectedVendorId,
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        Navigator.pop(context);
+      }
     }
   }
 

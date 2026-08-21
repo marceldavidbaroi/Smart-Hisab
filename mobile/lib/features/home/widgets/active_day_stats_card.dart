@@ -7,15 +7,11 @@ import '../../../l10n/generated/app_localizations.dart';
 
 class ActiveDayStatsCard extends StatelessWidget {
   final BusinessDay day;
-  final String shiftName;
-  final double shiftRate;
   final VoidCallback onCloseDayPressed;
 
   const ActiveDayStatsCard({
     super.key,
     required this.day,
-    this.shiftName = 'Lunch',
-    this.shiftRate = 80.0,
     required this.onCloseDayPressed,
   });
 
@@ -36,40 +32,31 @@ class ActiveDayStatsCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Active Shift Ribbon & End Day Button
+          // Header / End Day Action Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(LucideIcons.store, size: 16, color: AppColors.success),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(LucideIcons.utensils, size: 14, color: AppColors.primary),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          l10n?.homeActiveShift(shiftName, AppFormatters.formatBdt(shiftRate)) ??
-                              'Shift: $shiftName • ${AppFormatters.formatBdt(shiftRate)}/meal',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n?.homeDayOpen ?? '🟢 Day Open',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.success,
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 8),
               OutlinedButton.icon(
                 onPressed: onCloseDayPressed,
                 style: OutlinedButton.styleFrom(

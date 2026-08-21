@@ -12,6 +12,7 @@ import '../../core/services/supabase_service.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
 import '../auth/create_canteen_screen.dart';
 import '../auth/join_canteen_screen.dart';
+import 'widgets/canteen_action_sheets.dart';
 
 /// Standalone Switch Canteen Screen
 /// Allows users to view all available canteens, switch active canteen,
@@ -363,110 +364,43 @@ class _SwitchCanteenScreenState extends ConsumerState<SwitchCanteenScreen> {
   }
 
   void _confirmDeleteCanteen(BuildContext context, TenantMembershipItem tenant) {
-    CustomModalBottomSheet.show(
+    CanteenActionSheets.showDeleteCanteen(
       context: context,
-      title: 'Delete ${tenant.tenantName}?',
-      child: Consumer(
-        builder: (context, ref, _) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Are you sure you want to delete this canteen? This action cannot be undone and all data will be permanently removed.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  final success = await ref
-                      .read(authNotifierProvider.notifier)
-                      .deleteCanteen(tenant.tenantId);
-                  if (context.mounted && success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${tenant.tenantName} deleted successfully'),
-                        backgroundColor: AppColors.danger,
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(LucideIcons.trash2),
-                label: const Text('Delete Canteen', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.danger,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(height: 16),
-            ],
+      ref: ref,
+      tenantId: tenant.tenantId,
+      canteenName: tenant.tenantName,
+      onSuccess: () {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${tenant.tenantName} deleted successfully'),
+              backgroundColor: AppColors.danger,
+            ),
           );
-        },
-      ),
+        }
+      },
     );
   }
 
   void _confirmLeaveCanteen(BuildContext context, TenantMembershipItem tenant) {
-    CustomModalBottomSheet.show(
+    CanteenActionSheets.showLeaveCanteen(
       context: context,
-      title: 'Leave ${tenant.tenantName}?',
-      child: Consumer(
-        builder: (context, ref, _) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Are you sure you want to leave this canteen? You will lose access as manager until invited again.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  final success = await ref
-                      .read(authNotifierProvider.notifier)
-                      .leaveCanteen(tenant.tenantId);
-                  if (context.mounted && success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Left ${tenant.tenantName}'),
-                        backgroundColor: AppColors.warning,
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(LucideIcons.logOut),
-                label: const Text('Leave Canteen', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.warning,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(height: 16),
-            ],
+      ref: ref,
+      tenantId: tenant.tenantId,
+      canteenName: tenant.tenantName,
+      onSuccess: () {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Left ${tenant.tenantName} successfully'),
+              backgroundColor: AppColors.warning,
+            ),
           );
-        },
-      ),
+        }
+      },
     );
   }
+
 
   void _showGetCodeModal(BuildContext context, TenantMembershipItem tenant) {
     CustomModalBottomSheet.show(

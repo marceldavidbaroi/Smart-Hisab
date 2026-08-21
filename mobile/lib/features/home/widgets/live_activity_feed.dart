@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/cashbook_entry.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/cloud_sync_indicator.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class LiveActivityFeed extends StatelessWidget {
@@ -104,12 +105,18 @@ class LiveActivityFeed extends StatelessWidget {
                       color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                     ),
                   ),
-                  subtitle: Text(
-                    entry.category,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                    ),
+                  subtitle: Row(
+                    children: [
+                      Text(
+                        entry.category,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      CloudSyncIndicator(isSynced: entry.isSynced, size: 12),
+                    ],
                   ),
                   trailing: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

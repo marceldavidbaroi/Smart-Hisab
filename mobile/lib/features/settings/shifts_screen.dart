@@ -11,8 +11,21 @@ import 'shift_form_bottom_sheet.dart';
 import 'shift_timeline_view.dart';
 import 'shifts_notifier.dart';
 
-class ShiftsScreen extends ConsumerWidget {
+class ShiftsScreen extends ConsumerStatefulWidget {
   const ShiftsScreen({super.key});
+
+  @override
+  ConsumerState<ShiftsScreen> createState() => _ShiftsScreenState();
+}
+
+class _ShiftsScreenState extends ConsumerState<ShiftsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(shiftsNotifierProvider.notifier).fetchShifts();
+    });
+  }
 
   void _showDeleteConfirmation(BuildContext context, WidgetRef ref, CanteenShift shift) {
     CustomModalBottomSheet.show(
@@ -67,7 +80,7 @@ class ShiftsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final shiftsState = ref.watch(shiftsNotifierProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 

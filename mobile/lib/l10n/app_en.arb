@@ -8,6 +8,8 @@
   "navHome": "Home",
   "navCustomers": "Customers",
   "navCashbook": "Cashbook",
+  "navBazar": "Bazar",
+  "navMore": "More",
   "navStaff": "Staff",
   "navSettings": "Settings",
 
@@ -90,6 +92,7 @@
   "homeQuickActions": "Quick Actions",
   "homeActionMarkMeals": "Mark Meals",
   "homeActionCollectBaki": "Collect Baki",
+  "homeActionAddIncome": "Add Income",
   "homeActionAddExpense": "Add Expense",
   "homeActionDayNotes": "Day Notes",
   "homeLiveActivityFeed": "Live Activity Feed",

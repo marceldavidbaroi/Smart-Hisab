@@ -14,6 +14,7 @@ class CashbookEntry {
   final double amount;
   final String? notes;
   final DateTime createdAt;
+  final bool isSynced;
 
   const CashbookEntry({
     required this.id,
@@ -27,6 +28,7 @@ class CashbookEntry {
     required this.amount,
     this.notes,
     required this.createdAt,
+    this.isSynced = true,
   });
 
   factory CashbookEntry.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,7 @@ class CashbookEntry {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
+      isSynced: json['is_synced'] as bool? ?? (json['id'] != null && !(json['id'] as String).startsWith('entry-') && !(json['id'] as String).startsWith('note-')),
     );
   }
 
@@ -68,6 +71,7 @@ class CashbookEntry {
       'amount': amount,
       'notes': notes,
       'created_at': createdAt.toIso8601String(),
+      'is_synced': isSynced,
     };
   }
 
@@ -83,6 +87,7 @@ class CashbookEntry {
     double? amount,
     String? notes,
     DateTime? createdAt,
+    bool? isSynced,
   }) {
     return CashbookEntry(
       id: id ?? this.id,
@@ -96,6 +101,7 @@ class CashbookEntry {
       amount: amount ?? this.amount,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
+      isSynced: isSynced ?? this.isSynced,
     );
   }
 }

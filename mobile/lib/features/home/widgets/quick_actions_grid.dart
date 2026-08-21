@@ -6,6 +6,7 @@ import '../../../l10n/generated/app_localizations.dart';
 class QuickActionsGrid extends StatelessWidget {
   final VoidCallback onMarkMeals;
   final VoidCallback onCollectBaki;
+  final VoidCallback onAddIncome;
   final VoidCallback onAddExpense;
   final VoidCallback onDayNotes;
 
@@ -13,6 +14,7 @@ class QuickActionsGrid extends StatelessWidget {
     super.key,
     required this.onMarkMeals,
     required this.onCollectBaki,
+    required this.onAddIncome,
     required this.onAddExpense,
     required this.onDayNotes,
   });
@@ -21,43 +23,98 @@ class QuickActionsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.35,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _buildActionButton(
-          context,
-          l10n?.homeActionMarkMeals ?? 'Mark Meals',
-          LucideIcons.utensilsCrossed,
-          AppColors.primary,
-          onMarkMeals,
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.45,
+          children: [
+            _buildActionButton(
+              context,
+              l10n?.homeActionMarkMeals ?? 'Mark Meals',
+              LucideIcons.utensilsCrossed,
+              AppColors.primary,
+              onMarkMeals,
+            ),
+            _buildActionButton(
+              context,
+              l10n?.homeActionCollectBaki ?? 'Collect Baki',
+              LucideIcons.wallet,
+              AppColors.success,
+              onCollectBaki,
+            ),
+            _buildActionButton(
+              context,
+              l10n?.homeActionAddIncome ?? 'Add Income',
+              LucideIcons.arrowDownLeft,
+              const Color(0xFF10B981), // Emerald green for direct inflow
+              onAddIncome,
+            ),
+            _buildActionButton(
+              context,
+              l10n?.homeActionAddExpense ?? 'Add Expense',
+              LucideIcons.shoppingBag,
+              AppColors.warning,
+              onAddExpense,
+            ),
+          ],
         ),
-        _buildActionButton(
+        const SizedBox(height: 12),
+        // Full-width Day Notes & Market List Tile
+        _buildFullWidthActionButton(
           context,
-          l10n?.homeActionCollectBaki ?? 'Collect Baki',
-          LucideIcons.wallet,
-          AppColors.success,
-          onCollectBaki,
-        ),
-        _buildActionButton(
-          context,
-          l10n?.homeActionAddExpense ?? 'Add Expense',
-          LucideIcons.shoppingBag,
-          AppColors.warning,
-          onAddExpense,
-        ),
-        _buildActionButton(
-          context,
-          l10n?.homeActionDayNotes ?? 'Day Notes',
+          l10n?.homeActionDayNotes ?? 'Day Notes & Market List',
           LucideIcons.fileText,
           AppColors.accent,
           onDayNotes,
         ),
       ],
+    );
+  }
+
+  Widget _buildFullWidthActionButton(
+    BuildContext context,
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: isDark ? AppColors.cardDark : AppColors.cardLight,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: color),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

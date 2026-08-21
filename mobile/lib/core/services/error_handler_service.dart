@@ -25,11 +25,43 @@ class ErrorHandlerService {
       // Suppress secondary framework assertions regarding Navigator debugLocked state
       if (details.exception.toString().contains('_debugLocked')) return;
 
-      _logAndNotify(
-        error: details.exception,
-        stackTrace: details.stack,
-        contextName: 'Flutter Framework UI Error',
-      );
+      final summary = details.summary.toString();
+      final contextDescription = details.context?.toDescription() ?? '';
+      final library = details.library ?? '';
+
+      // Format diagnostic location details
+      final locationInfo = StringBuffer();
+      if (contextDescription.isNotEmpty) locationInfo.writeln('📍 Context: $contextDescription');
+      if (library.isNotEmpty) locationInfo.writeln('📦 Library: $library');
+      if (details.informationCollector != null) {
+        final collector = details.informationCollector!().map((e) => e.toString()).join('\n');
+        if (collector.isNotEmpty) locationInfo.writeln('🔍 Details:\n$collector');
+      }
+
+      // Print first 8 relevant project stack lines for pinpointing exact line number
+      if (details.stack != null) {
+        final projectStack = details.stack.toString().split('\n').where((line) => line.contains('package:smart_hisab') || line.contains('.dart:')).take(6).join('\n');
+        if (projectStack.isNotEmpty) {
+          locationInfo.writeln('📍 Project Stacktrace:\n$projectStack');
+        }
+      }
+
+      debugPrint('═══════════════════════════════════════════════════════════════');
+      debugPrint('🚨 [Flutter Framework UI Error: $summary]');
+      debugPrint('⚠️ Exception: ${details.exception}');
+      if (locationInfo.isNotEmpty) debugPrint(locationInfo.toString().trim());
+      debugPrint('═══════════════════════════════════════════════════════════════');
+
+      // Do NOT pop disruptive modal dialogs for minor layout subpixel overflows (e.g. RenderFlex overflowed)
+      // Allow visual yellow-striped debug banner without freezing/modalizing user flow
+      final isLayoutOverflow = details.exception.toString().contains('RenderFlex overflowed');
+      if (!isLayoutOverflow) {
+        _logAndNotify(
+          error: details.exception,
+          stackTrace: details.stack,
+          contextName: 'Flutter Framework UI Error: $summary',
+        );
+      }
     };
 
     // Catch unhandled asynchronous exceptions in the Dart isolate/event loop

@@ -9,6 +9,7 @@ docs/
 │   ├── app_vision.md                      # Product definition, users, problems solved
 │   ├── auth_flow_v2.md                    # Auth flow, Google Sign-In, multi-tenant
 │   ├── feature_availability.md           # ✅/❌ feature matrix across v1.0 / v1.5 / v2.0
+│   ├── first_time_setup_and_user_guide.md # Onboarding checklist & daily operating guidelines
 │   └── offline_architecture.md           # Hive local box schemas, outbox pattern, sync engine
 │
 ├── features/                          # Backend domain specs (Schema + RPCs)
