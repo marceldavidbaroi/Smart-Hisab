@@ -1,0 +1,118 @@
+{
+  "@@locale": "en",
+  "appName": "Smart-Hisab",
+  "@appName": {
+    "description": "The title of the application"
+  },
+  
+  "navHome": "Home",
+  "navCustomers": "Customers",
+  "navCashbook": "Cashbook",
+  "navStaff": "Staff",
+  "navSettings": "Settings",
+
+  "commonSave": "Save",
+  "commonCancel": "Cancel",
+  "commonDelete": "Delete",
+  "commonEdit": "Edit",
+  "commonConfirm": "Confirm",
+  "commonClose": "Close",
+  "commonBack": "Back",
+  "commonSearch": "Search",
+  "commonTotal": "Total",
+  "commonDue": "Due",
+  "commonPaid": "Paid",
+  "commonInflow": "Inflow",
+  "commonOutflow": "Outflow",
+  "commonBalance": "Balance",
+  "commonDate": "Date",
+  "commonNotes": "Notes",
+  "commonAmount": "Amount",
+
+  "settingsTitle": "Settings & Config",
+  "settingsManagementSection": "Management & Operations",
+  "settingsCanteenProfile": "Canteen Profile",
+  "settingsCanteenProfileSub": "Name & tier info",
+  "settingsSwitchCanteen": "Switch Canteen",
+  "settingsSwitchCanteenSub": "Change active shop",
+  "settingsShiftsConfig": "Shifts Config",
+  "settingsShiftsConfigSub": "Operating hours",
+  "settingsMealRates": "Meal Rates",
+  "settingsMealRatesSub": "Pricing & history",
+  "settingsVendorsLedger": "Vendors Ledger",
+  "settingsVendorsLedgerSub": "Suppliers & baki",
+  "settingsInviteManager": "Invite Manager",
+  "settingsInviteManagerSub": "6-digit join code",
+  "settingsMyProfile": "My Profile",
+  "settingsMyProfileSub": "Account details",
+  "settingsLanguage": "Language",
+  "settingsLanguageSub": "English / বাংলা",
+  "settingsDarkMode": "Dark Theme",
+  "settingsLightMode": "Light Theme",
+  "settingsSignOut": "Sign Out",
+  "settingsSignOutSub": "Sign out of your Smart-Hisab account",
+  "settingsSignOutConfirm": "Are you sure you want to sign out of Smart-Hisab?",
+
+  "homeDayOpen": "🟢 Day Open",
+  "homeDayClosed": "🟡 Day Closed",
+  "homeStartDayTitle": "Start Today's Business Day",
+  "homeStartDaySubtitle": "Set opening cash drawer amount to record daily meals & sales.",
+  "homeStartDayButton": "Start Business Day",
+  "homeActiveShift": "Shift: {shiftName} • {rate}/meal",
+  "@homeActiveShift": {
+    "placeholders": {
+      "shiftName": { "type": "String" },
+      "rate": { "type": "String" }
+    }
+  },
+  "homeEndDay": "End Day",
+  "homeLiveDrawerCash": "Live Drawer Cash",
+  "homeOpeningCashLabel": "Open: {amount}",
+  "@homeOpeningCashLabel": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "homeMeals": "Meals",
+  "homeInflows": "Inflows",
+  "homeOutflows": "Outflows",
+  "homeYesterdayRecap": "Yesterday's Recap",
+  "homeBalanced": "Balanced",
+  "homeVarianceDiff": "Diff: {amount}",
+  "@homeVarianceDiff": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "homeMealsServed": "Meals Served",
+  "homeCashCollected": "Cash Collected",
+  "homeTotalOutstandingBaki": "Total Outstanding Customer Baki",
+  "homeQuickActions": "Quick Actions",
+  "homeActionMarkMeals": "Mark Meals",
+  "homeActionCollectBaki": "Collect Baki",
+  "homeActionAddExpense": "Add Expense",
+  "homeActionDayNotes": "Day Notes",
+  "homeLiveActivityFeed": "Live Activity Feed",
+  "homeRecent5": "Recent 5",
+  "homeNoRecentTransactions": "No recent transactions recorded today.",
+
+  "homeOpenDayTitle": "Start Today's Business Day",
+  "homeOpeningCashLabelInput": "Opening Cash Balance (৳)",
+  "homeOpeningCashHint": "Enter drawer cash e.g. 5000",
+  "homeOpenDayConfirm": "Confirm & Open Day",
+
+  "homeCloseDayTitle": "End Business Day & Reconcile",
+  "homeExpectedCash": "Expected Cash:",
+  "homeActualClosingCash": "Actual Closing Cash in Drawer (৳)",
+  "homeClosingCashHint": "Enter actual cash in drawer",
+  "homeCashSurplus": "Cash Surplus (+):",
+  "homeCashShortage": "Cash Shortage (-):",
+  "homeReconciliationBalanced": "Cash matched perfectly! Expected = Actual",
+  "homeClosingNotesOptional": "Closing Notes (Optional)",
+  "homeClosingNotesHint": "e.g. ৳200 short due to wrong change",
+  "homeCloseDayConfirm": "Reconcile & Close Business Day",
+
+  "homeSelectCustomerBaki": "Select Customer for Baki Collection",
+  "homeSearchCustomerHint": "Search customer by name or phone...",
+  "homeNoMatchingCustomers": "No matching customers found."
+}

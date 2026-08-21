@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/cashbook_entry.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class LiveActivityFeed extends StatelessWidget {
   final List<CashbookEntry> activities;
@@ -15,6 +16,7 @@ class LiveActivityFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -24,7 +26,7 @@ class LiveActivityFeed extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Live Activity Feed',
+              l10n?.homeLiveActivityFeed ?? 'Live Activity Feed',
               style: TextStyle(
                 fontSize: 16, // AGENTS.md rule 7
                 fontWeight: FontWeight.bold,
@@ -32,7 +34,7 @@ class LiveActivityFeed extends StatelessWidget {
               ),
             ),
             Text(
-              'Recent 5',
+              l10n?.homeRecent5 ?? 'Recent 5',
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -51,7 +53,7 @@ class LiveActivityFeed extends StatelessWidget {
               border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
             ),
             child: Text(
-              'No recent transactions recorded today.',
+              l10n?.homeNoRecentTransactions ?? 'No recent transactions recorded today.',
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,

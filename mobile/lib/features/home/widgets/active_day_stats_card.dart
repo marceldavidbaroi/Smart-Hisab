@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/business_day.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ActiveDayStatsCard extends StatelessWidget {
   final BusinessDay day;
@@ -21,6 +22,7 @@ class ActiveDayStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
     final liveDrawerCash = day.openingCash + day.totalInflows - day.totalOutflows;
 
     return Container(
@@ -53,7 +55,8 @@ class ActiveDayStatsCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          'Shift: $shiftName • ${AppFormatters.formatBdt(shiftRate)}/meal',
+                          l10n?.homeActiveShift(shiftName, AppFormatters.formatBdt(shiftRate)) ??
+                              'Shift: $shiftName • ${AppFormatters.formatBdt(shiftRate)}/meal',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -77,9 +80,9 @@ class ActiveDayStatsCard extends StatelessWidget {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 icon: const Icon(LucideIcons.lock, size: 14),
-                label: const Text(
-                  'End Day',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                label: Text(
+                  l10n?.homeEndDay ?? 'End Day',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -119,7 +122,7 @@ class ActiveDayStatsCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Live Drawer Cash',
+                          l10n?.homeLiveDrawerCash ?? 'Live Drawer Cash',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -140,7 +143,8 @@ class ActiveDayStatsCard extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  'Open: ${AppFormatters.formatBdt(day.openingCash)}',
+                  l10n?.homeOpeningCashLabel(AppFormatters.formatBdt(day.openingCash)) ??
+                      'Open: ${AppFormatters.formatBdt(day.openingCash)}',
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -158,7 +162,7 @@ class ActiveDayStatsCard extends StatelessWidget {
               Expanded(
                 child: _buildMetricTile(
                   context,
-                  'Meals',
+                  l10n?.homeMeals ?? 'Meals',
                   '${day.todayMeals}',
                   LucideIcons.utensils,
                   AppColors.info,
@@ -168,7 +172,7 @@ class ActiveDayStatsCard extends StatelessWidget {
               Expanded(
                 child: _buildMetricTile(
                   context,
-                  'Inflows',
+                  l10n?.homeInflows ?? 'Inflows',
                   AppFormatters.formatBdt(day.totalInflows),
                   LucideIcons.arrowDownLeft,
                   AppColors.primary,
@@ -178,7 +182,7 @@ class ActiveDayStatsCard extends StatelessWidget {
               Expanded(
                 child: _buildMetricTile(
                   context,
-                  'Outflows',
+                  l10n?.homeOutflows ?? 'Outflows',
                   AppFormatters.formatBdt(day.totalOutflows),
                   LucideIcons.arrowUpRight,
                   AppColors.danger,

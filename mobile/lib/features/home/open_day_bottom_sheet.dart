@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'business_day_notifier.dart';
 
 class OpenDayBottomSheet extends ConsumerStatefulWidget {
   const OpenDayBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return CustomModalBottomSheet.show(
       context: context,
-      title: "Start Today's Business Day",
+      title: l10n?.homeOpenDayTitle ?? "Start Today's Business Day",
       child: const OpenDayBottomSheet(),
     );
   }
@@ -49,6 +51,7 @@ class _OpenDayBottomSheetState extends ConsumerState<OpenDayBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -62,9 +65,9 @@ class _OpenDayBottomSheetState extends ConsumerState<OpenDayBottomSheet> {
             fontSize: 18,
           ),
           decoration: InputDecoration(
-            labelText: 'Opening Cash Balance (৳)',
+            labelText: l10n?.homeOpeningCashLabelInput ?? 'Opening Cash Balance (৳)',
             labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-            hintText: 'Enter drawer cash e.g. 5000',
+            hintText: l10n?.homeOpeningCashHint ?? 'Enter drawer cash e.g. 5000',
             filled: true,
             fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
             border: OutlineInputBorder(
@@ -97,9 +100,9 @@ class _OpenDayBottomSheetState extends ConsumerState<OpenDayBottomSheet> {
                     color: Colors.white,
                   ),
                 )
-              : const Text(
-                  'Confirm & Start Day',
-                  style: TextStyle(
+              : Text(
+                  l10n?.homeOpenDayConfirm ?? 'Confirm & Open Day',
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),

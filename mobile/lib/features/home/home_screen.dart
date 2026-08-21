@@ -6,6 +6,7 @@ import '../../core/auth/auth_notifier.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_safe_area.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../app_scaffold_notifier.dart';
 import '../cashbook/bazar_note_detail_screen.dart';
 import '../cashbook/add_expense_bottom_sheet.dart';
@@ -27,6 +28,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final businessDayState = ref.watch(businessDayNotifierProvider);
+    final l10n = AppLocalizations.of(context);
 
     final canteenName = authState.tenantName ?? 'My Canteen';
     final activeDay = businessDayState.activeDay;
@@ -83,7 +85,7 @@ class HomeScreen extends ConsumerWidget {
 
               // Quick Actions Grid (Direct Modals)
               Text(
-                'Quick Actions',
+                l10n?.homeQuickActions ?? 'Quick Actions',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: 16, // AGENTS.md rule 7
@@ -152,6 +154,7 @@ class HomeScreen extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -160,7 +163,7 @@ class HomeScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Smart-Hisab',
+              l10n?.appName ?? 'Smart-Hisab',
               style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -190,7 +193,9 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           child: Text(
-            isDayOpen ? '🟢 Day Open' : '🟡 Day Closed',
+            isDayOpen
+                ? (l10n?.homeDayOpen ?? '🟢 Day Open')
+                : (l10n?.homeDayClosed ?? '🟡 Day Closed'),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -204,6 +209,7 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _buildStartDayCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -217,7 +223,7 @@ class HomeScreen extends ConsumerWidget {
           const Icon(LucideIcons.sun, size: 40, color: AppColors.warning),
           const SizedBox(height: 12),
           Text(
-            "Start Today's Business Day",
+            l10n?.homeStartDayTitle ?? "Start Today's Business Day",
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 16, // AGENTS.md rule 7
@@ -226,7 +232,7 @@ class HomeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Set opening cash drawer amount to record daily meals & sales.',
+            l10n?.homeStartDaySubtitle ?? 'Set opening cash drawer amount to record daily meals & sales.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   fontSize: 14,
@@ -245,9 +251,9 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             icon: const Icon(LucideIcons.playCircle, size: 20),
-            label: const Text(
-              'Start Business Day',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            label: Text(
+              l10n?.homeStartDayButton ?? 'Start Business Day',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
         ],
@@ -257,6 +263,7 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _buildBakiCard(BuildContext context, {required double totalBaki}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -281,7 +288,7 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Outstanding Customer Baki',
+                  l10n?.homeTotalOutstandingBaki ?? 'Total Outstanding Customer Baki',
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,

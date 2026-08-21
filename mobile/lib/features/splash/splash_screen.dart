@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/auth/auth_notifier.dart';
@@ -81,33 +81,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Icon Container with Emerald Gradient & Subtle Shadow
+                    // App Icon with Subtle Ambient Glow
                     Container(
                       width: 96,
                       height: 96,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            AppColors.primary,
-                            AppColors.primaryDark,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
+                            color: AppColors.primary.withValues(alpha: 0.35),
+                            blurRadius: 28,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-                      child: const Center(
-                        child: Icon(
-                          LucideIcons.store,
-                          size: 48,
-                          color: Colors.white,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: SvgPicture.asset(
+                          isDark
+                              ? 'assets/icons/app_icon_dark.svg'
+                              : 'assets/icons/app_icon_light.svg',
+                          width: 96,
+                          height: 96,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),

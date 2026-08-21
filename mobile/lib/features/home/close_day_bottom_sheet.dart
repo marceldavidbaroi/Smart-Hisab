@@ -3,15 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'business_day_notifier.dart';
 
 class CloseDayBottomSheet extends ConsumerStatefulWidget {
   const CloseDayBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return CustomModalBottomSheet.show(
       context: context,
-      title: "End Business Day & Reconcile",
+      title: l10n?.homeCloseDayTitle ?? "End Business Day & Reconcile",
       child: const CloseDayBottomSheet(),
     );
   }
@@ -62,6 +64,7 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final activeDay = ref.watch(businessDayNotifierProvider).activeDay;
+    final l10n = AppLocalizations.of(context);
     final openingCash = activeDay?.openingCash ?? 0.0;
     final cashIn = activeDay?.todayCash ?? 0.0;
     final expectedCash = openingCash + cashIn;
@@ -86,7 +89,7 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Expected Cash:',
+                  l10n?.homeExpectedCash ?? 'Expected Cash:',
                   style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
                 ),
                 Text(
@@ -107,8 +110,9 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
             style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 18),
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              labelText: 'Actual Closing Cash in Drawer (৳)',
+              labelText: l10n?.homeActualClosingCash ?? 'Actual Closing Cash in Drawer (৳)',
               labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+              hintText: l10n?.homeClosingCashHint ?? 'Enter actual cash in drawer',
               filled: true,
               fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
@@ -126,11 +130,15 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Variance:',
+                variance > 0
+                    ? (l10n?.homeCashSurplus ?? 'Cash Surplus (+):')
+                    : variance < 0
+                        ? (l10n?.homeCashShortage ?? 'Cash Shortage (-):')
+                        : (l10n?.homeReconciliationBalanced ?? 'Balanced'),
                 style: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, fontSize: 14),
               ),
               Text(
-                AppFormatters.formatBdt(variance),
+                AppFormatters.formatBdt(variance.abs()),
                 style: TextStyle(
                   color: variance >= 0 ? AppColors.success : AppColors.danger,
                   fontWeight: FontWeight.bold,
@@ -145,9 +153,9 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
             maxLines: 2,
             style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight, fontSize: 14),
             decoration: InputDecoration(
-              labelText: 'Day Notes / Variance Reason',
+              labelText: l10n?.homeClosingNotesOptional ?? 'Closing Notes (Optional)',
               labelStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-              hintText: 'e.g. Unrecorded tea expense ৳200',
+              hintText: l10n?.homeClosingNotesHint ?? 'e.g. ৳200 short due to wrong change',
               filled: true,
               fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
               border: OutlineInputBorder(
@@ -180,9 +188,9 @@ class _CloseDayBottomSheetState extends ConsumerState<CloseDayBottomSheet> {
                       color: Colors.black,
                     ),
                   )
-                : const Text(
-                    'Confirm & Close Day',
-                    style: TextStyle(
+                : Text(
+                    l10n?.homeCloseDayConfirm ?? 'Reconcile & Close Business Day',
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),

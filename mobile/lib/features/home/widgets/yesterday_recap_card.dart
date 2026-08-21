@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/business_day.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class YesterdayRecapCard extends StatelessWidget {
   final LastClosedDayRecap recap;
@@ -15,6 +16,7 @@ class YesterdayRecapCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
     final isBalanced = recap.isBalanced;
 
     return Container(
@@ -37,7 +39,7 @@ class YesterdayRecapCard extends StatelessWidget {
                   const Icon(LucideIcons.history, size: 18, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Text(
-                    "Yesterday's Recap",
+                    l10n?.homeYesterdayRecap ?? "Yesterday's Recap",
                     style: TextStyle(
                       fontSize: 16, // AGENTS.md rule 7
                       fontWeight: FontWeight.bold,
@@ -67,8 +69,9 @@ class YesterdayRecapCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       isBalanced
-                          ? 'Balanced'
-                          : 'Diff: ${AppFormatters.formatBdt(recap.variance.abs())}',
+                          ? (l10n?.homeBalanced ?? 'Balanced')
+                          : (l10n?.homeVarianceDiff(AppFormatters.formatBdt(recap.variance.abs())) ??
+                              'Diff: ${AppFormatters.formatBdt(recap.variance.abs())}'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -85,7 +88,7 @@ class YesterdayRecapCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _RecapStatTile(
-                  label: 'Meals Served',
+                  label: l10n?.homeMealsServed ?? 'Meals Served',
                   value: '${recap.totalMeals}',
                   icon: LucideIcons.utensils,
                   isDark: isDark,
@@ -94,7 +97,7 @@ class YesterdayRecapCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _RecapStatTile(
-                  label: 'Cash Collected',
+                  label: l10n?.homeCashCollected ?? 'Cash Collected',
                   value: AppFormatters.formatBdt(recap.totalInflows),
                   icon: LucideIcons.wallet,
                   isDark: isDark,

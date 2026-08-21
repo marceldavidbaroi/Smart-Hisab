@@ -29,9 +29,7 @@ void main() {
     expect(find.text('Email Address'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
 
-    // Verify quick fill test buttons and Demo button
-    expect(find.text('Owner'), findsOneWidget);
-    expect(find.text('Manager'), findsOneWidget);
+    // Verify Demo button
     expect(find.text('⚡ Try Demo Mode (Simulator Quick Entry)'), findsOneWidget);
   });
 }

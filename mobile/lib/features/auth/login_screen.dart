@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -100,27 +101,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     children: [
                       Container(
-                        width: 64,
-                        height: 64,
+                        width: 72,
+                        height: 72,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.primary, AppColors.primaryDark],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
                               color: AppColors.primary.withValues(alpha: 0.3),
-                              blurRadius: 16,
+                              blurRadius: 18,
                               offset: const Offset(0, 6),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          LucideIcons.store,
-                          size: 32,
-                          color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: SvgPicture.asset(
+                            isDark
+                                ? 'assets/icons/app_icon_dark.svg'
+                                : 'assets/icons/app_icon_light.svg',
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -330,63 +332,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     },
                   ),
                 ],
-
-                const SizedBox(height: 16),
-
-                // Quick fill test accounts (Owner & Manager)
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _emailController.text = 'owner@gmail.com';
-                            _passwordController.text = '123456';
-                          });
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          side: const BorderSide(color: AppColors.primary),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        icon: const Text('👑', style: TextStyle(fontSize: 14)),
-                        label: Text(
-                          'Owner',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark ? Colors.white : AppColors.textPrimaryLight,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _emailController.text = 'manager@gmail.com';
-                            _passwordController.text = '123456';
-                          });
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          side: BorderSide(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        icon: const Text('👔', style: TextStyle(fontSize: 14)),
-                        label: Text(
-                          'Manager',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
 
                 const SizedBox(height: 16),
 

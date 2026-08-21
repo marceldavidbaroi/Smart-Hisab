@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/constants/app_colors.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -16,6 +17,7 @@ class CustomBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final inactiveColor = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final l10n = AppLocalizations.of(context);
 
     return NavigationBar(
       selectedIndex: selectedIndex,
@@ -27,27 +29,27 @@ class CustomBottomNav extends StatelessWidget {
         NavigationDestination(
           icon: Icon(LucideIcons.home, color: inactiveColor),
           selectedIcon: const Icon(LucideIcons.home, color: AppColors.primary),
-          label: 'Home',
+          label: l10n?.navHome ?? 'Home',
         ),
         NavigationDestination(
           icon: Icon(LucideIcons.users, color: inactiveColor),
           selectedIcon: const Icon(LucideIcons.users, color: AppColors.primary),
-          label: 'Customers',
+          label: l10n?.navCustomers ?? 'Customers',
         ),
         NavigationDestination(
           icon: Icon(LucideIcons.wallet, color: inactiveColor),
           selectedIcon: const Icon(LucideIcons.wallet, color: AppColors.primary),
-          label: 'Accounts',
+          label: l10n?.navCashbook ?? 'Cashbook',
         ),
         NavigationDestination(
           icon: Icon(LucideIcons.userCheck, color: inactiveColor),
           selectedIcon: const Icon(LucideIcons.userCheck, color: AppColors.primary),
-          label: 'Staff',
+          label: l10n?.navStaff ?? 'Staff',
         ),
         NavigationDestination(
           icon: Icon(LucideIcons.settings, color: inactiveColor),
           selectedIcon: const Icon(LucideIcons.settings, color: AppColors.primary),
-          label: 'Settings',
+          label: l10n?.navSettings ?? 'Settings',
         ),
       ],
     );

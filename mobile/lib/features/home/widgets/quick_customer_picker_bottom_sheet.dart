@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/custom_modal_bottom_sheet.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../customers/collect_baki_bottom_sheet.dart';
 import '../../customers/customers_notifier.dart';
 
@@ -11,9 +12,10 @@ class QuickCustomerPickerBottomSheet extends ConsumerStatefulWidget {
   const QuickCustomerPickerBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return CustomModalBottomSheet.show(
       context: context,
-      title: 'Select Customer for Baki Collection',
+      title: l10n?.homeSelectCustomerBaki ?? 'Select Customer for Baki Collection',
       child: const QuickCustomerPickerBottomSheet(),
     );
   }
@@ -31,6 +33,7 @@ class _QuickCustomerPickerBottomSheetState
   Widget build(BuildContext context) {
     final customersState = ref.watch(customersNotifierProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     final filteredCustomers = customersState.customers.where((c) {
       final q = _searchQuery.toLowerCase();
@@ -50,7 +53,7 @@ class _QuickCustomerPickerBottomSheetState
           TextField(
             onChanged: (val) => setState(() => _searchQuery = val),
             decoration: InputDecoration(
-              hintText: 'Search customer by name or phone...',
+              hintText: l10n?.homeSearchCustomerHint ?? 'Search customer by name or phone...',
               prefixIcon: const Icon(LucideIcons.search, size: 18),
               filled: true,
               fillColor: isDark ? AppColors.surfaceDark : AppColors.bgLight,
@@ -68,7 +71,7 @@ class _QuickCustomerPickerBottomSheetState
             child: filteredCustomers.isEmpty
                 ? Center(
                     child: Text(
-                      'No matching customers found.',
+                      l10n?.homeNoMatchingCustomers ?? 'No matching customers found.',
                       style: TextStyle(
                         fontSize: 14,
                         color: isDark

@@ -16,6 +16,9 @@ import 'features/splash/splash_screen.dart';
 
 import 'core/theme/theme_notifier.dart';
 
+import 'core/localization/locale_notifier.dart';
+import 'l10n/generated/app_localizations.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -48,6 +51,7 @@ class SmartHisabApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeNotifierProvider);
+    final locale = ref.watch(localeNotifierProvider);
 
     return MaterialApp(
       title: 'Smart-Hisab',
@@ -57,6 +61,9 @@ class SmartHisabApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const AuthGuard(),
     );
   }
