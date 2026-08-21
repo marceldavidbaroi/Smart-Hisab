@@ -181,91 +181,144 @@ class _ShiftsScreenState extends ConsumerState<ShiftsScreen> {
                     ),
                   )
                 else
-                  Expanded(
+                    Expanded(
                     child: ListView.separated(
                       itemCount: shiftsState.shifts.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final shift = shiftsState.shifts[index];
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                        return Dismissible(
+                          key: Key('shift_${shift.id}'),
+                          // Swipe startToEnd (Left to Right) for Edit
+                          background: Container(
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(LucideIcons.edit2, color: Colors.white, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Edit',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            leading: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: shift.isActive
-                                    ? AppColors.primary.withValues(alpha: 0.1)
-                                    : Colors.grey.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                LucideIcons.clock,
-                                color: shift.isActive ? AppColors.primary : Colors.grey,
-                              ),
+                          // Swipe endToStart (Right to Left) for Delete
+                          secondaryBackground: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger,
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            title: Row(
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Flexible(
-                                  child: Text(
-                                    shift.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                                    ),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                SizedBox(width: 8),
+                                Icon(LucideIcons.trash2, color: Colors.white, size: 20),
+                              ],
+                            ),
+                          ),
+                          confirmDismiss: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              // Edit action
+                              ShiftFormBottomSheet.show(context, shift: shift);
+                              return false;
+                            } else if (direction == DismissDirection.endToStart) {
+                              // Delete action confirmation
+                              _showDeleteConfirmation(context, ref, shift);
+                              return false;
+                            }
+                            return false;
+                          },
+                          child: InkWell(
+                            onTap: () => ShiftFormBottomSheet.show(context, shift: shift),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                                ),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     color: shift.isActive
-                                        ? AppColors.success.withValues(alpha: 0.15)
-                                        : Colors.grey.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(8),
+                                        ? AppColors.primary.withValues(alpha: 0.1)
+                                        : Colors.grey.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
+                                  child: Icon(
+                                    LucideIcons.clock,
+                                    color: shift.isActive ? AppColors.primary : Colors.grey,
+                                  ),
+                                ),
+                                title: Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        shift.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: shift.isActive
+                                            ? AppColors.success.withValues(alpha: 0.15)
+                                            : Colors.grey.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        shift.isActive ? 'Active' : 'Inactive',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: shift.isActive ? AppColors.success : Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Padding(
+                                  padding: const EdgeInsets.only(top: 4),
                                   child: Text(
-                                    shift.isActive ? 'Active' : 'Inactive',
+                                    '${shift.startTime} - ${shift.endTime}',
                                     style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: shift.isActive ? AppColors.success : Colors.grey,
+                                      fontSize: 13,
+                                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                '${shift.startTime} - ${shift.endTime}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                ),
                               ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(LucideIcons.edit2, size: 18, color: AppColors.primary),
-                                  onPressed: () => ShiftFormBottomSheet.show(context, shift: shift),
-                                ),
-                                IconButton(
-                                  icon: const Icon(LucideIcons.trash2, size: 18, color: AppColors.danger),
-                                  onPressed: () => _showDeleteConfirmation(context, ref, shift),
-                                ),
-                              ],
                             ),
                           ),
                         );

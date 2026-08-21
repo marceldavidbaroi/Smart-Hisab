@@ -24,12 +24,24 @@ import 'widgets/quick_actions_grid.dart';
 import 'widgets/quick_customer_picker_bottom_sheet.dart';
 import 'widgets/yesterday_recap_card.dart';
 
-/// Tab 1: Redesigned Zero-Friction Owner Home Dashboard Screen
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(businessDayNotifierProvider.notifier).fetchActiveDay();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
     final businessDayState = ref.watch(businessDayNotifierProvider);
     final l10n = AppLocalizations.of(context);
@@ -41,6 +53,7 @@ class HomeScreen extends ConsumerWidget {
     Future<void> handleRefresh() async {
       await ref.read(businessDayNotifierProvider.notifier).fetchActiveDay();
     }
+
 
     return AppSafeArea(
       child: RefreshIndicator(

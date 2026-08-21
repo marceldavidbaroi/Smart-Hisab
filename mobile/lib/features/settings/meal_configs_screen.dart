@@ -179,46 +179,103 @@ class _MealConfigsScreenState extends ConsumerState<MealConfigsScreen> {
                                 ? config.shiftName!
                                 : 'Standard Meal Rate');
 
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                        return Dismissible(
+                          key: Key('meal_config_${config.id}'),
+                          background: Container(
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(LucideIcons.edit2, color: Colors.white, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Edit',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            leading: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(LucideIcons.utensils, color: AppColors.success),
+                          secondaryBackground: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger,
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            title: Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                              ),
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Effective from: $dateStr',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                ),
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(LucideIcons.trash2, color: Colors.white, size: 20),
+                              ],
+                            ),
+                          ),
+                          confirmDismiss: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              MealConfigFormBottomSheet.show(context, mealConfig: config);
+                              return false;
+                            } else if (direction == DismissDirection.endToStart) {
+                              _showDeleteConfirmation(context, ref, config);
+                              return false;
+                            }
+                            return false;
+                          },
+                          child: InkWell(
+                            onTap: () => MealConfigFormBottomSheet.show(context, mealConfig: config),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                                ),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(LucideIcons.utensils, color: AppColors.success),
+                                ),
+                                title: Text(
+                                  title,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                  ),
+                                ),
+                                subtitle: Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'Effective from: $dateStr',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                    ),
+                                  ),
+                                ),
+                                trailing: Text(
                                   '৳${config.rate.toStringAsFixed(0)}',
                                   style: const TextStyle(
                                     fontSize: 18,
@@ -226,16 +283,7 @@ class _MealConfigsScreenState extends ConsumerState<MealConfigsScreen> {
                                     color: AppColors.success,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                IconButton(
-                                  icon: const Icon(LucideIcons.edit2, size: 18, color: AppColors.primary),
-                                  onPressed: () => MealConfigFormBottomSheet.show(context, mealConfig: config),
-                                ),
-                                IconButton(
-                                  icon: const Icon(LucideIcons.trash2, size: 18, color: AppColors.danger),
-                                  onPressed: () => _showDeleteConfirmation(context, ref, config),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         );

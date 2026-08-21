@@ -6,7 +6,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/models/customer.dart';
 import 'add_manual_baki_bottom_sheet.dart';
 import 'collect_baki_bottom_sheet.dart';
-import 'manage_meal_subscription_bottom_sheet.dart';
 import 'meal_attendance_calendar_bottom_sheet.dart';
 
 class CustomerQuickActionGrid extends ConsumerWidget {
@@ -65,94 +64,50 @@ class CustomerQuickActionGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.9,
+    return Row(
       children: [
-        _buildActionButton(
-          context: context,
-          icon: customer.activeMeals.isNotEmpty ? LucideIcons.utensils : LucideIcons.utensilsCrossed,
-          label: customer.activeMeals.isNotEmpty ? 'Edit Meals' : 'Add Meal',
-          color: AppColors.primary,
-          onTap: () => ManageMealSubscriptionBottomSheet.show(context, customer),
+        // 1. Mark Attendance / Calendar
+        Expanded(
+          child: _buildActionButton(
+            context: context,
+            icon: isMarkedToday ? LucideIcons.checkCircle2 : LucideIcons.calendarCheck2,
+            label: isMarkedToday ? 'Ate Today' : 'Attendance',
+            color: isMarkedToday ? AppColors.success : AppColors.primary,
+            onTap: () async {
+              await MealAttendanceCalendarBottomSheet.show(context, customer);
+              onActionCompleted();
+            },
+          ),
         ),
-        Builder(builder: (context) {
-          final isDark = Theme.of(context).brightness == Brightness.dark;
-          final hasActiveMeal = customer.activeMeals.isNotEmpty;
-          final buttonColor = hasActiveMeal ? AppColors.success : Colors.grey;
+        const SizedBox(width: 8),
 
-          return IgnorePointer(
-            ignoring: !hasActiveMeal,
-            child: InkWell(
-              onTap: hasActiveMeal
-                  ? () async {
-                      await MealAttendanceCalendarBottomSheet.show(context, customer);
-                      onActionCompleted();
-                    }
-                  : null,
-              borderRadius: BorderRadius.circular(14),
-              child: Opacity(
-                opacity: hasActiveMeal ? 1.0 : 0.4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: buttonColor.withValues(alpha: hasActiveMeal ? 0.12 : 0.05),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: buttonColor.withValues(alpha: hasActiveMeal ? 0.3 : 0.1)),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isMarkedToday ? LucideIcons.checkCircle2 : LucideIcons.calendarCheck2,
-                        color: buttonColor,
-                        size: 20,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isMarkedToday ? 'Meal: Ate Today' : 'Mark Attendance',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: hasActiveMeal
-                              ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)
-                              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-        _buildActionButton(
-          context: context,
-          icon: LucideIcons.plusCircle,
-          label: 'Add Baki',
-          color: AppColors.danger,
-          onTap: () async {
-            await AddManualBakiBottomSheet.show(context, customer);
-            onActionCompleted();
-          },
+        // 2. Add Baki
+        Expanded(
+          child: _buildActionButton(
+            context: context,
+            icon: LucideIcons.plusCircle,
+            label: 'Add Baki',
+            color: AppColors.danger,
+            onTap: () async {
+              await AddManualBakiBottomSheet.show(context, customer);
+              onActionCompleted();
+            },
+          ),
         ),
-        _buildActionButton(
-          context: context,
-          icon: LucideIcons.banknote,
-          label: 'Collect Baki',
-          color: AppColors.success,
-          onTap: () async {
-            await CollectBakiBottomSheet.show(context, customer);
-            onActionCompleted();
-          },
+        const SizedBox(width: 8),
+
+        // 3. Collect Baki
+        Expanded(
+          child: _buildActionButton(
+            context: context,
+            icon: LucideIcons.banknote,
+            label: 'Collect Baki',
+            color: AppColors.success,
+            onTap: () async {
+              await CollectBakiBottomSheet.show(context, customer);
+              onActionCompleted();
+            },
+          ),
         ),
       ],
     );

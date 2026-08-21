@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/services/hive_service.dart';
 import '../customers/customers_notifier.dart';
 import '../settings/meal_configs_notifier.dart';
-import '../settings/shifts_notifier.dart';
 import '../staff/staff_notifier.dart';
 import 'business_day_notifier.dart';
 
@@ -82,37 +81,25 @@ class OnboardingProgressNotifier extends StateNotifier<OnboardingState> {
   void recalculate() => _recalculate();
 
   void _recalculate() {
-    // 1. Shifts
-    final shifts = _ref.read(shiftsNotifierProvider).shifts;
-    final hasShifts = shifts.isNotEmpty;
-
-    // 2. Meal Rates
+    // 1. Meal Rates
     final mealConfigs = _ref.read(mealConfigsNotifierProvider).mealConfigs;
     final hasMealRates = mealConfigs.isNotEmpty;
 
-    // 3. Customers
+    // 2. Customers
     final customers = _ref.read(customersNotifierProvider).customers;
     final hasCustomers = customers.isNotEmpty;
 
-    // 4. Staff
+    // 3. Staff
     final staff = _ref.read(staffNotifierProvider).staffList;
     final hasStaff = staff.isNotEmpty;
 
-    // 5. Open Day
+    // 4. Open Day
     final businessDayState = _ref.read(businessDayNotifierProvider);
     final hasOpenedDay = businessDayState.isDayOpen || businessDayState.lastClosedDayRecap != null;
 
     final steps = [
       OnboardingStep(
         stepNumber: 1,
-        titleBangla: 'খাবারের শিফট ও সময়সূচি',
-        titleEnglish: 'Configure Meal Shifts',
-        descriptionBangla: 'নাস্তা, দুপুর, বিকাল ও রাতের শিফট সময়সূচি',
-        descriptionEnglish: 'Breakfast, lunch, evening & dinner timings',
-        isCompleted: hasShifts,
-      ),
-      OnboardingStep(
-        stepNumber: 2,
         titleBangla: 'মিলের রেট ও দর নির্ধারণ',
         titleEnglish: 'Configure Meal Rates',
         descriptionBangla: 'প্রতি মিলের স্ট্যান্ডার্ড রেট (৳) সেট করুন',
@@ -120,7 +107,7 @@ class OnboardingProgressNotifier extends StateNotifier<OnboardingState> {
         isCompleted: hasMealRates,
       ),
       OnboardingStep(
-        stepNumber: 3,
+        stepNumber: 2,
         titleBangla: 'খাতা থেকে কাস্টমার ও বাকি যোগ',
         titleEnglish: 'Add Customers & Opening Baki',
         descriptionBangla: 'পুরোনো খাতার ব্যালেন্স সহ কাস্টমার তুলুন',
@@ -128,7 +115,7 @@ class OnboardingProgressNotifier extends StateNotifier<OnboardingState> {
         isCompleted: hasCustomers,
       ),
       OnboardingStep(
-        stepNumber: 4,
+        stepNumber: 3,
         titleBangla: 'কর্মচারীদের তালিকা যোগ করুন',
         titleEnglish: 'Staff & Cashier Roster',
         descriptionBangla: 'বাবুর্চি, সহকারী ও ক্যাশিয়ারের তথ্য রাখুন',
@@ -136,7 +123,7 @@ class OnboardingProgressNotifier extends StateNotifier<OnboardingState> {
         isCompleted: hasStaff,
       ),
       OnboardingStep(
-        stepNumber: 5,
+        stepNumber: 4,
         titleBangla: 'আজকের দিনের হিসাব শুরু করুন',
         titleEnglish: 'Start First Business Day',
         descriptionBangla: 'ক্যাশের জমা টাকা লিখে আজকের খাতা খুলুন',
@@ -152,7 +139,6 @@ class OnboardingProgressNotifier extends StateNotifier<OnboardingState> {
 final onboardingProgressProvider =
     StateNotifierProvider<OnboardingProgressNotifier, OnboardingState>((ref) {
   // Watch dependencies so checklist updates automatically in real-time
-  ref.watch(shiftsNotifierProvider);
   ref.watch(mealConfigsNotifierProvider);
   ref.watch(customersNotifierProvider);
   ref.watch(staffNotifierProvider);

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/custom_modal_bottom_sheet.dart';
+import '../app_scaffold_notifier.dart';
+
 
 class JoinCanteenScreen extends ConsumerStatefulWidget {
   const JoinCanteenScreen({super.key});
@@ -41,8 +43,16 @@ class _JoinCanteenScreenState extends ConsumerState<JoinCanteenScreen> {
     if (mounted) {
       setState(() => _submitting = false);
       if (success) {
+        // Reset navigation tab to Tab 0 (Home)
+        ref.read(scaffoldNotifierProvider.notifier).setTab(0);
+        // Pop the modal bottom sheet
         Navigator.pop(context);
+        // If opened from a pushed screen (e.g. Switch Canteen from Settings), pop until root
+        if (Navigator.canPop(context)) {
+          Navigator.popUntil(context, (route) => route.isFirst);
+        }
       } else {
+
         final err = ref.read(authNotifierProvider).errorMessage ?? 'Failed to join canteen.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -97,13 +97,8 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
             .map((json) => Customer.fromJson(Map<String, dynamic>.from(json as Map)))
             .toList();
 
-        final shiftInfo = await _resolveActiveShiftAndAttendance(tId);
-
         state = state.copyWith(
           customers: fetchedList,
-          activeShiftName: shiftInfo['shiftName'] as String? ?? 'Lunch',
-          activeShiftRate: (shiftInfo['shiftRate'] as num?)?.toDouble() ?? 0.0,
-          markedCustomerIds: (shiftInfo['markedIds'] as Set<String>?) ?? {},
           isLoading: false,
         );
 
@@ -126,67 +121,6 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     }
 
     state = state.copyWith(customers: [], isLoading: false);
-  }
-
-  Future<Map<String, dynamic>> _resolveActiveShiftAndAttendance(String tId) async {
-    String shiftName = 'Lunch';
-    double shiftRate = 0.0;
-    Set<String> markedIds = {};
-
-    try {
-      final shiftId = await SupabaseService.client
-          .rpc('get_current_shift', params: {'p_tenant_id': tId}) as String?;
-
-      if (shiftId != null && shiftId.isNotEmpty) {
-        final shiftData = await SupabaseService.client
-            .from('shifts')
-            .select('name')
-            .eq('id', shiftId)
-            .maybeSingle();
-        if (shiftData != null && shiftData['name'] != null) {
-          shiftName = shiftData['name'] as String;
-        }
-
-        final mealConfig = await SupabaseService.client
-            .from('meal_configs')
-            .select('rate')
-            .eq('tenant_id', tId)
-            .eq('shift_id', shiftId)
-            .order('effective_from', ascending: false)
-            .maybeSingle();
-        if (mealConfig != null && mealConfig['rate'] != null) {
-          shiftRate = (mealConfig['rate'] as num).toDouble();
-        }
-
-        final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-        final attendance = await SupabaseService.client
-            .from('meal_attendance')
-            .select('customer_id')
-            .eq('tenant_id', tId)
-            .eq('shift_id', shiftId)
-            .gte('created_at', '${todayStr}T00:00:00')
-            .lte('created_at', '${todayStr}T23:59:59');
-
-        final attendanceList = attendance as List;
-        markedIds = attendanceList.map((row) => row['customer_id'] as String).toSet();
-      }
-
-      if (shiftRate == 0.0) {
-        final fallbackConfig = await SupabaseService.client
-            .from('meal_configs')
-            .select('rate')
-            .eq('tenant_id', tId)
-            .order('effective_from', ascending: false)
-            .maybeSingle();
-        if (fallbackConfig != null && fallbackConfig['rate'] != null) {
-          shiftRate = (fallbackConfig['rate'] as num).toDouble();
-        }
-      }
-    } catch (e) {
-      debugPrint('_resolveActiveShiftAndAttendance note: $e');
-    }
-
-    return {'shiftName': shiftName, 'shiftRate': shiftRate, 'markedIds': markedIds};
   }
 
   Future<bool> recordMealAttendance(String customerId) async {
@@ -570,6 +504,67 @@ class CustomersNotifier extends StateNotifier<CustomersState> {
     }
 
     return {'entries': [], 'total_count': 0, 'opening_balance': 0.0};
+  }
+
+  void markCustomerAsPresentLocally(String customerId) {
+    if (!state.markedCustomerIds.contains(customerId)) {
+      state = state.copyWith(
+        markedCustomerIds: {...state.markedCustomerIds, customerId},
+      );
+    }
+  }
+
+  Future<void> fetchCustomerAttendanceOnDemand(String customerId) async {
+    final tId = tenantId;
+    if (tId == null || tId.isEmpty || !SupabaseService.isInitialized) return;
+
+    try {
+      final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+      final attendanceRes = await SupabaseService.client
+          .from('meal_attendance')
+          .select('customer_id, created_at')
+          .eq('tenant_id', tId)
+          .eq('customer_id', customerId)
+          .gte('created_at', '${todayStr}T00:00:00')
+          .lte('created_at', '${todayStr}T23:59:59');
+
+      final attendanceList = attendanceRes as List;
+      final newMarkedSet = Set<String>.from(state.markedCustomerIds);
+      if (attendanceList.isNotEmpty) {
+        newMarkedSet.add(customerId);
+      } else {
+        newMarkedSet.remove(customerId);
+      }
+
+      state = state.copyWith(markedCustomerIds: newMarkedSet);
+    } catch (e) {
+      debugPrint('fetchCustomerAttendanceOnDemand error: $e');
+    }
+  }
+
+  Future<double> resolveShiftRateOnDemand() async {
+    if (state.activeShiftRate > 0) return state.activeShiftRate;
+    final tId = tenantId;
+    if (tId == null || tId.isEmpty || !SupabaseService.isInitialized) return 80.0;
+
+    try {
+      final mealConfig = await SupabaseService.client
+          .from('meal_configs')
+          .select('rate')
+          .eq('tenant_id', tId)
+          .order('effective_from', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (mealConfig != null && mealConfig['rate'] != null) {
+        final rate = (mealConfig['rate'] as num).toDouble();
+        state = state.copyWith(activeShiftRate: rate);
+        return rate;
+      }
+    } catch (e) {
+      debugPrint('resolveShiftRateOnDemand error: $e');
+    }
+    return 80.0;
   }
 
   Future<double?> fetchCustomerBalance(String customerId) async {

@@ -7,6 +7,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/widgets/app_safe_area.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
+import '../app_scaffold_notifier.dart';
+
 
 /// Clean Canteen Selection screen presented exclusively during the Login Flow.
 /// Allows the user to tap their desired canteen to enter the dashboard.
@@ -217,12 +219,14 @@ class LoginSelectCanteenScreen extends ConsumerWidget {
                               ),
                               trailing: const Icon(LucideIcons.chevronRight, size: 20),
                               onTap: () async {
+                                ref.read(scaffoldNotifierProvider.notifier).setTab(0);
                                 await ref.read(authNotifierProvider.notifier).setActiveTenant(
                                       tenantId: item.tenantId,
                                       tenantName: item.tenantName,
                                       role: item.role,
                                     );
                               },
+
                             ),
                           );
                         },

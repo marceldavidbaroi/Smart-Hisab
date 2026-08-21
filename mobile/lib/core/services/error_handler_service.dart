@@ -53,9 +53,9 @@ class ErrorHandlerService {
       debugPrint('═══════════════════════════════════════════════════════════════');
 
       // Do NOT pop disruptive modal dialogs for minor layout subpixel overflows (e.g. RenderFlex overflowed)
-      // Allow visual yellow-striped debug banner without freezing/modalizing user flow
+      // or during standard development/hot-reloads to prevent blocking the UI loop.
       final isLayoutOverflow = details.exception.toString().contains('RenderFlex overflowed');
-      if (!isLayoutOverflow) {
+      if (!isLayoutOverflow && !kDebugMode) {
         _logAndNotify(
           error: details.exception,
           stackTrace: details.stack,
@@ -68,11 +68,14 @@ class ErrorHandlerService {
     PlatformDispatcher.instance.onError = (Object error, StackTrace stackTrace) {
       if (error.toString().contains('_debugLocked')) return true;
 
-      _logAndNotify(
-        error: error,
-        stackTrace: stackTrace,
-        contextName: 'Unhandled Async Error',
-      );
+      debugPrint('🚨 [Unhandled Async Error]: $error');
+      if (!kDebugMode) {
+        _logAndNotify(
+          error: error,
+          stackTrace: stackTrace,
+          contextName: 'Unhandled Async Error',
+        );
+      }
       return true; // Prevents crash / unhandled bubble
     };
   }

@@ -392,6 +392,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> _handleCanteenRemoved(String removedTenantId) async {
+    // 1. Wipe all local offline cache associated with this specific canteen
+    await HiveService.deleteCache('customers_$removedTenantId');
+    await HiveService.deleteCache('staff_$removedTenantId');
+    await HiveService.deleteCache('canteen_accounts_$removedTenantId');
+    await HiveService.deleteCache('cashbook_entries_$removedTenantId');
+    await HiveService.deleteCache('vendors_$removedTenantId');
+    await HiveService.deleteCache('shifts_$removedTenantId');
+    await HiveService.deleteCache('meal_configs_$removedTenantId');
+    await HiveService.deleteCache('active_day_$removedTenantId');
+    await HiveService.deleteCache('recent_activities_$removedTenantId');
+    await HiveService.deleteCache('last_closed_day_$removedTenantId');
+
     final baseList = state.availableTenants;
     final updatedList = baseList.where((t) => t.tenantId != removedTenantId).toList();
     final wasActive = state.tenantId == removedTenantId;
@@ -402,7 +414,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
 
-    // Deleting active canteen: Clear active tenant cache without triggering secondary API calls
+    // Deleting active canteen: Clear active tenant cache without clearing user auth/session
     await HiveService.deleteCache('active_tenant');
 
     if (updatedList.isEmpty) {
@@ -424,6 +436,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     }
   }
+
 
   Future<void> setActiveTenant({
     required String tenantId,

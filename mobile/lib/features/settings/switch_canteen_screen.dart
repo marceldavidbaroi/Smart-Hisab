@@ -10,9 +10,11 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/services/supabase_service.dart';
 import '../../core/widgets/custom_modal_bottom_sheet.dart';
+import '../app_scaffold_notifier.dart';
 import '../auth/create_canteen_screen.dart';
 import '../auth/join_canteen_screen.dart';
 import 'widgets/canteen_action_sheets.dart';
+
 
 /// Standalone Switch Canteen Screen
 /// Allows users to view all available canteens, switch active canteen,
@@ -220,6 +222,7 @@ class _SwitchCanteenScreenState extends ConsumerState<SwitchCanteenScreen> {
                                       tenantName: tenant.tenantName,
                                       role: tenant.role,
                                     );
+                                ref.read(scaffoldNotifierProvider.notifier).setTab(0);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -227,9 +230,13 @@ class _SwitchCanteenScreenState extends ConsumerState<SwitchCanteenScreen> {
                                       backgroundColor: AppColors.primary,
                                     ),
                                   );
+                                  if (Navigator.canPop(context)) {
+                                    Navigator.popUntil(context, (route) => route.isFirst);
+                                  }
                                 }
                               }
                             },
+
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Row(

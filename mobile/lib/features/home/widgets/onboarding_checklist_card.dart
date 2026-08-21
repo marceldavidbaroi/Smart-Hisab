@@ -5,7 +5,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../app_scaffold_notifier.dart';
 import '../../customers/add_customer_bottom_sheet.dart';
 import '../../settings/meal_configs_screen.dart';
-import '../../settings/shifts_screen.dart';
 import '../../staff/staff_screen.dart';
 import '../onboarding_progress_notifier.dart';
 import '../open_day_bottom_sheet.dart';
@@ -238,25 +237,19 @@ class OnboardingChecklistCard extends ConsumerWidget {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ShiftsScreen()),
-        );
-        break;
-      case 2:
-        Navigator.push(
-          context,
           MaterialPageRoute(builder: (_) => const MealConfigsScreen()),
         );
         break;
-      case 3:
+      case 2:
         AddCustomerBottomSheet.show(context);
         break;
-      case 4:
+      case 3:
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const StaffScreen()),
         );
         break;
-      case 5:
+      case 4:
         OpenDayBottomSheet.show(context);
         break;
       default:
